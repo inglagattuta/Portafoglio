@@ -32,6 +32,7 @@ h1 {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 10px;
 }
 
@@ -153,10 +154,10 @@ table {
 thead th {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 16px;
+  padding: 10px 12px;
   text-align: left;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   position: sticky;
@@ -192,14 +193,14 @@ tbody tr {
 }
 
 tbody tr:hover {
-  transform: scale(1.01);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: scale(1.005);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 5;
 }
 
 tbody td {
-  padding: 16px;
-  font-size: 0.95rem;
+  padding: 10px 12px;
+  font-size: 0.875rem;
   color: #2d3748;
 }
 
@@ -213,6 +214,19 @@ tbody tr:last-child td:first-child {
 
 tbody tr:last-child td:last-child {
   border-bottom-right-radius: 12px;
+}
+
+/* COLORI RIGHE IN BASE AL PROFITTO */
+tbody tr.profit-positive {
+  background: linear-gradient(to right, #e6ffed 0%, #f0fff4 100%) !important;
+}
+
+tbody tr.profit-negative {
+  background: linear-gradient(to right, #ffe6e6 0%, #fff5f5 100%) !important;
+}
+
+tbody tr.profit-neutral {
+  background: #f7fafc !important;
 }
 
 .action-buttons {
