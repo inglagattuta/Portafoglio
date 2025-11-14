@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portfolio Manager</title>
 
-  <!-- CSS con busting cache -->
-<link rel="stylesheet" href="style.css?v=3">
+  <!-- CSS con cache busting -->
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 
 <body>
@@ -41,19 +41,18 @@
     </div>
 
     <!-- CONTROLLI -->
-   <div class="controls">
-  <label class="file-label">
-    📥 Importa Excel
-    <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
-  </label>
+    <div class="controls">
+      <label class="file-label">
+        📥 Importa Excel
+        <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
+      </label>
 
-  <button onclick="exportExcel()">📤 Esporta Excel</button>
+      <button onclick="exportExcel()">📤 Esporta Excel</button>
 
-  <button onclick="window.location.href='dashboard.html'" class="dashboard-btn">
-    📊 Dashboard
-  </button>
-</div>
-
+      <button onclick="window.location.href='dashboard.html'" class="dashboard-btn">
+        📊 Dashboard
+      </button>
+    </div>
 
     <!-- TABELLA -->
     <div class="table-container">
@@ -67,13 +66,13 @@
 
   </div>
 
-  <!-- Modal root (opzionale ma raccomandato) -->
+  <!-- Modal root -->
   <div id="modal-root"></div>
 
   <!-- Libreria Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <!-- JS con busting cache -->
-  <script type="module" src="main.js?v=2"></script>
+  <!-- Main JS con cache busting -->
+  <script type="module" src="main.js?v=3"></script>
 </body>
 </html>
