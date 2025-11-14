@@ -5,21 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Portafoglio</title>
 
-  <!-- CSS aggiornato -->
   <link rel="stylesheet" href="style.css?v=4">
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
   <div class="container">
 
-    <!-- HEADER UGUALE A INDEX -->
     <header>
       <h1>💼 Portfolio Manager - Dashboard</h1>
       <p class="subtitle">Francesco La Gattuta</p>
     </header>
 
-    <!-- CONTROLLI -->
     <div class="controls">
       <button onclick="window.location.href='index.html'">🏠 Home</button>
 
@@ -31,8 +28,9 @@
       <button onclick="exportExcel()">📤 Esporta Excel</button>
     </div>
 
-    <!-- GRAFICI -->
+    <!-- GRID GRAFICI -->
     <div class="charts-grid">
+
       <div class="chart-card">
         <h2>Allocazione per Categoria</h2>
         <canvas id="chartCategory"></canvas>
@@ -52,10 +50,14 @@
         <h2>Percentuale Investito per Tipologia</h2>
         <canvas id="chartByType"></canvas>
       </div>
+
     </div>
   </div>
 
-  <!-- JS con cache busting -->
+  <!-- Excel JS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Script dashboard -->
   <script type="module" src="dashboard.js?v=4"></script>
 </body>
 </html>
