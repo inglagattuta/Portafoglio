@@ -61,6 +61,7 @@ function renderHeader(){
   columns.forEach(col=>{
     const th = document.createElement("th");
     th.textContent = col;
+    th.classList.add('sortable');
     if (hiddenCols.has(col)) th.style.display = "none";
     headerRow.appendChild(th);
   });
@@ -130,10 +131,10 @@ function ensureModal(){
   modalEl.style.justifyContent = "center";
   modalEl.style.background = "rgba(0,0,0,0.45)";
   modalEl.innerHTML = `
-    <div class="modal-card" style="width:360px;padding:16px;background:#fff;border-radius:8px;color:#000;">
-      <h3 style="margin:0 0 8px 0">Modifica</h3>
+    <div class="modal-card">
+      <h3>Modifica</h3>
       <div id="modalFields"></div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+      <div class="modal-buttons">
         <button id="modalSave">Salva</button>
         <button id="modalClose">Annulla</button>
       </div>
@@ -169,15 +170,11 @@ async function openEditModal(docId){
     fields.forEach(f => {
       const lbl = document.createElement("label");
       lbl.textContent = f.replaceAll("_"," ").toUpperCase();
-      lbl.style.display = "block";
-      lbl.style.marginTop = "8px";
       const inp = document.createElement("input");
       inp.type = "number";
       inp.step = "0.01";
       inp.id = "fld_" + f;
       inp.value = data[f] ?? "";
-      inp.style.width = "100%";
-      inp.style.padding = "6px";
       fieldsDiv.appendChild(lbl);
       fieldsDiv.appendChild(inp);
     });
@@ -300,7 +297,7 @@ function updateStats(docs){
   if (bxDividendi) bxDividendi.textContent = fmtEuro(totDiv);
   if (bxProfitto) {
     bxProfitto.textContent = fmtEuro(profitto);
-    bxProfitto.style.color = profitto >= 0 ? "lime" : "red";
+    bxProfitto.style.color = profitto >= 0 ? "#48bb78" : "#f56565";
   }
 }
 
@@ -358,6 +355,8 @@ async function loadData(){
 
       // Azioni
       const tdA = document.createElement("td");
+      tdA.classList.add('action-buttons');
+      
       const btE = document.createElement("button");
       btE.textContent = "Modifica";
       btE.onclick = () => openEditModal(id);
@@ -373,21 +372,22 @@ async function loadData(){
       tdA.appendChild(btE);
       tdA.appendChild(btD);
       tr.appendChild(tdA);
-// ---- COLORI DINAMICI IN BASE AL PROFITTO ----
-const pa = Number(d.prezzo_acquisto || 0);
-const pc = Number(d.prezzo_corrente || 0);
-const div = Number(d.dividendi || 0);
-const pre = Number(d.prelevato || 0);
 
-const profit = pc - pa + div + pre;
+      // ---- COLORI DINAMICI IN BASE AL PROFITTO (CON CLASSI CSS) ----
+      const pa = Number(d.prezzo_acquisto || 0);
+      const pc = Number(d.prezzo_corrente || 0);
+      const div = Number(d.dividendi || 0);
+      const pre = Number(d.prelevato || 0);
 
-if (profit > 0) {
-  tr.style.backgroundColor = "#e1f7e1";  // verde chiaro
-} else if (profit < 0) {
-  tr.style.backgroundColor = "#f9d6d5";  // rosso chiaro
-} else {
-  tr.style.backgroundColor = "#f0f0f0";  // neutro
-}
+      const profit = pc - pa + div + pre;
+
+      if (profit > 0) {
+        tr.classList.add('profit-positive');
+      } else if (profit < 0) {
+        tr.classList.add('profit-negative');
+      } else {
+        tr.classList.add('profit-neutral');
+      }
 
       tableBody.appendChild(tr);
     });
