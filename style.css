@@ -1,262 +1,49 @@
-/* -------------------------------------------------------------
-   BASE
-------------------------------------------------------------- */
-body {
-  font-family: system-ui, Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background: #f5f6fa;
-  color: #333;
-}
-
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 20px;
-}
-
-/* -------------------------------------------------------------
-   HEADER
-------------------------------------------------------------- */
-header h1 {
-  margin: 0;
-  font-size: 28px;
-  color: #111;
-}
-
-.subtitle {
-  margin-top: -5px;
-  color: #555;
-}
-
-/* -------------------------------------------------------------
-   STATISTICHE (4 BOX)
-------------------------------------------------------------- */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.stat-card {
-  background: white;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #666;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: bold;
-  margin-top: 5px;
-}
-
-/* -------------------------------------------------------------
-   CONTROLLI: Import / Export / Dashboard
-------------------------------------------------------------- */
-.controls {
+/* Container pulsanti sulla Home */
+.button-container {
   display: flex;
-  gap: 15px;
-  align-items: center;
-  margin-top: 25px;
+  flex-wrap: nowrap;            /* Impedisce di andare a capo */
+  gap: 10px;                    /* Spaziatura uniforme */
+  margin-bottom: 20px;
 }
 
-/* pulsanti generici */
-.controls button,
-.file-label {
-  background-color: #3b82f6; /* blu */
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
+/* Stile base dei pulsanti */
+.btn {
+  padding: 10px 20px;
+  border-radius: 6px;
   border: none;
   cursor: pointer;
   font-size: 14px;
-  transition: 0.2s;
-  display: inline-flex;
-  align-items: center;
-}
-
-.controls button:hover,
-.file-label:hover {
-  background-color: #2563eb;
-}
-
-/* Nascondo input file ma mantengo label stile pulsante */
-.file-label input {
-  display: none;
-}
-
-/* Dashboard — viola */
-.dashboard-btn {
-  background-color: #8b5cf6 !important;
-}
-
-.dashboard-btn:hover {
-  background-color: #7c3aed !important;
-}
-
-/* -------------------------------------------------------------
-   TABELLA
-------------------------------------------------------------- */
-.table-container {
-  overflow-x: auto;
-  margin-top: 25px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-thead {
-  background: #e5e7eb;
-}
-
-th {
-  padding: 10px;
-  font-weight: bold;
-  text-align: left;
-  font-size: 14px;
-}
-
-td {
-  padding: 10px;
-  font-size: 14px;
-  border-top: 1px solid #eee;
-}
-
-.sortable {
-  cursor: pointer;
-}
-
-.profit-positive {
-  background-color: #e8fce8;
-}
-
-.profit-negative {
-  background-color: #fdeaea;
-}
-
-.profit-neutral {
-  background-color: #f7f7f7;
-}
-
-/* -------------------------------------------------------------
-   SCORE — colori dinamici
-------------------------------------------------------------- */
-.score-cell.score-high {
-  background-color: #d1fae5;
-  color: #065f46;
-  font-weight: bold;
-}
-
-.score-cell.score-medium {
-  background-color: #fef3c7;
-  color: #92400e;
-  font-weight: bold;
-}
-
-.score-cell.score-low {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  font-weight: bold;
-}
-
-/* -------------------------------------------------------------
-   BOTTONI AZIONI
-------------------------------------------------------------- */
-.action-buttons button {
-  margin-right: 8px;
-  padding: 5px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.action-buttons button:first-child {
-  background-color: #10b981;
+  font-weight: 600;
   color: white;
+  min-width: 120px;             /* Tutti i pulsanti stessa larghezza */
+  text-align: center;
+  text-decoration: none;        /* Per il link Dashboard */
+  display: inline-block;        /* Per farlo comportare come gli altri */
 }
 
-.action-buttons button:first-child:hover {
-  background-color: #059669;
+/* Import */
+.btn-import {
+  background-color: #007bff;
 }
 
-.action-buttons button:last-child {
-  background-color: #ef4444;
-  color: white;
+.btn-import:hover {
+  background-color: #0056b3;
 }
 
-.action-buttons button:last-child:hover {
-  background-color: #dc2626;
+/* Export */
+.btn-export {
+  background-color: #28a745;
 }
 
-/* -------------------------------------------------------------
-   MODAL
-------------------------------------------------------------- */
-#editModal {
-  position: fixed;
-  inset: 0;
-  display: none;
-  background: rgba(0,0,0,0.45);
-  justify-content: center;
-  align-items: center;
+.btn-export:hover {
+  background-color: #1e7e34;
 }
 
-.modal-card {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  width: 320px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+/* Dashboard - colore diverso */
+.btn-dashboard {
+  background-color: #ff9800;
 }
 
-.modal-card h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-#modalFields label {
-  display: block;
-  margin-top: 10px;
-  font-size: 13px;
-  font-weight: bold;
-}
-
-#modalFields input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 3px;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
-}
-
-.modal-buttons button {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  color: white;
-}
-
-#modalSave {
-  background: #10b981;
-}
-
-#modalClose {
-  background: #ef4444;
+.btn-dashboard:hover {
+  background-color: #e68900;
 }
