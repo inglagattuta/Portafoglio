@@ -1,209 +1,127 @@
-// ================================
-// IMPORT FIREBASE
-// ================================
-import app from './firebase-config.js';
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portafoglio LAG</title>
 
-const db = getFirestore(app);
-
-// ================================
-// CONFIGURAZIONE COLONNE
-// ================================
-const columnsOrder = [
-  "tipologia",
-  "nome",
-  "prezzo_acquisto",
-  "prezzo_corrente",
-  "dividendi",
-  "prelevato",
-  "profitto", // calcolato
-  "score",
-  "azioni"
-];
-
-const euroColumns = [
-  "prezzo_acquisto",
-  "prezzo_corrente",
-  "dividendi",
-  "prelevato"
-];
-
-const percentColumns = [
-  "percentuale_12_mesi",
-  "rendimento_percentuale",
-  "payback",
-  "percentuale_portafoglio"
-];
-
-// ================================
-// COSTRUZIONE TABELLA
-// ================================
-const headerRow = document.getElementById("headerRow");
-const tableBody = document.getElementById("tableBody");
-
-// Disegna l'header
-columnsOrder.forEach(col => {
-  const th = document.createElement("th");
-  th.textContent = col.toUpperCase();
-  headerRow.appendChild(th);
-});
-
-// ================================
-// CARICAMENTO DATI
-// ================================
-async function loadData() {
-  const querySnapshot = await getDocs(collection(db, "portafoglio"));
-  tableBody.innerHTML = "";
-
-  querySnapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const row = tableBody.insertRow();
-
-    columnsOrder.forEach(key => {
-      const cell = row.insertCell();
-
-      // =========================
-      // CALCOLO PROFITTO
-      // =========================
-      if (key === "profitto") {
-        const pa = parseFloat(data.prezzo_acquisto || 0);
-        const pc = parseFloat(data.prezzo_corrente || 0);
-        const div = parseFloat(data.dividendi || 0);
-        const pre = parseFloat(data.prelevato || 0);
-
-        const profittoCalc = pc - pa + div + pre;
-        cell.textContent = profittoCalc.toFixed(2) + " €";
-        cell.style.color = profittoCalc > 0 ? "green" : profittoCalc < 0 ? "red" : "black";
-        return;
-      }
-
-      // =========================
-      // COLONNA AZIONI
-      // =========================
-      if (key === "azioni") {
-        cell.classList.add("actions");
-
-        // Bottone modifica
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Modifica";
-        editBtn.classList.add("edit-btn");
-        editBtn.onclick = () => editRow(docSnap.id, data);
-
-        // Bottone cancella
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Cancella";
-        delBtn.classList.add("delete-btn");
-        delBtn.onclick = () => deleteRow(docSnap.id);
-
-        cell.appendChild(editBtn);
-        cell.appendChild(delBtn);
-        return;
-      }
-
-      // =========================
-      // FORMATTARE NUMERI
-      // =========================
-      let value = data[key];
-
-      if (euroColumns.includes(key) && value !== undefined) {
-        value = parseFloat(value).toFixed(2) + " €";
-      }
-
-      cell.textContent = value ?? "";
-    });
-  });
-}
-
-loadData();
-
-// ================================
-// MODIFICA RECORD
-// ================================
-async function editRow(id, originalData) {
-  let newData = { ...originalData };
-
-  for (const key of Object.keys(originalData)) {
-    if (key === "profitto" || key === "score") continue;
-
-    const nuovo = prompt(`Modifica ${key}:`, originalData[key]);
-    if (nuovo !== null) {
-      newData[key] = isNaN(nuovo) ? nuovo : parseFloat(nuovo);
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2b2458; /* viola scuro */
+      margin: 0;
+      padding: 20px;
+      color: white;
+      display: flex;
+      justify-content: center;
     }
-  }
 
-  await updateDoc(doc(db, "portafoglio", id), newData);
-  loadData();
-}
-
-// ================================
-// CANCELLA RECORD
-// ================================
-async function deleteRow(id) {
-  if (!confirm("Sei sicuro di voler cancellare questo elemento?")) return;
-  await deleteDoc(doc(db, "portafoglio", id));
-  loadData();
-}
-
-// ================================
-// IMPORT/EXPORT EXCEL (SheetJS)
-// ================================
-import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
-
-// EXPORT TO EXCEL
-window.exportExcel = async function () {
-  const querySnapshot = await getDocs(collection(db, "portafoglio"));
-  const rows = [];
-
-  querySnapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const copy = { ...data };
-    delete copy.profitto; // profitto non si esporta
-    rows.push(copy);
-  });
-
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Portafoglio");
-
-  XLSX.writeFile(wb, "portafoglio.xlsx");
-};
-
-// IMPORT FROM EXCEL
-window.importExcel = async function (event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const data = await file.arrayBuffer();
-  const workbook = XLSX.read(data);
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const json = XLSX.utils.sheet_to_json(sheet);
-
-  for (const item of json) {
-    delete item.profitto; // non importiamo profitto
-
-    if (!item.nome) continue;
-
-    await updateExistingOrAdd(item);
-  }
-
-  loadData();
-  alert("Import completato!");
-};
-
-async function updateExistingOrAdd(record) {
-  const querySnapshot = await getDocs(collection(db, "portafoglio"));
-  for (const docSnap of querySnapshot.docs) {
-    const data = docSnap.data();
-    if (data.nome === record.nome) {
-      await updateDoc(doc(db, "portafoglio", docSnap.id), record);
-      return;
+    .container {
+      width: 95%;
+      max-width: 1200px;
+      background: #3a3370; /* viola leggero */
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-  }
-}
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      color: #ffffff;
+      font-size: 32px;
+      letter-spacing: 1px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+
+    button {
+      background: #6c5ce7;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #5a4bcc;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #1f1a40; /* viola molto scuro */
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th {
+      background: #4b3fa3;
+      padding: 10px;
+      color: white;
+      text-align: left;
+    }
+
+    td {
+      padding: 10px;
+      background: #dfdfdf; /* celle grigie */
+      color: #000;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .actions button {
+      margin-right: 8px;
+      background: #0984e3;
+    }
+    .actions button:hover {
+      background: #086ec0;
+    }
+
+    .delete-btn {
+      background: #d63031 !important;
+    }
+    .delete-btn:hover {
+      background: #b71c1c !important;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <h1>Portafoglio LAG</h1>
+
+    <div class="buttons">
+      <label for="fileInput">
+        <button>Importa Excel</button>
+      </label>
+      <input id="fileInput" type="file" accept=".xlsx" onchange="importExcel(event)" />
+
+      <button onclick="exportExcel()">Esporta Excel</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr id="headerRow"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
