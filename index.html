@@ -1,18 +1,66 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Portafoglio LAG</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #e6e0f8;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #4b0082;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th {
+      background: #6a0dad;
+      color: white;
+      padding: 10px;
+      cursor: pointer;
+    }
+    td {
+      padding: 10px;
+      background: #f2f2f2;
+      border-bottom: 1px solid #ddd;
+    }
+    .actions button {
+      margin-right: 5px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .edit-btn {
+      background: #3498db;
+      color: white;
+    }
+    .delete-btn {
+      background: #e74c3c;
+      color: white;
+    }
+  </style>
 </head>
 <body>
   <h1>Portafoglio LAG</h1>
-  <div id="table-container"></div>
 
-  <script type="module" src="./main.js"></script>
+  <table id="dataTable">
+    <thead>
+      <tr id="headerRow"></tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <script type="module" src="main.js"></script>
 </body>
 </html>
-
-
