@@ -1,32 +1,73 @@
-/* ============================================================
-   RESET BASE
-============================================================ */
-* {
+/* -------------------------------------------------------------
+   BASE
+------------------------------------------------------------- */
+body {
+  font-family: system-ui, Arial, sans-serif;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-  font-family: system-ui, Arial, sans-serif;
+  background: #f5f6fa;
+  color: #333;
 }
-.dashboard-btn {
-  background-color: #8b5cf6; /* Viola */
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* -------------------------------------------------------------
+   HEADER
+------------------------------------------------------------- */
+header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #111;
+}
+
+.subtitle {
+  margin-top: -5px;
+  color: #555;
+}
+
+/* -------------------------------------------------------------
+   STATISTICHE (4 BOX)
+------------------------------------------------------------- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+
+.stat-label {
   font-size: 14px;
-  transition: 0.2s;
+  color: #666;
 }
 
-.dashboard-btn:hover {
-  background-color: #7c3aed;
-}
-argin-left: 10px;
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 5px;
 }
 
-.dashboard-btn:hover {
-  opacity: 0.85;
+/* -------------------------------------------------------------
+   CONTROLLI: Import / Export / Dashboard
+------------------------------------------------------------- */
+.controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-top: 25px;
 }
+
+/* pulsanti generici */
 .controls button,
 .file-label {
   background-color: #3b82f6; /* blu */
@@ -37,284 +78,185 @@ argin-left: 10px;
   cursor: pointer;
   font-size: 14px;
   transition: 0.2s;
+  display: inline-flex;
+  align-items: center;
 }
 
-body {
-  background: #f5f6fa;
-  padding: 20px;
-  color: #333;
+.controls button:hover,
+.file-label:hover {
+  background-color: #2563eb;
 }
 
-/* Dark mode automatica */
-@media (prefers-color-scheme: dark) {
-  body {
-    background: #1e1e1e;
-    color: #ddd;
-  }
-}
-
-/* ============================================================
-   CONTAINER E HEADER
-============================================================ */
-.container {
-  max-width: 1200px;
-  margin: auto;
-}
-
-header h1 {
-  font-size: 28px;
-  margin-bottom: 5px;
-}
-
-.subtitle {
-  font-size: 16px;
-  opacity: 0.7;
-}
-
-/* ============================================================
-   STATISTICHE
-============================================================ */
-.stats-grid {
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-}
-
-.stat-card {
-  background: white;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.07);
-}
-
-@media (prefers-color-scheme: dark) {
-  .stat-card {
-    background: #2b2b2b;
-  }
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #666;
-}
-
-.stat-value {
-  margin-top: 5px;
-  font-size: 19px;
-  font-weight: bold;
-}
-
-/* ============================================================
-   CONTROLLI
-============================================================ */
-.controls {
-  margin: 25px 0;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.file-label {
-  background: #2980b9;
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
+/* Nascondo input file ma mantengo label stile pulsante */
 .file-label input {
   display: none;
 }
 
-button {
-  background: #27ae60;
-  border: none;
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  cursor: pointer;
+/* Dashboard — viola */
+.dashboard-btn {
+  background-color: #8b5cf6 !important;
 }
 
-button:hover,
-.file-label:hover {
-  opacity: 0.85;
+.dashboard-btn:hover {
+  background-color: #7c3aed !important;
 }
 
-/* ============================================================
+/* -------------------------------------------------------------
    TABELLA
-============================================================ */
+------------------------------------------------------------- */
 .table-container {
   overflow-x: auto;
+  margin-top: 25px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-thead th {
-  background: #3498db;
-  color: white;
+thead {
+  background: #e5e7eb;
+}
+
+th {
   padding: 10px;
+  font-weight: bold;
   text-align: left;
   font-size: 14px;
-  white-space: nowrap;
 }
 
-tbody td {
+td {
   padding: 10px;
-  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+  border-top: 1px solid #eee;
 }
 
-@media (prefers-color-scheme: dark) {
-  thead th {
-    background: #1f5c92;
-  }
-  tbody td {
-    border-color: #444;
-  }
+.sortable {
+  cursor: pointer;
 }
 
-/* Hover riga */
-tbody tr:hover {
-  background: rgba(0,0,0,0.05);
-}
-
-@media (prefers-color-scheme: dark) {
-  tbody tr:hover {
-    background: rgba(255,255,255,0.08);
-  }
-}
-
-/* ============================================================
-   COLORI SCORE
-============================================================ */
-.score-cell {
-  font-weight: bold;
-}
-
-.score-high {
-  color: #2ecc71 !important;  /* verde */
-}
-
-.score-medium {
-  color: #f1c40f !important;  /* giallo/arancio */
-}
-
-.score-low {
-  color: #e74c3c !important;  /* rosso */
-}
-
-/* ============================================================
-   COLORI RIGA PROFITTO
-============================================================ */
 .profit-positive {
-  background: rgba(46, 204, 113, 0.10);
+  background-color: #e8fce8;
 }
 
 .profit-negative {
-  background: rgba(231, 76, 60, 0.10);
+  background-color: #fdeaea;
 }
 
 .profit-neutral {
-  background: rgba(255,255,255,0.5);
+  background-color: #f7f7f7;
 }
 
-@media (prefers-color-scheme: dark) {
-  .profit-positive {
-    background: rgba(46, 204, 113, 0.15);
-  }
-  .profit-negative {
-    background: rgba(231, 76, 60, 0.15);
-  }
+/* -------------------------------------------------------------
+   SCORE — colori dinamici
+------------------------------------------------------------- */
+.score-cell.score-high {
+  background-color: #d1fae5;
+  color: #065f46;
+  font-weight: bold;
 }
 
-/* ============================================================
-   ACTION BUTTONS
-============================================================ */
-.action-buttons {
-  display: flex;
-  gap: 6px;
+.score-cell.score-medium {
+  background-color: #fef3c7;
+  color: #92400e;
+  font-weight: bold;
 }
 
+.score-cell.score-low {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  font-weight: bold;
+}
+
+/* -------------------------------------------------------------
+   BOTTONI AZIONI
+------------------------------------------------------------- */
 .action-buttons button {
-  padding: 6px 10px;
-  font-size: 13px;
+  margin-right: 8px;
+  padding: 5px 8px;
   border-radius: 6px;
+  font-size: 12px;
 }
 
-.action-buttons button:nth-child(1) {
-  background: #8e44ad;
+.action-buttons button:first-child {
+  background-color: #10b981;
+  color: white;
 }
 
-.action-buttons button:nth-child(2) {
-  background: #c0392b;
+.action-buttons button:first-child:hover {
+  background-color: #059669;
 }
 
-/* ============================================================
+.action-buttons button:last-child {
+  background-color: #ef4444;
+  color: white;
+}
+
+.action-buttons button:last-child:hover {
+  background-color: #dc2626;
+}
+
+/* -------------------------------------------------------------
    MODAL
-============================================================ */
+------------------------------------------------------------- */
 #editModal {
   position: fixed;
   inset: 0;
   display: none;
-  align-items: center;
-  justify-content: center;
   background: rgba(0,0,0,0.45);
-  z-index: 9999;
+  justify-content: center;
+  align-items: center;
 }
 
 .modal-card {
   background: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 12px;
   width: 320px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.25);
-}
-
-@media (prefers-color-scheme: dark) {
-  .modal-card {
-    background: #2c2c2c;
-  }
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .modal-card h3 {
+  margin-top: 0;
   margin-bottom: 10px;
 }
 
 #modalFields label {
   display: block;
   margin-top: 10px;
-  font-size: 12px;
-  opacity: 0.8;
+  font-size: 13px;
+  font-weight: bold;
 }
 
 #modalFields input {
   width: 100%;
-  padding: 7px;
-  margin-top: 4px;
+  padding: 8px;
+  margin-top: 3px;
   border-radius: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
 }
 
 .modal-buttons {
-  margin-top: 15px;
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
+  margin-top: 15px;
 }
 
 .modal-buttons button {
-  flex: 1;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
   border: none;
   cursor: pointer;
-  background: #3498db;
   color: white;
 }
 
-.modal-buttons button:nth-child(2) {
-  background: #777;
+#modalSave {
+  background: #10b981;
+}
+
+#modalClose {
+  background: #ef4444;
 }
