@@ -4,13 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portafoglio</title>
-
-  <!-- Foglio di stile base -->
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #fafafa;
-      margin: 20px;
+      background: #f4f6f8;
+      color: #333;
     }
 
     h2 {
@@ -20,71 +18,56 @@
     table {
       border-collapse: collapse;
       width: 100%;
-      margin-top: 15px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      font-size: 14px;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     th {
-      background: #e0e0e0;
-      cursor: pointer;
+      background: #4a90e2;
+      color: white;
+      font-weight: bold;
+      text-align: left;
+      padding: 10px;
+    }
+
+    td {
+      border-bottom: 1px solid #ddd;
+      padding: 10px;
+      background: #fafafa;
     }
 
     tr:nth-child(even) td {
-      background: #F0F0F0;
+      background: #f0f4f8;
     }
 
-    tr:nth-child(odd) td {
-      background: #E8E8E8;
+    button {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #357ab8;
     }
 
     .actions button {
       margin-right: 6px;
-      padding: 4px 8px;
-      cursor: pointer;
+      background: #6c8cd5;
     }
 
-    /* MODAL */
-    #editModal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
+    .actions button:hover {
+      background: #4b6fb3;
     }
 
-    #editModalContent {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      width: 320px;
-    }
-
-    #editModalContent label {
-      font-size: 13px;
-      margin-bottom: 3px;
-      display: block;
-    }
-
-    #editModalContent input {
-      width: 100%;
-      padding: 6px;
-      margin-bottom: 10px;
+    input[type="file"] {
+      margin-left: 10px;
     }
   </style>
-
-  <!-- XLSX per import/export excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
 </head>
 <body>
-
   <h2>Portafoglio</h2>
 
   <button onclick="exportExcel()">Export Excel</button>
@@ -97,20 +80,6 @@
     <tbody id="tableBody"></tbody>
   </table>
 
-  <!-- Modal per modifica -->
-  <div id="editModal">
-    <div id="editModalContent">
-      <h3>Modifica</h3>
-      <div id="modalFields"></div>
-      <div style="text-align:right; margin-top: 10px;">
-        <button id="modalSave">Salva</button>
-        <button id="modalClose">Chiudi</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CARICAMENTO JAVASCRIPT -->
   <script type="module" src="main.js"></script>
-
 </body>
 </html>
