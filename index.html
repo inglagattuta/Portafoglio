@@ -12,6 +12,17 @@
       padding: 20px;
     }
     h1 {
+<div style="text-align:center; margin-bottom: 20px;">
+  <button onclick="exportExcel()" style="padding:10px 20px; background:#6a0dad; color:white; border:none; border-radius:6px; cursor:pointer;">
+    Esporta Excel
+  </button>
+
+  <label for="excelInput" style="padding:10px 20px; background:#3498db; color:white; border:none; border-radius:6px; cursor:pointer; margin-left:10px;">
+    Importa Excel
+  </label>
+  <input type="file" id="excelInput" accept=".xlsx" onchange="importExcel(event)" style="display:none;">
+</div>
+
       text-align: center;
       color: #4b0082;
       margin-bottom: 20px;
