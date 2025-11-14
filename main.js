@@ -1,29 +1,34 @@
-// ===============================
-// main.js - VERSIONE COMPLETA
-// ===============================
+// main.js - completo, con import/export excel, update, formattazione
 
-import app from "./firebase-config.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,
   collection,
   getDocs,
-  updateDoc,
-  deleteDoc,
   setDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  doc,
+  deleteDoc,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// CONFIGURAZIONE FIREBASE
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID",
+};
+
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const tableBody = document.getElementById("tableBody");
+// ELEMENTI DOM
 const headerRow = document.getElementById("headerRow");
+const tableBody = document.getElementById("tableBody");
 
-// ---------------------------------
-// CONFIG TABELLA
-// ---------------------------------
-
-let columnsOrder = [
+// COLONNE (tipologia deve essere prima)
+const columns = [
   "tipologia",
   "nome",
   "prezzo_acquisto",
@@ -31,168 +36,96 @@ let columnsOrder = [
   "dividendi",
   "prelevato",
   "profitto",
-  "score"
+  "percentuale_12_mesi",
+  "rendimento_percentuale",
+  "payback",
+  "percentuale_portafoglio",
+  "score",
+  "azioni",
 ];
 
-const euroColumns = ["prezzo_acquisto", "prezzo_corrente", "dividendi", "prelevato"];
-const percentColumns = ["percentuale_12_mesi", "rendimento_percentuale", "payback", "percentuale_portafoglio"];
+// COLONNE DA NASCONDERE
+const hiddenColumns = [
+  "percentuale_12_mesi",
+  "rendimento_percentuale",
+  "payback",
+  "percentuale_portafoglio",
+];
 
-let showPercent = false;
-
-// ---------------------------------
-// CARICA I DATI
-// ---------------------------------
-
-async function loadData() {
-  const snap = await getDocs(collection(db, "portafoglio"));
-  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  // ricrea header
+// RENDER TABELLA
+function renderHeader() {
   headerRow.innerHTML = "";
-  columnsOrder.forEach(col => {
-    const th = document.createElement("th");
-    th.textContent = col;
-    headerRow.appendChild(th);
+  columns.forEach((col) => {
+    if (col === "azioni") {
+      headerRow.innerHTML += `<th>Azioni</th>`;
+    } else {
+      headerRow.innerHTML += `<th ${hiddenColumns.includes(col) ? "style='display:none'" : ""}>${col}</th>`;
+    }
+  });
+}
+
+function renderRow(id, data) {
+  const tr = document.createElement("tr");
+
+  columns.forEach((col) => {
+    const td = document.createElement("td");
+
+    if (col === "azioni") {
+      td.className = "actions";
+      td.innerHTML = `
+        <button onclick="editRecord('${id}')">Modifica</button>
+        <button onclick="deleteRecord('${id}')">Cancella</button>
+      `;
+    } else {
+      td.textContent = data[col] ?? "";
+
+      if (col === "profitto") {
+        const value = Number(data[col]);
+        td.style.color = value > 0 ? "green" : value < 0 ? "red" : "black";
+      }
+
+      if (col === "score") {
+        td.textContent = Number(data[col]).toFixed(2);
+      }
+
+      if (hiddenColumns.includes(col)) {
+        td.style.display = "none";
+      }
+    }
+
+    tr.appendChild(td);
   });
 
-  // colonna azioni
-  const thA = document.createElement("th");
-  thA.textContent = "Azioni";
-  headerRow.appendChild(thA);
+  tableBody.appendChild(tr);
+}
 
-  // righe
+// CARICAMENTO DATI
+async function loadData() {
   tableBody.innerHTML = "";
+  renderHeader();
 
-  docs.forEach((d, idx) => {
-    const row = tableBody.insertRow();
-
-    columnsOrder.forEach(key => {
-      const cell = row.insertCell();
-
-      // profitto calcolato
-      if (key === "profitto") {
-        const pa = parseFloat(d.prezzo_acquisto || 0);
-        const pc = parseFloat(d.prezzo_corrente || 0);
-        const div = parseFloat(d.dividendi || 0);
-        const pre = parseFloat(d.prelevato || 0);
-
-        const profitto = pc - pa + div + pre;
-
-        cell.textContent = profitto.toFixed(2) + " €";
-        cell.dataset.raw = profitto;
-
-        cell.style.color = profitto > 0 ? "green" : profitto < 0 ? "red" : "black";
-
-        return;
-      }
-
-      // valori normali
-      let val = d[key];
-
-      if (euroColumns.includes(key)) {
-        val = parseFloat(val || 0);
-        cell.textContent = val.toFixed(2) + " €";
-        cell.dataset.raw = val;
-
-      } else if (percentColumns.includes(key)) {
-        val = parseFloat(val || 0);
-        cell.textContent = val.toFixed(2) + " %";
-        cell.dataset.raw = val;
-        if (!showPercent) cell.style.display = "none";
-
-      } else if (key === "score") {
-        val = parseFloat(val || 0);
-        cell.textContent = val.toFixed(2);
-        cell.dataset.raw = val;
-
-      } else {
-        cell.textContent = val ?? "";
-        cell.dataset.raw = String(val ?? "").toLowerCase();
-      }
-    });
-
-    // Azioni
-    const cA = row.insertCell();
-    cA.classList.add("actions");
-
-    const btnE = document.createElement("button");
-    btnE.textContent = "Modifica";
-    btnE.onclick = () => openModalForEdit(d.id, d);
-
-    const btnD = document.createElement("button");
-    btnD.textContent = "Cancella";
-    btnD.onclick = () => deleteRow(d.id);
-
-    cA.appendChild(btnE);
-    cA.appendChild(btnD);
-  });
-
-  enableSorting();
-}
-
-// ---------------------------------
-// ORDINAMENTO
-// ---------------------------------
-
-function enableSorting() {
-  const headers = Array.from(headerRow.cells);
-
-  headers.forEach((th, index) => {
-    if (th.textContent === "Azioni") return;
-
-    th.style.cursor = "pointer";
-    th.dataset.asc = "true";
-
-    th.onclick = () => {
-      const asc = th.dataset.asc === "true";
-      sortColumn(index, asc);
-      th.dataset.asc = (!asc).toString();
-
-      headers.forEach(h => {
-        if (h !== th) h.textContent = h.textContent.replace(/ ↑| ↓/g, "");
-      });
-
-      th.textContent = th.textContent.replace(/ ↑| ↓/g, "") + (asc ? " ↑" : " ↓");
-    };
+  const querySnapshot = await getDocs(collection(db, "portafoglio"));
+  querySnapshot.forEach((docSnap) => {
+    renderRow(docSnap.id, docSnap.data());
   });
 }
 
-function sortColumn(colIndex, asc) {
-  const rows = Array.from(tableBody.rows);
+loadData();
 
-  const arr = rows.map(r => {
-    const raw = r.cells[colIndex].dataset.raw;
-    const num = parseFloat(raw);
-    return { row: r, key: isNaN(num) ? raw : num };
-  });
+// MODIFICA RECORD
+window.editRecord = async function (id) {
+  const docRef = doc(db, "portafoglio", id);
+  const docSnap = await getDocs(collection(db, "portafoglio"));
 
-  arr.sort((a, b) => {
-    const x = a.key, y = b.key;
-    return asc ? (x > y ? 1 : -1) : (x < y ? 1 : -1);
-  });
+  const data = (await getDocs(collection(db, "portafoglio"))).docs
+    .find((d) => d.id === id)
+    ?.data();
 
-  arr.forEach(el => tableBody.appendChild(el.row));
-}
+  if (!data) return alert("Errore: record non trovato");
 
-// ---------------------------------
-// CANCELLA
-// ---------------------------------
+  const newValues = {};
 
-async function deleteRow(id) {
-  if (!confirm("Vuoi cancellare questo record?")) return;
-  await deleteDoc(doc(db, "portafoglio", id));
-  loadData();
-}
-
-// ---------------------------------
-// MODIFICA (MODAL)
-// ---------------------------------
-
-function openModalForEdit(id, originalData) {
-  const modal = document.getElementById("editModal");
-  const fieldsDiv = document.getElementById("modalFields");
-
-  const fields = [
+  const fieldsToEdit = [
     "prezzo_acquisto",
     "prezzo_corrente",
     "dividendi",
@@ -200,95 +133,69 @@ function openModalForEdit(id, originalData) {
     "percentuale_12_mesi",
     "rendimento_percentuale",
     "payback",
-    "score"
+    "score",
   ];
 
-  fieldsDiv.innerHTML = "";
-
-  fields.forEach(f => {
-    const val = originalData[f] ?? "";
-    fieldsDiv.innerHTML += `
-      <label>${f}</label>
-      <input type="number" id="fld_${f}" value="${val}" step="0.01">
-    `;
-  });
-
-  modal.style.display = "flex";
-
-  document.getElementById("modalClose").onclick = () => {
-    modal.style.display = "none";
-  };
-
-  document.getElementById("modalSave").onclick = async () => {
-    const updated = { ...originalData };
-
-    fields.forEach(f => {
-      const el = document.getElementById("fld_" + f);
-      const val = el.value;
-      updated[f] = f === "score" ? parseFloat(parseFloat(val).toFixed(2)) : parseFloat(val);
-    });
-
-    await updateDoc(doc(db, "portafoglio", id), updated);
-    modal.style.display = "none";
-    loadData();
-  };
-}
-
-// ---------------------------------
-// EXPORT
-// ---------------------------------
-
-window.exportExcel = async function () {
-  const snap = await getDocs(collection(db, "portafoglio"));
-
-  const rows = snap.docs.map(d => {
-    const item = { ...d.data() };
-    delete item.profitto;
-    return item;
-  });
-
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Portafoglio");
-
-  XLSX.writeFile(wb, "portafoglio.xlsx");
-};
-
-// ---------------------------------
-// IMPORT
-// ---------------------------------
-
-window.importExcel = async function (event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf, { type: "array" });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  const data = XLSX.utils.sheet_to_json(sheet);
-
-  for (const item of data) {
-    delete item.profitto;
-
-    if (!item.nome) continue;
-
-    const snap = await getDocs(collection(db, "portafoglio"));
-
-    let existing = snap.docs.find(d => d.data().nome === item.nome);
-
-    if (existing) {
-      await updateDoc(doc(db, "portafoglio", existing.id), item);
-    } else {
-      await setDoc(doc(db, "portafoglio", crypto.randomUUID()), item);
-    }
+  for (const field of fieldsToEdit) {
+    const value = prompt(`Modifica ${field}:`, data[field] ?? "");
+    if (value === null) return; // annullato
+    newValues[field] = Number(value);
   }
 
-  alert("Import completato!");
+  newValues.profitto =
+    newValues.prezzo_corrente -
+    newValues.prezzo_acquisto +
+    newValues.dividendi +
+    newValues.prelevato;
+
+  await setDoc(doc(db, "portafoglio", id), {
+    ...data,
+    ...newValues,
+  });
+
   loadData();
 };
 
-// ---------------------------------
-// AVVIO
-// ---------------------------------
+// CANCELLA RECORD
+window.deleteRecord = async function (id) {
+  if (!confirm("Sei sicuro di voler cancellare questo record?")) return;
+  await deleteDoc(doc(db, "portafoglio", id));
+  loadData();
+};
 
-loadData();
+// EXPORT EXCEL
+window.exportExcel = async function () {
+  const workbook = XLSX.utils.book_new();
+  const querySnapshot = await getDocs(collection(db, "portafoglio"));
+
+  const data = querySnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  const sheet = XLSX.utils.json_to_sheet(data);
+  XLSX.utils.book_append_sheet(workbook, sheet, "Portafoglio");
+  XLSX.writeFile(workbook, "portafoglio.xlsx");
+};
+
+// IMPORT EXCEL CON CONTROLLO DUPLICATI
+window.importExcel = async function (event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet);
+
+    for (const row of json) {
+      const id = row.id || row.nome;
+      if (!id) continue;
+
+      await setDoc(doc(db, "portafoglio", id), row, { merge: true });
+    }
+
+    loadData();
+  };
+
+  reader.readAsArrayBuffer(file);
+};
