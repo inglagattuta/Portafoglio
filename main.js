@@ -1,38 +1,124 @@
-body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin-top: 50px;
-  background-color: #D8BFD8; /* viola chiaro */
-  color: #1D1D1D;
+import app from './firebase-config.js?v=8';
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const db = getFirestore(app);
+const container = document.getElementById('table-container');
+
+// Colonne nell'ordine desiderato
+const columnsOrder = [
+  "nome",
+  "prezzo_acquisto",
+  "prezzo_corrente",
+  "tipologia",
+  "dividendi",
+  "prelevato",
+  "profitto",
+  "percentuale_12_mesi",
+  "rendimento_percentuale",
+  "payback",
+  "percentuale_portafoglio",
+  "score"
+];
+
+// Colonne in € e %
+const euroColumns = ["prezzo_acquisto", "prezzo_corrente", "dividendi", "prelevato", "profitto"];
+const percentColumns = ["percentuale_12_mesi", "rendimento_percentuale", "payback", "percentuale_portafoglio"];
+
+async function loadData() {
+  try {
+    const querySnapshot = await getDocs(collection(db, "portafoglio"));
+    if (querySnapshot.empty) {
+      container.innerHTML = "<p>Nessun dato trovato nella collection 'portafoglio'!</p>";
+      return;
+    }
+
+    const table = document.createElement('table');
+
+    // Intestazione tabella
+    const header = table.insertRow();
+    columnsOrder.forEach(key => {
+      const th = document.createElement('th');
+      th.textContent = key;
+      th.style.cursor = "pointer";
+      header.appendChild(th);
+    });
+
+    // Aggiungiamo i dati
+    querySnapshot.forEach((doc, rIndex) => {
+      const data = doc.data();
+      const row = table.insertRow();
+      columnsOrder.forEach(key => {
+        const cell = row.insertCell();
+        let value = data[key] ?? "";
+
+        // formattazione numerica a 2 decimali
+        if (typeof value === "number") {
+          value = value.toFixed(2);
+
+          // aggiungi simbolo € o %
+          if (euroColumns.includes(key)) value = value + " €";
+          else if (percentColumns.includes(key)) value = value + " %";
+        }
+
+        cell.textContent = value;
+        cell.style.backgroundColor = rIndex % 2 === 0 ? "#F0F0F0" : "#E8E8E8"; 
+      });
+    });
+
+    container.innerHTML = "";
+    container.appendChild(table);
+
+    // Ordinamento colonne con frecce e evidenziazione
+    columnsOrder.forEach((key, index) => {
+      let asc = true;
+      const th = header.cells[index];
+      th.addEventListener("click", () => {
+        sortTable(table, index, asc);
+
+        // reset header e celle
+        Array.from(header.cells).forEach((cell, i) => {
+          cell.style.background = "linear-gradient(to bottom, #FFB300, #FFC857)";
+          cell.textContent = columnsOrder[i];
+        });
+        Array.from(table.rows).forEach((row, rIndex) => {
+          if (rIndex === 0) return;
+          Array.from(row.cells).forEach((cell, cIndex) => {
+            cell.style.border = "none";
+            cell.style.backgroundColor = rIndex % 2 === 0 ? "#F0F0F0" : "#E8E8E8";
+          });
+        });
+
+        // evidenzia colonna ordinata
+        const arrow = asc ? " ↑" : " ↓";
+        th.textContent = key + arrow;
+        Array.from(table.rows).forEach((row, rIndex) => {
+          if (rIndex === 0) return;
+          const cell = row.cells[index];
+          cell.style.backgroundColor = asc ? "#C6F6D5" : "#FFE4B2"; 
+          cell.style.border = "1px solid #999"; 
+        });
+
+        asc = !asc;
+      });
+    });
+
+  } catch (error) {
+    console.error("Errore Firestore:", error);
+    container.innerHTML = "<p>Errore connessione Firestore!</p>";
+  }
 }
 
-h1 {
-  color: #0DA8BB;
-  font-size: 2.5em;
-  margin-bottom: 10px;
+// Ordinamento colonne
+function sortTable(table, colIndex, asc = true) {
+  const rows = Array.from(table.rows).slice(1);
+  rows.sort((a, b) => {
+    let x = a.cells[colIndex].textContent.replace(" ↑", "").replace(" ↓", "").replace(" €", "").replace(" %", "");
+    let y = b.cells[colIndex].textContent.replace(" ↑", "").replace(" ↓", "").replace(" €", "").replace(" %", "");
+    x = isNaN(x) ? x : parseFloat(x);
+    y = isNaN(y) ? y : parseFloat(y);
+    return (x > y ? 1 : -1) * (asc ? 1 : -1);
+  });
+  rows.forEach(row => table.appendChild(row));
 }
 
-table {
-  margin: 20px auto;
-  border-collapse: collapse;
-  width: 95%;
-  box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-}
-
-th, td {
-  padding: 8px 12px;
-}
-
-th {
-  background: linear-gradient(to bottom, #FFB300, #FFC857);
-  color: #FFFFFF;
-  transition: background-color 0.3s ease;
-}
-
-th:hover {
-  background-color: #FF8C42;
-}
-
-tr td {
-  border: none;
-}
+loadData();
