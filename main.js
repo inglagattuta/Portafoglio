@@ -357,11 +357,13 @@ async function loadData(){
           td.textContent = fmtPerc(v);
           td.dataset.raw = v;
         }
-        else if (col === "score") {
-          const v = Number(d[col] || 0);
-          td.textContent = fmtScore(v);
-          td.dataset.raw = v;
-        } else {
+        else if (col === "score"){
+  const v = Number(d[col]||0);
+  td.textContent = fmtScore(v);
+  td.dataset.raw = v;
+  td.classList.add("score-cell");  // <-- aggiunta per il colore
+}
+else {
           td.textContent = d[col] ?? "";
           td.dataset.raw = (d[col] ?? "").toString();
         }
