@@ -202,6 +202,30 @@ tbody tr:nth-child(even) { background: #fbfdff; }
 @media (max-width:600px) {
   .chart-container canvas { height:220px !important; }
 }
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.chart-box {
+  background: #1f2937;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.chart-box h3 {
+  margin-bottom: 12px;
+  text-align: center;
+  color: #e5e7eb;
+  font-size: 1.1rem;
+}
+
+.chart-box canvas {
+  max-height: 260px !important;
+}
 
 /* ===== UTILITY / DEBUG ===== */
 /* Se il CSS non viene applicato, abilita bordo visivo per capire cosa carica */
