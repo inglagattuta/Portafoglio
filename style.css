@@ -7,6 +7,18 @@
   box-sizing: border-box;
   font-family: system-ui, Arial, sans-serif;
 }
+.dashboard-btn {
+  padding: 10px 15px;
+  background: #8b5cf6;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+.dashboard-btn:hover {
+  opacity: 0.85;
+}
 
 body {
   background: #f5f6fa;
