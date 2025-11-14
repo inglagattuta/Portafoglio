@@ -27,6 +27,17 @@ argin-left: 10px;
 .dashboard-btn:hover {
   opacity: 0.85;
 }
+.controls button,
+.file-label {
+  background-color: #3b82f6; /* blu */
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+}
 
 body {
   background: #f5f6fa;
