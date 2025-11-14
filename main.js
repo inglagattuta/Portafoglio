@@ -1,21 +1,17 @@
-import app from './firebase-config.js?v=12';
-import { getFirestore, collection, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import app from './firebase-config.js?v=13';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const db = getFirestore(app);
 const container = document.getElementById('table-container');
 
-// Colonne ordine
 let columnsOrder = [
   "tipologia", "nome", "prezzo_acquisto", "prezzo_corrente",
   "dividendi", "prelevato", "profitto", "score",
   "percentuale_12_mesi", "rendimento_percentuale", "payback", "percentuale_portafoglio"
 ];
 
-// Colonne in € e %
 const euroColumns = ["prezzo_acquisto", "prezzo_corrente", "dividendi", "prelevato", "profitto"];
 const percentColumns = ["percentuale_12_mesi", "rendimento_percentuale", "payback", "percentuale_portafoglio"];
-
-// Stato toggle colonne %
 let showPercent = false;
 
 async function loadData() {
@@ -26,7 +22,6 @@ async function loadData() {
       return;
     }
 
-    // Pulsanti toggle e import/export
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "Mostra colonne %";
     toggleBtn.style.marginRight = "10px";
@@ -56,9 +51,8 @@ async function loadData() {
     const table = document.createElement('table');
     container.appendChild(table);
 
-    // Header tabella
     const header = table.insertRow();
-    columnsOrder.forEach(key => {
+    columnsOrder.concat(["Azioni"]).forEach(key => {
       const th = document.createElement('th');
       th.textContent = key;
       th.style.cursor = "pointer";
@@ -66,10 +60,10 @@ async function loadData() {
       header.appendChild(th);
     });
 
-    // Aggiungi dati
     querySnapshot.forEach((docSnap, rIndex) => {
       const data = docSnap.data();
       const row = table.insertRow();
+
       columnsOrder.forEach(key => {
         const cell = row.insertCell();
         let value = data[key] ?? "";
@@ -89,9 +83,23 @@ async function loadData() {
         cell.style.backgroundColor = rIndex % 2 === 0 ? "#F0F0F0" : "#E8E8E8";
         if (percentColumns.includes(key) && !showPercent) cell.style.display = "none";
       });
+
+      // Colonna Azioni
+      const actionCell = row.insertCell();
+      const modifyBtn = document.createElement("button");
+      modifyBtn.textContent = "Modifica";
+      modifyBtn.onclick = () => editRow(docSnap.id, data);
+      modifyBtn.style.marginRight = "5px";
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Cancella";
+      deleteBtn.onclick = () => deleteRow(docSnap.id);
+
+      actionCell.appendChild(modifyBtn);
+      actionCell.appendChild(deleteBtn);
     });
 
-    // Ordinamento con frecce
+    // Ordinamento colonne con frecce
     columnsOrder.forEach((key, index) => {
       let asc = true;
       const th = header.cells[index];
@@ -100,7 +108,7 @@ async function loadData() {
 
         Array.from(header.cells).forEach((cell, i) => {
           cell.style.background = "linear-gradient(to bottom, #FFB300, #FFC857)";
-          cell.textContent = columnsOrder[i];
+          cell.textContent = i < columnsOrder.length ? columnsOrder[i] : "Azioni";
           if (percentColumns.includes(columnsOrder[i]) && !showPercent) cell.style.display = "none";
         });
 
@@ -138,12 +146,39 @@ async function loadData() {
   }
 }
 
+// Funzioni Azioni
+function editRow(id, data) {
+  const updatedData = { ...data };
+  for (const key of Object.keys(data)) {
+    if (key === "score") continue; // opzionale
+    const newVal = prompt(`Modifica ${key}`, data[key]);
+    if (newVal !== null) {
+      updatedData[key] = isNaN(data[key]) ? newVal : parseFloat(newVal);
+    }
+  }
+  const docRef = doc(db, "portafoglio", id);
+  setDoc(docRef, updatedData).then(() => {
+    alert("Record aggiornato!");
+    loadData();
+  });
+}
+
+function deleteRow(id) {
+  if (confirm("Sei sicuro di voler cancellare questo record?")) {
+    const docRef = doc(db, "portafoglio", id);
+    deleteDoc(docRef).then(() => {
+      alert("Record cancellato!");
+      loadData();
+    });
+  }
+}
+
 // Toggle colonne %
 function togglePercentColumns(table) {
   const rows = Array.from(table.rows);
-  rows.forEach((row) => {
+  rows.forEach(row => {
     Array.from(row.cells).forEach((cell, cIndex) => {
-      const key = columnsOrder[cIndex];
+      const key = cIndex < columnsOrder.length ? columnsOrder[cIndex] : null;
       if (percentColumns.includes(key)) {
         cell.style.display = showPercent ? "" : "none";
       }
@@ -164,7 +199,7 @@ function sortTable(table, colIndex, asc = true) {
   rows.forEach(row => table.appendChild(row));
 }
 
-// Export Excel
+// Export/Import Excel
 function exportToExcel() {
   getDocs(collection(db, "portafoglio")).then(querySnapshot => {
     const data = [];
@@ -176,7 +211,6 @@ function exportToExcel() {
   }).catch(err => console.error(err));
 }
 
-// Import Excel
 function importFromExcel(file) {
   const reader = new FileReader();
   reader.onload = async (e) => {
@@ -196,5 +230,4 @@ function importFromExcel(file) {
   reader.readAsArrayBuffer(file);
 }
 
-// Avvia il caricamento tabella
 loadData();
