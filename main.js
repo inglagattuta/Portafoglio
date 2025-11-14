@@ -1,10 +1,10 @@
-import app from './firebase-config.js?v=10';
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import app from './firebase-config.js?v=12';
+import { getFirestore, collection, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const db = getFirestore(app);
 const container = document.getElementById('table-container');
 
-// Colonne nell'ordine desiderato
+// Colonne ordine
 let columnsOrder = [
   "tipologia", "nome", "prezzo_acquisto", "prezzo_corrente",
   "dividendi", "prelevato", "profitto", "score",
@@ -15,7 +15,7 @@ let columnsOrder = [
 const euroColumns = ["prezzo_acquisto", "prezzo_corrente", "dividendi", "prelevato", "profitto"];
 const percentColumns = ["percentuale_12_mesi", "rendimento_percentuale", "payback", "percentuale_portafoglio"];
 
-// Stato toggle
+// Stato toggle colonne %
 let showPercent = false;
 
 async function loadData() {
@@ -26,22 +26,37 @@ async function loadData() {
       return;
     }
 
-    // Pulsante toggle
+    // Pulsanti toggle e import/export
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "Mostra colonne %";
-    toggleBtn.style.marginBottom = "10px";
+    toggleBtn.style.marginRight = "10px";
     toggleBtn.onclick = () => {
       showPercent = !showPercent;
       toggleBtn.textContent = showPercent ? "Nascondi colonne %" : "Mostra colonne %";
       togglePercentColumns(table);
     };
+
+    const exportBtn = document.createElement("button");
+    exportBtn.textContent = "Export Excel";
+    exportBtn.style.marginRight = "10px";
+    exportBtn.onclick = exportToExcel;
+
+    const importBtn = document.createElement("input");
+    importBtn.type = "file";
+    importBtn.accept = ".xlsx,.xls";
+    importBtn.onchange = (e) => {
+      if (e.target.files.length) importFromExcel(e.target.files[0]);
+    };
+
     container.innerHTML = "";
     container.appendChild(toggleBtn);
+    container.appendChild(exportBtn);
+    container.appendChild(importBtn);
 
     const table = document.createElement('table');
     container.appendChild(table);
 
-    // Intestazione tabella
+    // Header tabella
     const header = table.insertRow();
     columnsOrder.forEach(key => {
       const th = document.createElement('th');
@@ -51,9 +66,9 @@ async function loadData() {
       header.appendChild(th);
     });
 
-    // Aggiungiamo i dati
-    querySnapshot.forEach((doc, rIndex) => {
-      const data = doc.data();
+    // Aggiungi dati
+    querySnapshot.forEach((docSnap, rIndex) => {
+      const data = docSnap.data();
       const row = table.insertRow();
       columnsOrder.forEach(key => {
         const cell = row.insertCell();
@@ -61,11 +76,10 @@ async function loadData() {
 
         if (typeof value === "number") {
           value = value.toFixed(2);
-          if (euroColumns.includes(key)) value = value + " €";
-          else if (percentColumns.includes(key)) value = value + " %";
+          if (euroColumns.includes(key)) value += " €";
+          else if (percentColumns.includes(key)) value += " %";
         }
 
-        // Colorazione profitto
         if (key === "profitto") {
           let num = parseFloat(value);
           if (!isNaN(num)) cell.style.color = num > 0 ? "green" : num < 0 ? "red" : "#000";
@@ -73,24 +87,23 @@ async function loadData() {
 
         cell.textContent = value;
         cell.style.backgroundColor = rIndex % 2 === 0 ? "#F0F0F0" : "#E8E8E8";
-
         if (percentColumns.includes(key) && !showPercent) cell.style.display = "none";
       });
     });
 
-    // Ordinamento colonne con frecce e evidenziazione
+    // Ordinamento con frecce
     columnsOrder.forEach((key, index) => {
       let asc = true;
       const th = header.cells[index];
       th.addEventListener("click", () => {
         sortTable(table, index, asc);
 
-        // reset header e celle
         Array.from(header.cells).forEach((cell, i) => {
           cell.style.background = "linear-gradient(to bottom, #FFB300, #FFC857)";
           cell.textContent = columnsOrder[i];
           if (percentColumns.includes(columnsOrder[i]) && !showPercent) cell.style.display = "none";
         });
+
         Array.from(table.rows).forEach((row, rIndex) => {
           if (rIndex === 0) return;
           Array.from(row.cells).forEach((cell, cIndex) => {
@@ -104,7 +117,6 @@ async function loadData() {
           });
         });
 
-        // evidenzia colonna ordinata
         const arrow = asc ? " ↑" : " ↓";
         th.textContent = key + arrow;
         Array.from(table.rows).forEach((row, rIndex) => {
@@ -121,15 +133,15 @@ async function loadData() {
     });
 
   } catch (error) {
-    console.error("Errore Firestore:", error);
+    console.error(error);
     container.innerHTML = "<p>Errore connessione Firestore!</p>";
   }
 }
 
-// Funzione per mostrare/nascondere colonne %
+// Toggle colonne %
 function togglePercentColumns(table) {
   const rows = Array.from(table.rows);
-  rows.forEach((row, rIndex) => {
+  rows.forEach((row) => {
     Array.from(row.cells).forEach((cell, cIndex) => {
       const key = columnsOrder[cIndex];
       if (percentColumns.includes(key)) {
@@ -139,12 +151,12 @@ function togglePercentColumns(table) {
   });
 }
 
-// Ordinamento colonne
+// Ordinamento
 function sortTable(table, colIndex, asc = true) {
   const rows = Array.from(table.rows).slice(1);
   rows.sort((a, b) => {
-    let x = a.cells[colIndex].textContent.replace(" ↑", "").replace(" ↓", "").replace(" €", "").replace(" %", "");
-    let y = b.cells[colIndex].textContent.replace(" ↑", "").replace(" ↓", "").replace(" €", "").replace(" %", "");
+    let x = a.cells[colIndex].textContent.replace(" ↑","").replace(" ↓","").replace(" €","").replace(" %","");
+    let y = b.cells[colIndex].textContent.replace(" ↑","").replace(" ↓","").replace(" €","").replace(" %","");
     x = isNaN(x) ? x : parseFloat(x);
     y = isNaN(y) ? y : parseFloat(y);
     return (x > y ? 1 : -1) * (asc ? 1 : -1);
@@ -152,4 +164,37 @@ function sortTable(table, colIndex, asc = true) {
   rows.forEach(row => table.appendChild(row));
 }
 
+// Export Excel
+function exportToExcel() {
+  getDocs(collection(db, "portafoglio")).then(querySnapshot => {
+    const data = [];
+    querySnapshot.forEach(docSnap => data.push(docSnap.data()));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Portafoglio");
+    XLSX.writeFile(wb, "Portafoglio.xlsx");
+  }).catch(err => console.error(err));
+}
+
+// Import Excel
+function importFromExcel(file) {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+    for (const item of jsonData) {
+      const docRef = doc(db, "portafoglio", item.nome || crypto.randomUUID());
+      await setDoc(docRef, item);
+    }
+    alert("Import completato!");
+    loadData();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Avvia il caricamento tabella
 loadData();
