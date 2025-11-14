@@ -382,11 +382,19 @@ async function loadData(){
           td.dataset.raw = v;
         }
         else if (col === "score") {
-          const v = Number(d[col]||0);
-          td.textContent = fmtScore(v);
-          td.dataset.raw = v;
-          td.classList.add("score-cell");   // ✔ colore score
-        }
+  const v = Number(d[col] || 0);
+
+  td.textContent = fmtScore(v);
+  td.dataset.raw = v;
+
+  td.classList.add("score-cell");
+
+  // Colore dinamico
+  if (v >= 12) td.classList.add("score-high");
+  else if (v >= 8) td.classList.add("score-medium");
+  else td.classList.add("score-low");
+}
+
         else {
           td.textContent = d[col] ?? "";
           td.dataset.raw = (d[col] ?? "").toString();
