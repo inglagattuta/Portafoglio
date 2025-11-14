@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Portafoglio</title>
-  <link rel="stylesheet" href="style.css?v=3">
+
+  <!-- CSS aggiornato -->
+  <link rel="stylesheet" href="style.css?v=4">
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -19,10 +22,12 @@
     <!-- CONTROLLI -->
     <div class="controls">
       <button onclick="window.location.href='index.html'">🏠 Home</button>
+
       <label class="file-label">
         📥 Importa Excel
         <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
       </label>
+
       <button onclick="exportExcel()">📤 Esporta Excel</button>
     </div>
 
@@ -50,6 +55,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js"></script>
+  <!-- JS con cache busting -->
+  <script type="module" src="dashboard.js?v=4"></script>
 </body>
 </html>
