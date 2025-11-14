@@ -1,3 +1,27 @@
+table {
+  font-family: "Inter", "Roboto", "Segoe UI", Arial, sans-serif;
+  font-size: 14px;          /* leggermente più piccolo */
+  font-weight: 400;         /* professionale e pulito */
+  color: #222;              /* testo più elegante */
+}
+
+table td, table th {
+  padding: 6px 10px;        /* più ordinato */
+  border-bottom: 1px solid #e0e0e0;
+}
+
+table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+button {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+
 /* Sfondo pagina */
 body {
   font-family: system-ui, Avenir, Helvetica, sans-serif;
