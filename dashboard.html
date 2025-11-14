@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Portafoglio</title>
+  <link rel="stylesheet" href="style.css?v=3">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER UGUALE A INDEX -->
+    <header>
+      <h1>💼 Portfolio Manager - Dashboard</h1>
+      <p class="subtitle">Francesco La Gattuta</p>
+    </header>
+
+    <!-- CONTROLLI -->
+    <div class="controls">
+      <button onclick="window.location.href='index.html'">🏠 Home</button>
+      <label class="file-label">
+        📥 Importa Excel
+        <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
+      </label>
+      <button onclick="exportExcel()">📤 Esporta Excel</button>
+    </div>
+
+    <!-- GRAFICI -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h2>Allocazione per Categoria</h2>
+        <canvas id="chartCategory"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h2>Investito vs Valore Attuale</h2>
+        <canvas id="chartInvested"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h2>Top 5 Titoli per Score</h2>
+        <canvas id="chartTopScore"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h2>Percentuale Investito per Tipologia</h2>
+        <canvas id="chartByType"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
