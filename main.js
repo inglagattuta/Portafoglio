@@ -270,12 +270,11 @@ async function openEditModal(docId){
     alert("Errore apertura modal (vedi console).");
   }
 }
-
 // -----------------
-// EXPORT / IMPORT
+// EXPORT EXCEL
 // -----------------
-async function exportExcel(){
-  try{
+window.exportExcel = async function () {
+  try {
     const snap = await getDocs(collection(db,"portafoglio"));
     const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -286,14 +285,17 @@ async function exportExcel(){
     console.error("export error", e);
     alert("Errore export (vedi console)");
   }
-}
+};
 
-// import: overwrite only existing by nome (case-insensitive); do NOT create new
-async function importExcelHandler(event){
+// -----------------
+// IMPORT EXCEL (overwrite esistenti)
+// -----------------
+window.importExcel = async function(event){
   const file = event.target.files?.[0];
   if (!file) return alert("Nessun file selezionato");
+
   try{
-    // map existing names -> id
+    // Mappa nomi esistenti → ID
     const allSnap = await getDocs(collection(db,"portafoglio"));
     const nameMap = new Map();
     allSnap.docs.forEach(d => {
@@ -307,71 +309,115 @@ async function importExcelHandler(event){
     const json = XLSX.utils.sheet_to_json(sheet);
 
     let updated=0, skipped=0;
+
     for (const row of json){
       const nm = (row.nome || "").toString().toLowerCase();
       if (!nm) { skipped++; continue; }
       const id = nameMap.get(nm);
-      if (!id) { skipped++; continue; } // do not create new
-      // normalize numeric fields
-      ["prezzo_acquisto","prezzo_corrente","dividendi","prelevato","percentuale_12_mesi","rendimento_percentuale","payback","percentuale_portafoglio","score"].forEach(k=>{
-        if (row[k] !== undefined && row[k] !== null && row[k] !== "") row[k] = Number(row[k]);
+      if (!id) { skipped++; continue; }
+
+      ["prezzo_acquisto","prezzo_corrente","dividendi","prelevato",
+       "percentuale_12_mesi","rendimento_percentuale","payback",
+       "percentuale_portafoglio","score"].forEach(k=>{
+        if (row[k] !== undefined && row[k] !== null && row[k] !== "")
+          row[k] = Number(row[k]);
       });
+
       delete row.profitto;
+
       await updateDoc(doc(db,"portafoglio",id), row);
       updated++;
     }
 
     alert(`Import completato. Aggiornati: ${updated}. Saltati: ${skipped}.`);
     await loadData();
-  } catch(e){
+  }
+  catch(e){
     console.error("import error", e);
     alert("Errore import (vedi console)");
   }
+};
+
+// -----------------
+// RENDER RIGHE + STATS
+// -----------------
+function renderRow(id, data) {
+  const tr = document.createElement("tr");
+
+  columns.forEach(col => {
+    const td = document.createElement("td");
+    if (hiddenCols.has(col)) td.style.display = "none";
+
+    if (col === "profitto") {
+      const pa = Number(data.prezzo_acquisto || 0);
+      const pc = Number(data.prezzo_corrente || 0);
+      const div = Number(data.dividendi || 0);
+      const pre = Number(data.prelevato || 0);
+      const profitto = pc - pa + div + pre;
+
+      td.textContent = fmtEuro(profitto);
+      td.dataset.raw = profitto;
+      td.style.color = profitto > 0 ? "lime" : profitto < 0 ? "red" : "white";
+    }
+    else if (euroCols.has(col)) {
+      const v = Number(data[col] || 0);
+      td.textContent = fmtEuro(v);
+      td.dataset.raw = v;
+    }
+    else if (percentCols.has(col)) {
+      const v = Number(data[col] || 0);
+      td.textContent = fmtPerc(v);
+      td.dataset.raw = v;
+    }
+    else if (col === "score") {
+      const v = Number(data[col] || 0);
+      td.textContent = fmtScore(v);
+      td.dataset.raw = v;
+    }
+    else {
+      td.textContent = data[col] ?? "";
+      td.dataset.raw = data[col] ?? "";
+    }
+
+    tr.appendChild(td);
+  });
+
+  // Azioni
+  const tdA = document.createElement("td");
+
+  const btnEdit = document.createElement("button");
+  btnEdit.textContent = "Modifica";
+  btnEdit.onclick = () => openEditModal(id);
+
+  const btnDel = document.createElement("button");
+  btnDel.textContent = "Cancella";
+  btnDel.onclick = async () => {
+    if (!confirm("Confermi cancellazione?")) return;
+    await deleteDoc(doc(db,"portafoglio",id));
+    await loadData();
+  };
+
+  tdA.appendChild(btnEdit);
+  tdA.appendChild(btnDel);
+  tr.appendChild(tdA);
+
+  tableBody.appendChild(tr);
 }
 
-// wire up
-btnExport.addEventListener("click", exportExcel);
-fileInput.addEventListener("change", importExcelHandler);
-btnReload.addEventListener("click", loadData);
-
-// start
+// -----------------
+// LOAD DATA
+// -----------------
 async function loadData() {
   tableBody.innerHTML = "";
   renderHeader();
 
-  const querySnapshot = await getDocs(collection(db, "portafoglio"));
+  const snap = await getDocs(collection(db, "portafoglio"));
 
-  querySnapshot.forEach((docSnap) => {
+  snap.forEach(docSnap => {
     renderRow(docSnap.id, docSnap.data());
   });
 
-  updateStats(querySnapshot.docs);
+  updateStats(snap.docs);
 }
 
-function updateStats(docs) {
-  let totaleInvestito = 0;
-  let valoreAttuale = 0;
-  let totaleDividendi = 0;
-  let totalePrelevato = 0;
-
-  docs.forEach(d => {
-    const data = d.data();
-
-    totaleInvestito += Number(data.prezzo_acquisto || 0);
-    valoreAttuale += Number(data.prezzo_corrente || 0);
-    totaleDividendi += Number(data.dividendi || 0);
-    totalePrelevato += Number(data.prelevato || 0);
-  });
-
-  const profitto =
-    valoreAttuale - totaleInvestito + totaleDividendi + totalePrelevato;
-
-  document.getElementById("totInvestito").textContent = totaleInvestito.toFixed(2) + " €";
-  document.getElementById("valoreAttuale").textContent = valoreAttuale.toFixed(2) + " €";
-  document.getElementById("totDividendi").textContent = totaleDividendi.toFixed(2) + " €";
-  document.getElementById("totProfitto").textContent = profitto.toFixed(2) + " €";
-
-  document.getElementById("totProfitto").style.color =
-    profitto >= 0 ? "lime" : "red";
-}
-
+loadData();
