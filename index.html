@@ -5,7 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portfolio Manager</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- ★ CSS AGGIUNTIVO PER SCORE E LOOK MIGLIORE ★ -->
+  <style>
+    /* Stile celle SCORE */
+    .score-cell {
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 5px 10px;
+      border-radius: 6px;
+      text-align: center;
+      color: white;
+      display: inline-block;
+      min-width: 55px;
+    }
+    .score-high {
+      background-color: #0d6efd; /* Blu professionale */
+    }
+    .score-medium {
+      background-color: #198754; /* Verde */
+    }
+    .score-low {
+      background-color: #dc3545; /* Rosso */
+    }
+
+    /* Righe verdi o rosse in base al profitto */
+    tr.green-row td {
+      background-color: #e9f8ec !important;
+    }
+    tr.red-row td {
+      background-color: #ffecec !important;
+    }
+
+    /* Font più professionale e leggermente più piccolo in tabella */
+    table td, table th {
+      font-size: 0.9rem;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -52,6 +91,7 @@
 
   <!-- Libreria Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <!-- Script principale -->
   <script type="module" src="main.js"></script>
 </body>
