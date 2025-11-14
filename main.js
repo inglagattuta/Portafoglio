@@ -116,6 +116,10 @@ async function loadData() {
         value = parseFloat(value).toFixed(2) + " €";
       }
 
+      if (key === "score" && value !== undefined) {
+        value = parseFloat(value).toFixed(2);
+      }
+
       cell.textContent = value ?? "";
     });
   });
@@ -124,22 +128,82 @@ async function loadData() {
 loadData();
 
 // ================================
-// MODIFICA RECORD
+// MODALE PER MODIFICA RECORD
 // ================================
-async function editRow(id, originalData) {
-  let newData = { ...originalData };
+function openModal(id, originalData) {
+  let modal = document.getElementById("editModal");
 
-  for (const key of Object.keys(originalData)) {
-    if (key === "profitto" || key === "score") continue;
-
-    const nuovo = prompt(`Modifica ${key}:`, originalData[key]);
-    if (nuovo !== null) {
-      newData[key] = isNaN(nuovo) ? nuovo : parseFloat(nuovo);
-    }
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "editModal";
+    modal.style.position = "fixed";
+    modal.style.top = "0";
+    modal.style.left = "0";
+    modal.style.width = "100%";
+    modal.style.height = "100%";
+    modal.style.background = "rgba(0,0,0,0.5)";
+    modal.style.display = "flex";
+    modal.style.alignItems = "center";
+    modal.style.justifyContent = "center";
+    modal.innerHTML = `
+      <div id="modalContent" style="background:white;padding:20px;border-radius:10px;width:300px;">
+        <h3>Modifica dati</h3>
+        <div id="modalFields"></div>
+        <button id="saveBtn">Salva</button>
+        <button id="closeBtn">Chiudi</button>
+      </div>`;
+    document.body.appendChild(modal);
   }
 
-  await updateDoc(doc(db, "portafoglio", id), newData);
-  loadData();
+  const fields = [
+    "prezzo_acquisto",
+    "prezzo_corrente",
+    "dividendi",
+    "prelevato",
+    "percentuale_12_mesi",
+    "rendimento_percentuale",
+    "payback",
+    "score"
+  ];
+
+  const modalFields = document.getElementById("modalFields");
+  modalFields.innerHTML = "";
+
+  fields.forEach(f => {
+    const val = originalData[f] ?? "";
+    modalFields.innerHTML += `
+      <label>${f}</label>
+      <input id="${f}" type="number" step="0.01" value="${val}" style="width:100%;margin-bottom:10px;" />
+    `;
+  });
+
+  modal.style.display = "flex";
+
+  document.getElementById("closeBtn").onclick = () => {
+    modal.style.display = "none";
+  };
+
+  document.getElementById("saveBtn").onclick = async () => {
+    let newData = { ...originalData };
+
+    fields.forEach(f => {
+      let value = parseFloat(document.getElementById(f).value);
+      if (!isNaN(value)) newData[f] = value;
+    });
+
+    newData.score = parseFloat(newData.score).toFixed(2);
+
+    await updateDoc(doc(db, "portafoglio", id), newData);
+    modal.style.display = "none";
+    loadData();
+  };
+}
+
+async function editRow(id, originalData) {
+  openModal(id, originalData);
+}
+}
+}
 }
 
 // ================================
