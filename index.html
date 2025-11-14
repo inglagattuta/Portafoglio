@@ -1,59 +1,73 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portfolio Manager</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Manager</title>
+
+  <!-- CSS con busting cache -->
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
+
 <body>
-<div class="container">
-<header>
-<h1>💼 Portfolio Manager</h1>
-      
+  <div class="container">
+
+    <header>
+      <h1>💼 Portfolio Manager</h1>
       <p class="subtitle">Francesco La Gattuta</p>
-</header>
+    </header>
 
-<div class="stats-grid">
-<div class="stat-card">
-<div class="stat-label">Totale Investito</div>
-<div class="stat-value" id="totInvestito">0.00 €</div>
-</div>
-<div class="stat-card">
-<div class="stat-label">Valore Attuale</div>
-<div class="stat-value" id="valoreAttuale">0.00 €</div>
-</div>
-<div class="stat-card">
-<div class="stat-label">Totale Dividendi</div>
-<div class="stat-value" id="totDividendi">0.00 €</div>
-</div>
-<div class="stat-card">
-<div class="stat-label">Profitto Totale</div>
-<div class="stat-value" id="totProfitto">0.00 €</div>
-</div>
-</div>
+    <!-- STATISTICHE -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Totale Investito</div>
+        <div class="stat-value" id="totInvestito">0.00 €</div>
+      </div>
 
-<div class="controls">
-<label class="file-label">
-📥 Importa Excel
-<input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
-</label>
-<button onclick="exportExcel()">📤 Esporta Excel</button>
-</div>
+      <div class="stat-card">
+        <div class="stat-label">Valore Attuale</div>
+        <div class="stat-value" id="valoreAttuale">0.00 €</div>
+      </div>
 
-<div class="table-container">
-<table>
-<thead>
-<tr id="headerRow"></tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
-</div>
-</div>
+      <div class="stat-card">
+        <div class="stat-label">Totale Dividendi</div>
+        <div class="stat-value" id="totDividendi">0.00 €</div>
+      </div>
 
-<!-- Libreria Excel -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<!-- Script principale -->
-<script type="module" src="main.js"></script>
+      <div class="stat-card">
+        <div class="stat-label">Profitto Totale</div>
+        <div class="stat-value" id="totProfitto">0.00 €</div>
+      </div>
+    </div>
+
+    <!-- CONTROLLI -->
+    <div class="controls">
+      <label class="file-label">
+        📥 Importa Excel
+        <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
+      </label>
+      <button onclick="exportExcel()">📤 Esporta Excel</button>
+    </div>
+
+    <!-- TABELLA -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr id="headerRow"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Modal root (opzionale ma raccomandato) -->
+  <div id="modal-root"></div>
+
+  <!-- Libreria Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- JS con busting cache -->
+  <script type="module" src="main.js?v=2"></script>
 </body>
 </html>
