@@ -899,8 +899,14 @@
       event.target.value = '';
     };
 
-    // Make applyFilters globally accessible
+    // Make functions globally accessible
     window.applyFilters = applyFilters;
+    window.importExcel = importExcel;
+    window.exportExcel = exportExcel;
+    window.openAddModal = openAddModal;
+    window.editRecord = editRecord;
+    window.deleteRecord = deleteRecord;
+    window.closeModal = closeModal;
 
     // Initialize
     loadData();
