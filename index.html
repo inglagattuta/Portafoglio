@@ -1,155 +1,29 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portafoglio Dashboard</title>
-    <script type="module" src="/main.js"></script>
+<div class="container">
+<header>
+<h1>💼 Portfolio Manager</h1>
+      <p class="subtitle">Gestisci i tuoi investimenti con stile</p>
+      <p class="subtitle">Francesco La Gattuta</p>
+</header>
 
-    <style>
-      body {
-        font-family: "Inter", Arial, sans-serif;
-        background: #f5f6fa;
-        margin: 0;
-        padding: 20px;
-      }
+<div class="stats-grid">
+<div class="stat-card">
+<div class="stat-label">Totale Investito</div>
+<div class="stat-value" id="totInvestito">0.00 €</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Valore Attuale</div>
+<div class="stat-value" id="valoreAttuale">0.00 €</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Totale Dividendi</div>
+<div class="stat-value" id="totDividendi">0.00 €</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Profitto Totale</div>
+<div class="stat-value" id="totProfitto">0.00 €</div>
+</div>
+</div>
 
-      h1 {
-        font-size: 22px;
-        margin-bottom: 20px;
-        font-weight: 600;
-        color: #333;
-      }
-
-      .cards {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-        margin-bottom: 25px;
-      }
-
-      .card {
-        background: white;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        font-size: 14px;
-      }
-
-      .card-title {
-        font-size: 13px;
-        color: #777;
-        margin-bottom: 5px;
-      }
-
-      .card-value {
-        font-size: 18px;
-        font-weight: 600;
-        color: #222;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        font-size: 13px;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      }
-
-      thead {
-        background: #eef1f5;
-      }
-
-      th, td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #ddd;
-      }
-
-      th {
-        text-align: left;
-        font-size: 12px;
-        font-weight: 600;
-        color: #333;
-        cursor: pointer;
-      }
-
-      tr.red-row {
-        background-color: rgba(255, 60, 60, 0.12);
-      }
-
-      tr.green-row {
-        background-color: rgba(0, 200, 90, 0.12);
-      }
-
-      .score-badge {
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 12px;
-        color: white;
-      }
-
-      .score-high { background: #2ecc71; }
-      .score-medium { background: #f1c40f; }
-      .score-low { background: #e74c3c; }
-
-      .btn {
-        padding: 6px 10px;
-        font-size: 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        border: none;
-      }
-
-      .btn-edit { background: #3498db; color: white; }
-      .btn-delete { background: #e74c3c; color: white; }
-    </style>
-
-  </head>
-
-  <body>
-    <h1>Portafoglio Investimenti</h1>
-
-    <div class="cards">
-      <div class="card">
-        <div class="card-title">Investito Totale</div>
-        <div class="card-value" id="tot-investito">0€</div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Valore Attuale</div>
-        <div class="card-value" id="tot-corrente">0€</div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Profitto Totale</div>
-        <div class="card-value" id="tot-profitto">0€</div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Dividendi Totali</div>
-        <div class="card-value" id="tot-dividendi">0€</div>
-      </div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th data-col="tipologia">Tipologia</th>
-          <th data-col="titolo">Titolo</th>
-          <th data-col="investito">Investito</th>
-          <th data-col="corrente">Corrente</th>
-          <th data-col="dividendi">Dividendi</th>
-          <th data-col="prelevato">Prelevato</th>
-          <th data-col="profitto">Profitto</th>
-          <th>Score</th>
-          <th>Azioni</th>
-        </tr>
-      </thead>
-      <tbody id="table-body"></tbody>
-    </table>
-
-  </body>
-</html>
+<div class="controls">
+<label class="file-label">
+📥 Importa Excel
