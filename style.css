@@ -92,6 +92,12 @@ h1 {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+td.score-cell {
+  font-weight: 600;
+  color: #5b21b6; /* viola professionale */
+}
+
+
 button {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
