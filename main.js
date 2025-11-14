@@ -13,7 +13,6 @@ async function loadData() {
       return;
     }
 
-    status.textContent = "Dati caricati da Firebase:";
 
     // Creiamo la tabella
     const table = document.createElement('table');
