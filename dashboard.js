@@ -6,7 +6,7 @@
   <title>Dashboard Portfolio</title>
 
   <!-- CSS con busting cache -->
-  <link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=1000">
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
