@@ -5,6 +5,26 @@ body {
   background-color: #E8DFF5; /* viola chiaro */
   color: #333;
 }
+.statBox {
+  background: white;
+  color: black;
+  padding: 15px 20px;
+  border-radius: 10px;
+  min-width: 200px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.statBox h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #4b2e83;
+}
+
+.statBox p {
+  margin: 10px 0 0;
+  font-size: 20px;
+  font-weight: bold;
+}
 
 /* Titolo */
 h1 {
