@@ -1,30 +1,53 @@
-import app from './firebase-config.js?v=13';
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import app from './firebase-config.js?v=20';
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const db = getFirestore(app);
 const container = document.getElementById('table-container');
 
+/* COLONNE */
 let columnsOrder = [
-  "tipologia", "nome", "prezzo_acquisto", "prezzo_corrente",
-  "dividendi", "prelevato", "profitto", "score",
-  "percentuale_12_mesi", "rendimento_percentuale", "payback", "percentuale_portafoglio"
+  "tipologia",
+  "nome",
+  "prezzo_acquisto",
+  "prezzo_corrente",
+  "dividendi",
+  "prelevato",
+  "profitto",   // calcolato automaticamente
+  "score",
+  "percentuale_12_mesi",
+  "rendimento_percentuale",
+  "payback",
+  "percentuale_portafoglio"
 ];
 
-const euroColumns = ["prezzo_acquisto", "prezzo_corrente", "dividendi", "prelevato", "profitto"];
+const euroColumns = ["prezzo_acquisto", "prezzo_corrente", "dividendi", "prelevato"];
 const percentColumns = ["percentuale_12_mesi", "rendimento_percentuale", "payback", "percentuale_portafoglio"];
 let showPercent = false;
 
+/* ===========================
+   CARICAMENTO DATI
+=========================== */
 async function loadData() {
   try {
     const querySnapshot = await getDocs(collection(db, "portafoglio"));
+
+    container.innerHTML = "";
+
     if (querySnapshot.empty) {
-      container.innerHTML = "<p>Nessun dato trovato nella collection 'portafoglio'!</p>";
+      container.innerHTML = "<p>Nessun dato trovato nella collection 'portafoglio'.</p>";
       return;
     }
 
+    /* === BOTTONI === */
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "Mostra colonne %";
-    toggleBtn.style.marginRight = "10px";
     toggleBtn.onclick = () => {
       showPercent = !showPercent;
       toggleBtn.textContent = showPercent ? "Nascondi colonne %" : "Mostra colonne %";
@@ -32,201 +55,224 @@ async function loadData() {
     };
 
     const exportBtn = document.createElement("button");
-    exportBtn.textContent = "Export Excel";
-    exportBtn.style.marginRight = "10px";
+    exportBtn.textContent = "Esporta Excel";
     exportBtn.onclick = exportToExcel;
 
-    const importBtn = document.createElement("input");
-    importBtn.type = "file";
-    importBtn.accept = ".xlsx,.xls";
-    importBtn.onchange = (e) => {
+    const importInput = document.createElement("input");
+    importInput.type = "file";
+    importInput.accept = ".xlsx,.xls";
+    importInput.onchange = e => {
       if (e.target.files.length) importFromExcel(e.target.files[0]);
     };
 
-    container.innerHTML = "";
     container.appendChild(toggleBtn);
     container.appendChild(exportBtn);
-    container.appendChild(importBtn);
+    container.appendChild(importInput);
 
-    const table = document.createElement('table');
+    /* === TABELLA === */
+    const table = document.createElement("table");
     container.appendChild(table);
 
     const header = table.insertRow();
-    columnsOrder.concat(["Azioni"]).forEach(key => {
-      const th = document.createElement('th');
+
+    // HEADER
+    columnsOrder.forEach(key => {
+      const th = document.createElement("th");
       th.textContent = key;
-      th.style.cursor = "pointer";
       if (percentColumns.includes(key) && !showPercent) th.style.display = "none";
       header.appendChild(th);
     });
 
+    // COLONNA AZIONI
+    const thActions = document.createElement("th");
+    thActions.textContent = "Azioni";
+    header.appendChild(thActions);
+
+    /* === RIGHE === */
     querySnapshot.forEach((docSnap, rIndex) => {
       const data = docSnap.data();
       const row = table.insertRow();
 
       columnsOrder.forEach(key => {
         const cell = row.insertCell();
+
         let value = data[key] ?? "";
 
-        if (typeof value === "number") {
+        // 🔥 PROFITTO: CALCOLATO
+        if (key === "profitto") {
+          const pa = parseFloat(data.prezzo_acquisto || 0);
+          const pc = parseFloat(data.prezzo_corrente || 0);
+          const div = parseFloat(data.dividendi || 0);
+          const pre = parseFloat(data.prelevato || 0);
+
+          const profittoCalc = pc - pa + div + pre;
+          value = profittoCalc.toFixed(2) + " €";
+
+          cell.style.color = profittoCalc > 0 ? "green" :
+                             profittoCalc < 0 ? "red" : "black";
+        }
+
+        // FORMATTAZIONE NUMERI
+        else if (typeof value === "number") {
           value = value.toFixed(2);
+
           if (euroColumns.includes(key)) value += " €";
           else if (percentColumns.includes(key)) value += " %";
         }
 
-        if (key === "profitto") {
-          let num = parseFloat(value);
-          if (!isNaN(num)) cell.style.color = num > 0 ? "green" : num < 0 ? "red" : "#000";
-        }
-
         cell.textContent = value;
         cell.style.backgroundColor = rIndex % 2 === 0 ? "#F0F0F0" : "#E8E8E8";
-        if (percentColumns.includes(key) && !showPercent) cell.style.display = "none";
+
+        if (percentColumns.includes(key) && !showPercent) {
+          cell.style.display = "none";
+        }
       });
 
-      // Colonna Azioni
+      /* === COLONNA AZIONI === */
       const actionCell = row.insertCell();
-      const modifyBtn = document.createElement("button");
-      modifyBtn.textContent = "Modifica";
-      modifyBtn.onclick = () => editRow(docSnap.id, data);
-      modifyBtn.style.marginRight = "5px";
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "Cancella";
-      deleteBtn.onclick = () => deleteRow(docSnap.id);
+      const btnEdit = document.createElement("button");
+      btnEdit.textContent = "Modifica";
+      btnEdit.style.marginRight = "5px";
+      btnEdit.onclick = () => editRow(docSnap.id, data);
 
-      actionCell.appendChild(modifyBtn);
-      actionCell.appendChild(deleteBtn);
+      const btnDelete = document.createElement("button");
+      btnDelete.textContent = "Cancella";
+      btnDelete.onclick = () => deleteRow(docSnap.id);
+
+      actionCell.appendChild(btnEdit);
+      actionCell.appendChild(btnDelete);
     });
 
-    // Ordinamento colonne con frecce
-    columnsOrder.forEach((key, index) => {
-      let asc = true;
-      const th = header.cells[index];
-      th.addEventListener("click", () => {
-        sortTable(table, index, asc);
-
-        Array.from(header.cells).forEach((cell, i) => {
-          cell.style.background = "linear-gradient(to bottom, #FFB300, #FFC857)";
-          cell.textContent = i < columnsOrder.length ? columnsOrder[i] : "Azioni";
-          if (percentColumns.includes(columnsOrder[i]) && !showPercent) cell.style.display = "none";
-        });
-
-        Array.from(table.rows).forEach((row, rIndex) => {
-          if (rIndex === 0) return;
-          Array.from(row.cells).forEach((cell, cIndex) => {
-            cell.style.border = "none";
-            if (!percentColumns.includes(columnsOrder[cIndex]) || showPercent) {
-              cell.style.backgroundColor = rIndex % 2 === 0 ? "#F0F0F0" : "#E8E8E8";
-              cell.style.display = "";
-            } else {
-              cell.style.display = "none";
-            }
-          });
-        });
-
-        const arrow = asc ? " ↑" : " ↓";
-        th.textContent = key + arrow;
-        Array.from(table.rows).forEach((row, rIndex) => {
-          if (rIndex === 0) return;
-          const cell = row.cells[index];
-          if (!percentColumns.includes(key) || showPercent) {
-            cell.style.backgroundColor = asc ? "#C6F6D5" : "#FFE4B2";
-            cell.style.border = "1px solid #999";
-          }
-        });
-
-        asc = !asc;
-      });
-    });
+    enableSorting(table);
 
   } catch (error) {
     console.error(error);
-    container.innerHTML = "<p>Errore connessione Firestore!</p>";
+    container.innerHTML = "<p>Errore connessione Firestore.</p>";
   }
 }
 
-// Funzioni Azioni
+/* ===========================
+   MODIFICA RECORD
+=========================== */
 function editRow(id, data) {
-  const updatedData = { ...data };
+  const updated = { ...data };
+
   for (const key of Object.keys(data)) {
-    if (key === "score") continue; // opzionale
-    const newVal = prompt(`Modifica ${key}`, data[key]);
+    if (key === "profitto") continue;
+    const newVal = prompt(`Modifica ${key}:`, data[key]);
     if (newVal !== null) {
-      updatedData[key] = isNaN(data[key]) ? newVal : parseFloat(newVal);
+      updated[key] = isNaN(data[key]) ? newVal : parseFloat(newVal);
     }
   }
-  const docRef = doc(db, "portafoglio", id);
-  setDoc(docRef, updatedData).then(() => {
+
+  setDoc(doc(db, "portafoglio", id), updated).then(() => {
     alert("Record aggiornato!");
     loadData();
   });
 }
 
+/* ===========================
+   CANCELLA RECORD
+=========================== */
 function deleteRow(id) {
-  if (confirm("Sei sicuro di voler cancellare questo record?")) {
-    const docRef = doc(db, "portafoglio", id);
-    deleteDoc(docRef).then(() => {
-      alert("Record cancellato!");
-      loadData();
+  if (!confirm("Vuoi davvero cancellare questo record?")) return;
+
+  deleteDoc(doc(db, "portafoglio", id)).then(() => {
+    alert("Cancellato!");
+    loadData();
+  });
+}
+
+/* ===========================
+   TOGGLE COLONNE %
+=========================== */
+function togglePercentColumns(table) {
+  for (let r = 0; r < table.rows.length; r++) {
+    const row = table.rows[r];
+    columnsOrder.forEach((key, cIndex) => {
+      if (percentColumns.includes(key)) {
+        row.cells[cIndex].style.display = showPercent ? "" : "none";
+      }
     });
   }
 }
 
-// Toggle colonne %
-function togglePercentColumns(table) {
-  const rows = Array.from(table.rows);
-  rows.forEach(row => {
-    Array.from(row.cells).forEach((cell, cIndex) => {
-      const key = cIndex < columnsOrder.length ? columnsOrder[cIndex] : null;
-      if (percentColumns.includes(key)) {
-        cell.style.display = showPercent ? "" : "none";
-      }
-    });
+/* ===========================
+   ORDINAMENTO COLONNE
+=========================== */
+function enableSorting(table) {
+  const headerCells = table.rows[0].cells;
+
+  columnsOrder.forEach((key, index) => {
+    let asc = true;
+    headerCells[index].style.cursor = "pointer";
+
+    headerCells[index].onclick = () => {
+      sortTable(table, index, asc);
+      asc = !asc;
+    };
   });
 }
 
-// Ordinamento
-function sortTable(table, colIndex, asc = true) {
+function sortTable(table, colIndex, asc) {
   const rows = Array.from(table.rows).slice(1);
+
   rows.sort((a, b) => {
-    let x = a.cells[colIndex].textContent.replace(" ↑","").replace(" ↓","").replace(" €","").replace(" %","");
-    let y = b.cells[colIndex].textContent.replace(" ↑","").replace(" ↓","").replace(" €","").replace(" %","");
-    x = isNaN(x) ? x : parseFloat(x);
-    y = isNaN(y) ? y : parseFloat(y);
-    return (x > y ? 1 : -1) * (asc ? 1 : -1);
+    let x = a.cells[colIndex].textContent.replace("€", "").replace("%", "");
+    let y = b.cells[colIndex].textContent.replace("€", "").replace("%", "");
+
+    x = parseFloat(x) || x.toLowerCase();
+    y = parseFloat(y) || y.toLowerCase();
+
+    return asc ? (x > y ? 1 : -1) : (x < y ? 1 : -1);
   });
-  rows.forEach(row => table.appendChild(row));
+
+  rows.forEach(r => table.appendChild(r));
 }
 
-// Export/Import Excel
+/* ===========================
+   EXPORT EXCEL
+=========================== */
 function exportToExcel() {
   getDocs(collection(db, "portafoglio")).then(querySnapshot => {
-    const data = [];
-    querySnapshot.forEach(docSnap => data.push(docSnap.data()));
-    const ws = XLSX.utils.json_to_sheet(data);
+    const arr = [];
+
+    querySnapshot.forEach(docSnap => {
+      const obj = { ...docSnap.data() };
+      delete obj.profitto; // non esportiamo campo calcolato
+      arr.push(obj);
+    });
+
+    const ws = XLSX.utils.json_to_sheet(arr);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Portafoglio");
     XLSX.writeFile(wb, "Portafoglio.xlsx");
-  }).catch(err => console.error(err));
+  });
 }
 
+/* ===========================
+   IMPORT EXCEL
+=========================== */
 function importFromExcel(file) {
   const reader = new FileReader();
-  reader.onload = async (e) => {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-    for (const item of jsonData) {
-      const docRef = doc(db, "portafoglio", item.nome || crypto.randomUUID());
-      await setDoc(docRef, item);
+  reader.onload = async e => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet);
+
+    for (const item of json) {
+      delete item.profitto; // ignoriamo profitto
+      const id = item.nome || crypto.randomUUID();
+      await setDoc(doc(db, "portafoglio", id), item);
     }
+
     alert("Import completato!");
     loadData();
   };
+
   reader.readAsArrayBuffer(file);
 }
 
