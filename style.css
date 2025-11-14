@@ -8,12 +8,20 @@
   font-family: system-ui, Arial, sans-serif;
 }
 .dashboard-btn {
-  padding: 10px 15px;
-  background: #8b5cf6;
+  background-color: #8b5cf6; /* Viola */
   color: white;
+  padding: 10px 15px;
+  border: none;
   border-radius: 8px;
-  text-decoration: none;
-  margin-left: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.dashboard-btn:hover {
+  background-color: #7c3aed;
+}
+argin-left: 10px;
 }
 
 .dashboard-btn:hover {
