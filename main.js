@@ -335,4 +335,43 @@ fileInput.addEventListener("change", importExcelHandler);
 btnReload.addEventListener("click", loadData);
 
 // start
-loadData();
+async function loadData() {
+  tableBody.innerHTML = "";
+  renderHeader();
+
+  const querySnapshot = await getDocs(collection(db, "portafoglio"));
+
+  querySnapshot.forEach((docSnap) => {
+    renderRow(docSnap.id, docSnap.data());
+  });
+
+  updateStats(querySnapshot.docs);
+}
+
+function updateStats(docs) {
+  let totaleInvestito = 0;
+  let valoreAttuale = 0;
+  let totaleDividendi = 0;
+  let totalePrelevato = 0;
+
+  docs.forEach(d => {
+    const data = d.data();
+
+    totaleInvestito += Number(data.prezzo_acquisto || 0);
+    valoreAttuale += Number(data.prezzo_corrente || 0);
+    totaleDividendi += Number(data.dividendi || 0);
+    totalePrelevato += Number(data.prelevato || 0);
+  });
+
+  const profitto =
+    valoreAttuale - totaleInvestito + totaleDividendi + totalePrelevato;
+
+  document.getElementById("totInvestito").textContent = totaleInvestito.toFixed(2) + " €";
+  document.getElementById("valoreAttuale").textContent = valoreAttuale.toFixed(2) + " €";
+  document.getElementById("totDividendi").textContent = totaleDividendi.toFixed(2) + " €";
+  document.getElementById("totProfitto").textContent = profitto.toFixed(2) + " €";
+
+  document.getElementById("totProfitto").style.color =
+    profitto >= 0 ? "lime" : "red";
+}
+
