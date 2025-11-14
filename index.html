@@ -1,13 +1,153 @@
 <div class="container">
 <header>
 <h1>💼 Portfolio Manager</h1>
-      <p class="subtitle">Gestisci i tuoi investimenti con stile</p>
+      
       <p class="subtitle">Francesco La Gattuta</p>
 </header>
 
 <div class="stats-grid">
 <div class="stat-card">
-<div class="stat-label">Totale Investito</div>
+<div class="stat-label">Totale <!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafoglio</title>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Portafoglio LAG</title>
+<style>
+    body {
+      background: #4b2e83;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      color: #333;
+      margin-top: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th {
+      background: #4a90e2;
+      color: white;
+      padding: 12px;
+      text-align: left;
+    }
+
+    td {
+      padding: 10px;
+      background: #fafafa;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:nth-child(even) td {
+      background: #f0f4f8;
+    }
+
+    button {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #357ab8;
+    }
+
+    .actions button {
+      margin-right: 6px;
+      background: #6c8cd5;
+    }
+
+    .actions button:hover {
+      background: #4b6fb3;
+    :root{
+      --bg:#3a2660;
+      --card:#2f214b;
+      --accent:#6a5bb8;
+      --accent-2:#4a90e2;
+      --muted:#cfc7ee;
+      --white:#ffffff;
+      --table-bg:#ffffff;
+      --cell-odd:#f8f7fc;
+      --cell-even:#efeff8;
+}
+    html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--white);}
+    .wrap{max-width:1200px;margin:20px auto;padding:20px;}
+    h1{margin:0 0 14px 0;color:var(--muted);font-size:28px}
+    .controls{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+    button.primary{background:var(--accent);color:var(--white);border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.ghost{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,0.15);padding:8px 12px;border-radius:8px;cursor:pointer}
+    input[type="file"]{display:inline-block;background:#fff;color:#000;padding:6px;border-radius:6px}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+    table{width:100%;border-collapse:collapse;background:var(--table-bg);color:#111;border-radius:8px;overflow:hidden;display:table}
+    thead th{background:linear-gradient(180deg,var(--accent-2),#356fb0);color:white;padding:12px;text-align:left;font-weight:700;cursor:pointer}
+    tbody td{padding:10px;border-bottom:1px solid #e6e6ef;background:var(--cell-odd)}
+    tbody tr:nth-child(even) td{background:var(--cell-even)}
+    td.value-euro{text-align:right;font-variant-numeric:tabular-nums}
+    td.value-percent{text-align:right;font-variant-numeric:tabular-nums}
+    td.value-score{text-align:right;font-variant-numeric:tabular-nums}
+    .actions button{margin-right:6px;padding:6px 10px;border-radius:6px;border:none;cursor:pointer}
+    .actions .edit{background:#2ecc71;color:#fff}
+    .actions .delete{background:#e74c3c;color:#fff}
+    /* modal */
+    #editModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);z-index:9999}
+    #editModal .modal-card{width:360px;background:#fff;color:#000;padding:16px;border-radius:8px}
+    #editModal label{display:block;margin-top:8px;font-size:13px}
+    #editModal input{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #ccc}
+    #editModal .row{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+</style>
+</head>
+
+<body>
+  <h2>Portafoglio</h2>
+  <div class="wrap">
+    <h1>Portafoglio LAG</h1>
+
+  <button onclick="exportExcel()">Export Excel</button>
+  <input type="file" id="excelInput" onchange="importExcel(event)" />
+    <div class="controls">
+      <button id="btnExport" class="primary">Export Excel</button>
+      <label style="background:#fff;color:#000;padding:6px 10px;border-radius:6px;cursor:pointer">
+        Importa Excel
+        <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none" />
+      </label>
+      <button id="btnReload" class="ghost">Ricarica</button>
+    </div>
+
+  <table>
+    <thead>
+      <tr id="headerRow"></tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+    <div class="card">
+      <table>
+        <thead><tr id="headerRow"></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 📌 OBBLIGATORIO: libreria XLSX PRIMA DI main.js -->
+  <!-- SheetJS (necessario) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- main module -->
+<script type="module" src="main.js"></script>
+</body>
+</html></div>
 <div class="stat-value" id="totInvestito">0.00 €</div>
 </div>
 <div class="stat-card">
