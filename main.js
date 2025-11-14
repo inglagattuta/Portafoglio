@@ -373,6 +373,21 @@ async function loadData(){
       tdA.appendChild(btE);
       tdA.appendChild(btD);
       tr.appendChild(tdA);
+// ---- COLORI DINAMICI IN BASE AL PROFITTO ----
+const pa = Number(d.prezzo_acquisto || 0);
+const pc = Number(d.prezzo_corrente || 0);
+const div = Number(d.dividendi || 0);
+const pre = Number(d.prelevato || 0);
+
+const profit = pc - pa + div + pre;
+
+if (profit > 0) {
+  tr.style.backgroundColor = "#e1f7e1";  // verde chiaro
+} else if (profit < 0) {
+  tr.style.backgroundColor = "#f9d6d5";  // rosso chiaro
+} else {
+  tr.style.backgroundColor = "#f0f0f0";  // neutro
+}
 
       tableBody.appendChild(tr);
     });
