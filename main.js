@@ -12,12 +12,12 @@ import {
 
 // CONFIGURAZIONE FIREBASE
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyBhDoRKmRffrjO-WvVjgX3K7JdfPaM7MGk",
+  authDomain: "portafoglio-dashboard.firebaseapp.com",
+  projectId: "portafoglio-dashboard",
+  storageBucket: "portafoglio-dashboard.firebasestorage.app",
+  messagingSenderId: "194509041146",
+  appId: "1:194509041146:web:aa943d555dc067f7110843"
 };
 
 const app = initializeApp(firebaseConfig);
