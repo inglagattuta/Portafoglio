@@ -60,7 +60,23 @@ function renderHeader(){
   headerRow.innerHTML = "";
   columns.forEach(col=>{
     const th = document.createElement("th");
-    th.textContent = col;
+    const labelMap = {
+  tipologia: "Tipologia",
+  nome: "Titolo",
+  prezzo_acquisto: "Investito",
+  prezzo_corrente: "Corrente",
+  dividendi: "Dividendi",
+  prelevato: "Prelevato",
+  profitto: "Profitto",
+  score: "Score",
+  percentuale_12_mesi: "% 12 mesi",
+  rendimento_percentuale: "Rendimento %",
+  payback: "Payback",
+  percentuale_portafoglio: "% Portafoglio"
+};
+
+th.textContent = labelMap[col] || col;
+
     th.classList.add('sortable');
     if (hiddenCols.has(col)) th.style.display = "none";
     headerRow.appendChild(th);
