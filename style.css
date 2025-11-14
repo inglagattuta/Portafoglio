@@ -1,49 +1,191 @@
-/* Container pulsanti sulla Home */
-.button-container {
+/* =============== RESET =============== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #f5f5f5;
+  color: #222;
+  padding: 20px;
+}
+
+/* =============== CONTAINER =============== */
+.container {
+  max-width: 1100px;
+  margin: auto;
+  background: white;
+  padding: 20px 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* =============== HEADER =============== */
+header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+/* =============== STAT CARDS =============== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: #fafafa;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #eee;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+/* =============== CONTROLLI (PULSANTI) =============== */
+.controls {
   display: flex;
-  flex-wrap: nowrap;            /* Impedisce di andare a capo */
-  gap: 10px;                    /* Spaziatura uniforme */
+  gap: 10px;
+  flex-wrap: wrap;           /* consente di adattare su mobile */
   margin-bottom: 20px;
 }
 
 /* Stile base dei pulsanti */
-.btn {
-  padding: 10px 20px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
+.controls button,
+.file-label,
+.dashboard-btn {
+  background: #007bff;
   color: white;
-  min-width: 120px;             /* Tutti i pulsanti stessa larghezza */
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 150px;
   text-align: center;
-  text-decoration: none;        /* Per il link Dashboard */
-  display: inline-block;        /* Per farlo comportare come gli altri */
+  display: inline-block;
 }
 
-/* Import */
-.btn-import {
-  background-color: #007bff;
+/* Import (file-label) */
+.file-label {
+  background: #007bff;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
 }
 
-.btn-import:hover {
-  background-color: #0056b3;
+.file-label input {
+  position: absolute;
+  opacity: 0;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* Export */
-.btn-export {
-  background-color: #28a745;
+.controls button:nth-of-type(1) { /* Esporta Excel */
+  background: #28a745;
 }
 
-.btn-export:hover {
-  background-color: #1e7e34;
+/* Dashboard */
+.dashboard-btn {
+  background: #ff9800;
 }
 
-/* Dashboard - colore diverso */
-.btn-dashboard {
-  background-color: #ff9800;
+.dashboard-btn:hover {
+  background: #e68900;
 }
 
-.btn-dashboard:hover {
-  background-color: #e68900;
+/* Hover generico */
+.controls button:hover,
+.file-label:hover {
+  opacity: 0.9;
+}
+
+/* =============== TABELLA =============== */
+.table-container {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+thead {
+  background: #007bff;
+  color: white;
+}
+
+thead th {
+  padding: 10px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =============== CHARTS (Dashboard) =============== */
+.chart-container {
+  background: #ffffff;
+  margin: 25px 0;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+.chart-title {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+/* Adattivo */
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+  }
+
+  .controls button,
+  .file-label,
+  .dashboard-btn {
+    width: 100%;
+  }
 }
