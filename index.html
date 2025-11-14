@@ -5,10 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portafoglio</title>
   <style>
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; background:#f3f3f3; }
-    th { background:#ddd; }
-    .actions button { margin-right: 6px; }
+    body {
+      background: #2a2540; /* viola scuro */
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #e2d9ff;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #3a3450;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th {
+      background: #5a4f80;
+      padding: 10px;
+      color: #ffffff;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    td {
+      background: #4a4266;
+      padding: 8px;
+      border-bottom: 1px solid #3a3450;
+    }
+
+    tr:hover td {
+      background: #5a5275;
+    }
+
+    .actions button {
+      margin-right: 6px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background: #4caf50;
+      color: white;
+    }
+
+    .delete-btn {
+      background: #d9534f;
+      color: white;
+    }
+
+    button {
+      background: #6a5bb8;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    input[type="file"] {
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
