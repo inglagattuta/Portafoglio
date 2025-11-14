@@ -1,3 +1,25 @@
+/* Font più professionale e leggermente più piccolo */
+body, table {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 14px;
+}
+
+/* Righe rosse o verdi dinamiche */
+.row-profit-positive {
+  background-color: #e8ffe8 !important;
+}
+
+.row-profit-negative {
+  background-color: #ffecec !important;
+}
+
+/* Score con colore diverso */
+.score-cell {
+  font-weight: bold;
+  color: #4a3aff; /* viola professionale */
+}
+
+
 * {
   margin: 0;
   padding: 0;
