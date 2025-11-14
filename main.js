@@ -1,26 +1,34 @@
-// main.js - import/export corretto, import sovrascrive solo record esistenti, modal modifica funzionante
+// main.js - completo, con import/export excel, update, formattazione
 
-import app from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,
   collection,
   getDocs,
-  updateDoc,
+  setDoc,
+  doc,
   deleteDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// CONFIGURAZIONE FIREBASE
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID",
+};
+
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ELEMENTI DOM
 const headerRow = document.getElementById("headerRow");
 const tableBody = document.getElementById("tableBody");
-const editModal = document.getElementById("editModal");
-const modalFields = document.getElementById("modalFields");
-const modalSave = document.getElementById("modalSave");
-const modalClose = document.getElementById("modalClose");
 
-// configurazione colonne (visuale)
-const columnsOrder = [
+// COLONNE (tipologia deve essere prima)
+const columns = [
   "tipologia",
   "nome",
   "prezzo_acquisto",
@@ -28,313 +36,166 @@ const columnsOrder = [
   "dividendi",
   "prelevato",
   "profitto",
-  "score"
+  "percentuale_12_mesi",
+  "rendimento_percentuale",
+  "payback",
+  "percentuale_portafoglio",
+  "score",
+  "azioni",
 ];
 
-const euroCols = ["prezzo_acquisto", "prezzo_corrente", "dividendi", "prelevato"];
-const percentCols = ["percentuale_12_mesi","rendimento_percentuale","payback","percentuale_portafoglio"];
+// COLONNE DA NASCONDERE
+const hiddenColumns = [
+  "percentuale_12_mesi",
+  "rendimento_percentuale",
+  "payback",
+  "percentuale_portafoglio",
+];
 
-// stato per modal
-let currentEditingId = null;
-let currentOriginalData = null;
-
-// -----------------------
-// render header + table
-// -----------------------
-function renderHeader(){
+// RENDER TABELLA
+function renderHeader() {
   headerRow.innerHTML = "";
-  columnsOrder.forEach(col=>{
-    const th = document.createElement("th");
-    th.textContent = col;
-    headerRow.appendChild(th);
-  });
-  const thA = document.createElement("th");
-  thA.textContent = "Azioni";
-  headerRow.appendChild(thA);
-}
-
-function formatCellValue(key, raw){
-  if (raw === undefined || raw === null) return "";
-  if (key === "profitto") return Number(raw).toFixed(2) + " €";
-  if (euroCols.includes(key)) return Number(raw).toFixed(2) + " €";
-  if (percentCols.includes(key)) return Number(raw).toFixed(2) + " %";
-  if (key === "score") return Number(raw).toFixed(2);
-  return String(raw);
-}
-
-async function loadData(){
-  try {
-    const snap = await getDocs(collection(db, "portafoglio"));
-    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    renderHeader();
-    tableBody.innerHTML = "";
-
-    docs.forEach((d, rIdx)=>{
-      const tr = document.createElement("tr");
-
-      columnsOrder.forEach(key=>{
-        const td = document.createElement("td");
-
-        if (key === "profitto"){
-          // calcola profitto al volo
-          const pa = parseFloat(d.prezzo_acquisto || 0);
-          const pc = parseFloat(d.prezzo_corrente || 0);
-          const div = parseFloat(d.dividendi || 0);
-          const pre = parseFloat(d.prelevato || 0);
-          const profitto = pc - pa + div + pre;
-          td.textContent = profitto.toFixed(2) + " €";
-          td.dataset.raw = profitto;
-          td.style.color = profitto > 0 ? "green" : profitto < 0 ? "red" : "black";
-        } else {
-          const raw = d[key];
-          td.textContent = formatCellValue(key, raw);
-          td.dataset.raw = (euroCols.includes(key) || percentCols.includes(key) || key==="score")
-                           ? Number(raw || 0)
-                           : String(raw || "").toLowerCase();
-        }
-
-        td.style.background = rIdx % 2 === 0 ? "#F0F0F0" : "#E8E8E8";
-        tr.appendChild(td);
-      });
-
-      // Azioni: crea bottoni con event listeners (scope module sicuro)
-      const tdA = document.createElement("td");
-      tdA.className = "actions";
-      const btnEdit = document.createElement("button");
-      btnEdit.textContent = "Modifica";
-      btnEdit.addEventListener("click", ()=> openEditModal(d.id, d));
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Cancella";
-      btnDel.addEventListener("click", ()=> deleteRow(d.id));
-      tdA.appendChild(btnEdit);
-      tdA.appendChild(btnDel);
-      tr.appendChild(tdA);
-
-      tableBody.appendChild(tr);
-    });
-
-    enableSorting();
-  } catch (e){
-    console.error("loadData error", e);
-    alert("Errore caricamento dati. Guarda console.");
-  }
-}
-
-// -----------------------
-// sorting (usa dataset.raw per numeri)
-// -----------------------
-function enableSorting(){
-  const headers = Array.from(headerRow.cells);
-  headers.forEach((th, idx)=>{
-    if (th.textContent === "Azioni") return;
-    th.style.cursor = "pointer";
-    th.dataset.asc = "true";
-    th.onclick = ()=>{
-      const asc = th.dataset.asc === "true";
-      sortByColumn(idx, asc);
-      th.dataset.asc = (!asc).toString();
-
-      // freccia visiva
-      headers.forEach(h=> h.textContent = h.textContent.replace(/ ↑| ↓/g, ""));
-      th.textContent = th.textContent + (asc ? " ↑" : " ↓");
-    };
-  });
-}
-
-function sortByColumn(colIndex, asc){
-  const rows = Array.from(tableBody.rows);
-  const arr = rows.map(row=>{
-    const cell = row.cells[colIndex];
-    const raw = cell ? cell.dataset.raw : "";
-    const num = parseFloat(raw);
-    return { row, key: (!isNaN(num) ? num : raw) };
-  });
-
-  arr.sort((a,b)=>{
-    const x = a.key, y = b.key;
-    if (typeof x === "number" && typeof y === "number") return asc ? x - y : y - x;
-    if (x > y) return asc ? 1 : -1;
-    if (x < y) return asc ? -1 : 1;
-    return 0;
-  });
-
-  arr.forEach(item=> tableBody.appendChild(item.row));
-}
-
-// -----------------------
-// delete
-// -----------------------
-async function deleteRow(id){
-  if (!confirm("Sei sicuro di cancellare questo record?")) return;
-  try{
-    await deleteDoc(doc(db,"portafoglio",id));
-    await loadData();
-  } catch(e){
-    console.error(e);
-    alert("Errore cancellazione");
-  }
-}
-
-// -----------------------
-// EDIT modal
-// -----------------------
-function openEditModal(id, originalData){
-  currentEditingId = id;
-  currentOriginalData = originalData;
-  modalFields.innerHTML = "";
-
-  const fields = [
-    "prezzo_acquisto",
-    "prezzo_corrente",
-    "dividendi",
-    "prelevato",
-    "percentuale_12_mesi",
-    "rendimento_percentuale",
-    "payback",
-    "score"
-  ];
-
-  fields.forEach(f=>{
-    const lbl = document.createElement("label");
-    lbl.textContent = f.replaceAll("_"," ").toUpperCase();
-    const inp = document.createElement("input");
-    inp.type = "number";
-    inp.step = "0.01";
-    inp.id = "fld_" + f;
-    inp.value = originalData[f] ?? "";
-    inp.style.width = "100%";
-    inp.style.marginBottom = "8px";
-    modalFields.appendChild(lbl);
-    modalFields.appendChild(inp);
-  });
-
-  editModal.style.display = "flex";
-}
-
-modalClose.addEventListener("click", ()=> {
-  editModal.style.display = "none";
-});
-
-modalSave.addEventListener("click", async ()=>{
-  if (!currentEditingId) return;
-  const updated = { ...currentOriginalData };
-  const fields = [
-    "prezzo_acquisto",
-    "prezzo_corrente",
-    "dividendi",
-    "prelevato",
-    "percentuale_12_mesi",
-    "rendimento_percentuale",
-    "payback",
-    "score"
-  ];
-
-  fields.forEach(f=>{
-    const el = document.getElementById("fld_" + f);
-    if (!el) return;
-    const v = el.value;
-    if (v === "") {
-      delete updated[f];
+  columns.forEach((col) => {
+    if (col === "azioni") {
+      headerRow.innerHTML += `<th>Azioni</th>`;
     } else {
-      updated[f] = (f === "score") ? parseFloat(parseFloat(v).toFixed(2)) : parseFloat(v);
+      headerRow.innerHTML += `<th ${hiddenColumns.includes(col) ? "style='display:none'" : ""}>${col}</th>`;
     }
   });
-
-  try{
-    await updateDoc(doc(db,"portafoglio",currentEditingId), updated);
-    editModal.style.display = "none";
-    await loadData();
-  } catch(e){
-    console.error(e);
-    alert("Errore aggiornamento");
-  }
-});
-
-// -----------------------
-// EXPORT (usa global XLSX caricato in index.html)
-// -----------------------
-async function exportExcel(){
-  try{
-    const snap = await getDocs(collection(db,"portafoglio"));
-    const rows = snap.docs.map(d => {
-      const obj = { id: d.id, ...d.data() };
-      delete obj.profitto;
-      return obj;
-    });
-
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Portafoglio");
-    XLSX.writeFile(wb, "portafoglio.xlsx");
-  } catch(e){
-    console.error(e);
-    alert("Errore export");
-  }
 }
 
-// rendi le funzioni disponibili per i pulsanti in index.html
-window.exportExcel = exportExcel;
+function renderRow(id, data) {
+  const tr = document.createElement("tr");
 
-// -----------------------
-// IMPORT: sovrascrive SOLO se nome esistente (case-insensitive). Non crea nuovi.
-// -----------------------
-window.importExcel = async function(event){
-  const file = event.target.files?.[0];
-  if (!file) return alert("Nessun file selezionato");
-  try{
-    // build map nome(lowercase) -> docId
-    const snapAll = await getDocs(collection(db,"portafoglio"));
-    const nameMap = new Map();
-    snapAll.docs.forEach(d => {
-      const nm = (d.data().nome || "").toString().toLowerCase();
-      if (nm) nameMap.set(nm, d.id);
-    });
+  columns.forEach((col) => {
+    const td = document.createElement("td");
 
-    const ab = await file.arrayBuffer();
-    const wb = XLSX.read(ab, { type: "array" });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet);
+    if (col === "azioni") {
+      td.className = "actions";
+      td.innerHTML = `
+        <button onclick="editRecord('${id}')">Modifica</button>
+        <button onclick="deleteRecord('${id}')">Cancella</button>
+      `;
+    } else {
+      td.textContent = data[col] ?? "";
 
-    let updatedCount = 0;
-    let skippedCount = 0;
-    const skippedNames = [];
-
-    for (const row of json){
-      const name = (row.nome || "").toString().toLowerCase();
-      if (!name) {
-        skippedCount++;
-        continue;
+      if (col === "profitto") {
+        const value = Number(data[col]);
+        td.style.color = value > 0 ? "green" : value < 0 ? "red" : "black";
       }
-      const docId = nameMap.get(name);
-      if (docId){
-        // prepare record: remove profitto if present
-        const toSave = { ...row };
-        delete toSave.profitto;
-        // convert numeric strings to numbers for known numeric fields
-        ["prezzo_acquisto","prezzo_corrente","dividendi","prelevato","percentuale_12_mesi","rendimento_percentuale","payback","percentuale_portafoglio","score"].forEach(k=>{
-          if (toSave[k]!==undefined && toSave[k]!==null && toSave[k] !== "") toSave[k] = Number(toSave[k]);
-        });
-        await updateDoc(doc(db,"portafoglio",docId), toSave);
-        updatedCount++;
-      } else {
-        skippedCount++;
-        skippedNames.push(row.nome || "(no name)");
+
+      if (col === "score") {
+        td.textContent = Number(data[col]).toFixed(2);
+      }
+
+      if (hiddenColumns.includes(col)) {
+        td.style.display = "none";
       }
     }
 
-    let msg = `Import completato. Aggiornati: ${updatedCount}. Saltati (non trovati): ${skippedCount}.`;
-    if (skippedNames.length) msg += ` Nomi saltati: ${skippedNames.slice(0,10).join(", ")}${skippedNames.length>10?"...":""}`;
-    alert(msg);
-    await loadData();
-  } catch(e){
-    console.error(e);
-    alert("Errore import: guarda console");
+    tr.appendChild(td);
+  });
+
+  tableBody.appendChild(tr);
+}
+
+// CARICAMENTO DATI
+async function loadData() {
+  tableBody.innerHTML = "";
+  renderHeader();
+
+  const querySnapshot = await getDocs(collection(db, "portafoglio"));
+  querySnapshot.forEach((docSnap) => {
+    renderRow(docSnap.id, docSnap.data());
+  });
+}
+
+loadData();
+
+// MODIFICA RECORD
+window.editRecord = async function (id) {
+  const docRef = doc(db, "portafoglio", id);
+  const docSnap = await getDocs(collection(db, "portafoglio"));
+
+  const data = (await getDocs(collection(db, "portafoglio"))).docs
+    .find((d) => d.id === id)
+    ?.data();
+
+  if (!data) return alert("Errore: record non trovato");
+
+  const newValues = {};
+
+  const fieldsToEdit = [
+    "prezzo_acquisto",
+    "prezzo_corrente",
+    "dividendi",
+    "prelevato",
+    "percentuale_12_mesi",
+    "rendimento_percentuale",
+    "payback",
+    "score",
+  ];
+
+  for (const field of fieldsToEdit) {
+    const value = prompt(`Modifica ${field}:`, data[field] ?? "");
+    if (value === null) return; // annullato
+    newValues[field] = Number(value);
   }
+
+  newValues.profitto =
+    newValues.prezzo_corrente -
+    newValues.prezzo_acquisto +
+    newValues.dividendi +
+    newValues.prelevato;
+
+  await setDoc(doc(db, "portafoglio", id), {
+    ...data,
+    ...newValues,
+  });
+
+  loadData();
 };
 
-// export la funzione loadData per debug se necessario
-window.loadData = loadData;
+// CANCELLA RECORD
+window.deleteRecord = async function (id) {
+  if (!confirm("Sei sicuro di voler cancellare questo record?")) return;
+  await deleteDoc(doc(db, "portafoglio", id));
+  loadData();
+};
 
-// avvia
-loadData();
+// EXPORT EXCEL
+window.exportExcel = async function () {
+  const workbook = XLSX.utils.book_new();
+  const querySnapshot = await getDocs(collection(db, "portafoglio"));
+
+  const data = querySnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  const sheet = XLSX.utils.json_to_sheet(data);
+  XLSX.utils.book_append_sheet(workbook, sheet, "Portafoglio");
+  XLSX.writeFile(workbook, "portafoglio.xlsx");
+};
+
+// IMPORT EXCEL CON CONTROLLO DUPLICATI
+window.importExcel = async function (event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet);
+
+    for (const row of json) {
+      const id = row.id || row.nome;
+      if (!id) continue;
+
+      await setDoc(doc(db, "portafoglio", id), row, { merge: true });
+    }
+
+    loadData();
+  };
+
+  reader.readAsArrayBuffer(file);
+};
