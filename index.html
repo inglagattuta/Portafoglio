@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css?v=4">
 </head>
 
-<body>
+<body data-theme="light">
   <div class="container">
 
     <header>
@@ -42,6 +42,10 @@
 
     <!-- CONTROLLI -->
     <div class="controls">
+
+      <!-- SWITCH DARK MODE -->
+      <button id="toggle-theme" class="theme-btn">🌙 Dark Mode</button>
+
       <label class="file-label">
         📥 Importa Excel
         <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
