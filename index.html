@@ -1,30 +1,27 @@
 <!DOCTYPE html>
 <html lang="it">
 
-
-  <!-- CSS con cache busting -->
-  <link rel="stylesheet" href="style.css?v=4">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portafoglio</title>
+
+  <!-- CSS con cache busting -->
   <link rel="stylesheet" href="style.css?v=4">
 </head>
-
-
 
 <body data-theme="light">
   <div class="container">
 
     <header>
       <!-- Toggle Dark Mode -->
-<div class="theme-toggle">
-  <label class="switch">
-    <input type="checkbox" id="themeSwitch">
-    <span class="slider round"></span>
-  </label>
-  <span id="themeLabel">🌞 Light</span>
-</div>
+      <div class="theme-toggle">
+        <label class="switch">
+          <input type="checkbox" id="themeSwitch">
+          <span class="slider round"></span>
+        </label>
+        <span id="themeLabel">🌞 Light</span>
+      </div>
 
       <h1>💼 Portfolio Manager</h1>
       <p class="subtitle">Francesco La Gattuta</p>
@@ -55,10 +52,6 @@
 
     <!-- CONTROLLI -->
     <div class="controls">
-
-      <!-- SWITCH DARK MODE -->
-     
-
       <label class="file-label">
         📥 Importa Excel
         <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
@@ -92,4 +85,5 @@
   <!-- Script principale -->
   <script type="module" src="main.js?v=4"></script>
 </body>
+
 </html>
