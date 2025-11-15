@@ -1,89 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portafoglio</title>
-
-  <!-- CSS con cache busting -->
-  <link rel="stylesheet" href="style.css?v=4">
-</head>
-
-<body data-theme="light">
-  <div class="container">
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portafoglio Dashboard</title>
+    <link rel="stylesheet" href="style.css?v=4" />
+  </head>
+  <body>
     <header>
-      <!-- Toggle Dark Mode -->
-      <div class="theme-toggle">
-        <label class="switch">
-          <input type="checkbox" id="themeSwitch">
-          <span class="slider round"></span>
-        </label>
-        <span id="themeLabel">🌞 Light</span>
-      </div>
-
-      <h1>💼 Portfolio Manager</h1>
-      <p class="subtitle">Francesco La Gattuta</p>
+      <h1>Portafoglio Investimenti</h1>
+      <button id="themeToggle">🌓</button>
     </header>
 
-    <!-- STATISTICHE -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Totale Investito</div>
-        <div class="stat-value" id="totInvestito">0.00 €</div>
-      </div>
+    <main>
+      <section class="stats">
+        <div class="stat"><h3>Investito Totale</h3><p id="totalInvested">0€</p></div>
+        <div class="stat"><h3>Valore Attuale</h3><p id="totalCurrent">0€</p></div>
+        <div class="stat"><h3>Profitto Totale</h3><p id="totalProfit">0€</p></div>
+        <div class="stat"><h3>Dividendi Totali</h3><p id="totalDividends">0€</p></div>
+      </section>
 
-      <div class="stat-card">
-        <div class="stat-label">Valore Attuale</div>
-        <div class="stat-value" id="valoreAttuale">0.00 €</div>
-      </div>
+      <section>
+        <table id="portfolioTable">
+          <thead>
+            <tr>
+              <th>Tipologia</th>
+              <th>Titolo</th>
+              <th>Investito</th>
+              <th>Corrente</th>
+              <th>Dividendi</th>
+              <th>Prelevato</th>
+              <th>Profitto</th>
+              <th>Score</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="portfolioBody"></tbody>
+        </table>
+      </section>
+    </main>
 
-      <div class="stat-card">
-        <div class="stat-label">Totale Dividendi</div>
-        <div class="stat-value" id="totDividendi">0.00 €</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Profitto Totale</div>
-        <div class="stat-value" id="totProfitto">0.00 €</div>
-      </div>
-    </div>
-
-    <!-- CONTROLLI -->
-    <div class="controls">
-      <label class="file-label">
-        📥 Importa Excel
-        <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
-      </label>
-
-      <button onclick="exportExcel()">📤 Esporta Excel</button>
-
-      <button onclick="window.location.href='dashboard.html'" class="dashboard-btn">
-        📊 Dashboard
-      </button>
-    </div>
-
-    <!-- TABELLA -->
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr id="headerRow"></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-
-  </div>
-
-  <!-- Modal -->
-  <div id="modal-root"></div>
-
-  <!-- Excel JS -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- Script principale -->
-  <script type="module" src="main.js?v=4"></script>
-</body>
-
+    <script src="firebase-config.js?v=4"></script>
+    <script src="main.js?v=4"></script>
+  </body>
 </html>
