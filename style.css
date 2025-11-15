@@ -1,7 +1,22 @@
 /* =========================================================
    STYLE.CSS - Tema Dashboard & Portfolio Manager
    ========================================================= */
+/* FIX leggibilità bottone Dashboard */
+.dashboard-btn {
+  background: var(--primary-color);
+  color: #fff !important;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 
+.dashboard-btn:hover {
+  filter: brightness(1.08);
+}
 /* ----------- RESET ----------- */
 * {
   margin: 0;
