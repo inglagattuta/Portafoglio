@@ -25,6 +25,35 @@ const headerRow = document.getElementById("headerRow");
 const tableBody = document.getElementById("tableBody");
 
 // Box
+// ------------------------------------------
+// DARK MODE
+// ------------------------------------------
+const themeSwitch = document.getElementById("themeSwitch");
+const themeLabel  = document.getElementById("themeLabel");
+
+function applyTheme(isDark) {
+  if (isDark) {
+    document.body.classList.add("dark");
+    themeSwitch.checked = true;
+    themeLabel.textContent = "🌚 Dark";
+  } else {
+    document.body.classList.remove("dark");
+    themeSwitch.checked = false;
+    themeLabel.textContent = "🌞 Light";
+  }
+}
+
+// Carica preferenza
+const savedTheme = localStorage.getItem("theme") === "dark";
+applyTheme(savedTheme);
+
+// Toggle
+themeSwitch.addEventListener("change", () => {
+  const isDark = themeSwitch.checked;
+  applyTheme(isDark);
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+});
+
 const bxInvestito   = document.getElementById("totInvestito");
 const bxValore      = document.getElementById("valoreAttuale");
 const bxDividendi   = document.getElementById("totDividendi");
