@@ -473,30 +473,5 @@ async function loadData(){
 // -------------------------------------------------------------
 loadData();
 
-// -------------------------------------------------------------
-// DARK MODE
-// -------------------------------------------------------------
-const themeBtn = document.getElementById("toggle-theme");
-const body = document.body;
 
-// Tema salvato
-const savedTheme = localStorage.getItem("theme");
-if (savedTheme === "dark") {
-  body.setAttribute("data-theme", "dark");
-  themeBtn.textContent = "☀️ Light Mode";
-}
-
-// Toggle
-themeBtn.addEventListener("click", () => {
-  const isDark = body.getAttribute("data-theme") === "dark";
-
-  if (isDark) {
-    body.setAttribute("data-theme", "light");
-    themeBtn.textContent = "🌙 Dark Mode";
-    localStorage.setItem("theme", "light");
-  } else {
-    body.setAttribute("data-theme", "dark");
-    themeBtn.textContent = "☀️ Light Mode";
-    localStorage.setItem("theme", "dark");
-  }
 });
