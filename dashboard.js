@@ -1,68 +1,106 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Portfolio</title>
+import app from "./firebase-config.js";
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  <!-- CSS con busting cache -->
-<link rel="stylesheet" href="style.css?v=1000">
+const db = getFirestore(app);
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+// -----------------------------------------------------
+// LOAD DATA
+// -----------------------------------------------------
+async function loadCharts() {
+  const snap = await getDocs(collection(db, "portafoglio"));
+  const rows = snap.docs.map(d => d.data());
 
-<body>
-  <div class="container">
+  if (!rows.length) return;
 
-    <header>
-      <h1>📊 Dashboard Portafoglio</h1>
-      <p class="subtitle">Analisi grafica</p>
-    </header>
+  buildCategoryChart(rows);
+  buildInvestedChart(rows);
+  buildTopScoreChart(rows);
+  buildTypeChart(rows);
+}
 
-    <!-- CONTROLLI -->
-    <div class="controls">
-      <label class="file-label">
-        📥 Importa Excel
-        <input type="file" accept=".xlsx,.xls">
-      </label>
+// -----------------------------------------------------
+// CHART 1: CATEGORIA
+// -----------------------------------------------------
+function buildCategoryChart(rows) {
+  const byCategory = {};
 
-      <button onclick="window.location.href='index.html'">
-        ⬅ Torna alla Home
-      </button>
+  rows.forEach(r => {
+    if (!byCategory[r.tipologia]) byCategory[r.tipologia] = 0;
+    byCategory[r.tipologia] += Number(r.prezzo_corrente || 0);
+  });
 
-      <button class="dashboard-btn">
-        📊 Dashboard
-      </button>
-    </div>
+  new Chart(document.getElementById("chartCategory"), {
+    type: "pie",
+    data: {
+      labels: Object.keys(byCategory),
+      datasets: [{
+        data: Object.values(byCategory)
+      }]
+    }
+  });
+}
 
-    <!-- GRAFICI -->
-    <div class="charts-grid">
+// -----------------------------------------------------
+// CHART 2: INVESTITO vs VALORE
+// -----------------------------------------------------
+function buildInvestedChart(rows) {
+  const invested = rows.reduce((a,b)=>a+Number(b.prezzo_acquisto||0), 0);
+  const value    = rows.reduce((a,b)=>a+Number(b.prezzo_corrente||0), 0);
 
-      <div class="chart-box">
-        <h3>Allocazione per Categoria</h3>
-        <canvas id="chartCategory"></canvas>
-      </div>
+  new Chart(document.getElementById("chartInvested"), {
+    type: "bar",
+    data: {
+      labels: ["Investito", "Valore"],
+      datasets: [{
+        data: [invested, value]
+      }]
+    }
+  });
+}
 
-      <div class="chart-box">
-        <h3>Investito vs Attuale</h3>
-        <canvas id="chartInvested"></canvas>
-      </div>
+// -----------------------------------------------------
+// CHART 3: TOP SCORE
+// -----------------------------------------------------
+function buildTopScoreChart(rows) {
+  const top = rows
+    .sort((a,b)=>b.score - a.score)
+    .slice(0,5);
 
-      <div class="chart-box">
-        <h3>Top 5 per Score</h3>
-        <canvas id="chartTopScore"></canvas>
-      </div>
+  new Chart(document.getElementById("chartTopScore"), {
+    type: "bar",
+    data: {
+      labels: top.map(t => t.nome),
+      datasets: [{
+        data: top.map(t => t.score)
+      }]
+    }
+  });
+}
 
-      <div class="chart-box">
-        <h3>% Investito per Tipologia</h3>
-        <canvas id="chartByType"></canvas>
-      </div>
+// -----------------------------------------------------
+// CHART 4: TIPOLOGIA %
+// -----------------------------------------------------
+function buildTypeChart(rows) {
+  const byType = {};
 
-    </div>
+  rows.forEach(r => {
+    if (!byType[r.tipologia]) byType[r.tipologia] = 0;
+    byType[r.tipologia] += Number(r.prezzo_acquisto || 0);
+  });
 
-  </div>
+  new Chart(document.getElementById("chartByType"), {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(byType),
+      datasets: [{
+        data: Object.values(byType)
+      }]
+    }
+  });
+}
 
-  <script src="dashboard.js?v=3"></script>
-</body>
-</html>
+loadCharts();
