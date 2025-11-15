@@ -15,6 +15,94 @@ body {
   color: #2c3e50;
   padding: 20px;
 }
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: 0.3s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #4b8bfd;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* ---------------------- */
+/* DARK MODE ACTIVATION   */
+/* ---------------------- */
+
+body.dark {
+  background: #111;
+  color: #eee;
+}
+
+body.dark .stat-card {
+  background: #1a1a1a;
+  border-color: #333;
+}
+
+body.dark table {
+  background: #1a1a1a;
+}
+
+body.dark table th {
+  background: #222;
+  color: #fff;
+}
+
+body.dark table td {
+  border-color: #333;
+}
+
+body.dark .modal-card {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+body.dark .action-buttons button {
+  background: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+body.dark .action-buttons button:hover {
+  background: #444;
+}
 
 /* ----------- CONTAINER ----------- */
 .container {
