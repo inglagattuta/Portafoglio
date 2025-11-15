@@ -276,4 +276,198 @@ window.importExcel = async function(event){
       if (!id) { skipped++; continue; }
 
       [
-        "prezzo_a_
+        "prezzo_acquisto","prezzo_corrente","dividendi","prelevato",
+        "percentuale_12_mesi","rendimento_percentuale","payback",
+        "percentuale_portafoglio","score"
+      ].forEach(k=>{
+        if (row[k] !== undefined && row[k] !== null && row[k] !== "")
+          row[k] = Number(row[k]);
+      });
+
+      delete row.profitto;
+      await updateDoc(doc(db,"portafoglio",id), row);
+      updated++;
+    }
+
+    alert(`Import completato. Aggiornati: ${updated}, Saltati: ${skipped}`);
+    await loadData();
+
+  } catch (e) {
+    console.error("import error", e);
+    alert("Errore import");
+  }
+};
+
+// -------------------------------------------------------------
+// EXPORT
+// -------------------------------------------------------------
+window.exportExcel = async function(){
+  try {
+    const snap = await getDocs(collection(db,"portafoglio"));
+    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Portafoglio");
+    XLSX.writeFile(wb, "portafoglio.xlsx");
+  } catch (e) {
+    console.error("export error", e);
+    alert("Errore export");
+  }
+};
+
+// -------------------------------------------------------------
+// STATISTICHE
+// -------------------------------------------------------------
+function updateStats(docs){
+  let totInvestito = 0;
+  let totValore = 0;
+  let totDiv = 0;
+  let totPrelevato = 0;
+
+  docs.forEach(d => {
+    const o = d.data();
+    totInvestito += Number(o.prezzo_acquisto || 0);
+    totValore    += Number(o.prezzo_corrente || 0);
+    totDiv       += Number(o.dividendi || 0);
+    totPrelevato += Number(o.prelevato || 0);
+  });
+
+  const profitto = totValore - totInvestito + totDiv + totPrelevato;
+
+  bxInvestito.textContent = fmtEuro(totInvestito);
+  bxValore.textContent    = fmtEuro(totValore);
+  bxDividendi.textContent = fmtEuro(totDiv);
+
+  bxProfitto.textContent = fmtEuro(profitto);
+  bxProfitto.style.color = profitto >= 0 ? "#2ecc71" : "#e74c3c";
+}
+
+// -------------------------------------------------------------
+// LOAD DATA
+// -------------------------------------------------------------
+async function loadData(){
+  tableBody.innerHTML = "";
+  renderHeader();
+
+  try {
+    const snap = await getDocs(collection(db,"portafoglio"));
+
+    snap.docs.forEach(docSnap => {
+      const d = docSnap.data();
+      const id = docSnap.id;
+      const tr = document.createElement("tr");
+
+      columns.forEach(col => {
+        const td = document.createElement("td");
+        if (hiddenCols.has(col)) td.style.display = "none";
+
+        if (col === "profitto") {
+          const p = Number(d.prezzo_corrente||0)
+                  - Number(d.prezzo_acquisto||0)
+                  + Number(d.dividendi||0)
+                  + Number(d.prelevato||0);
+          td.textContent = fmtEuro(p);
+          td.dataset.raw = p;
+        }
+        else if (euroCols.has(col)) {
+          const v = Number(d[col]||0);
+          td.textContent = fmtEuro(v);
+          td.dataset.raw = v;
+        }
+        else if (percentCols.has(col)) {
+          const v = Number(d[col]||0);
+          td.textContent = fmtPerc(v);
+          td.dataset.raw = v;
+        }
+        else if (col === "score") {
+          const v = Number(d[col] || 0);
+          td.textContent = fmtScore(v);
+          td.dataset.raw = v;
+          td.classList.add("score-cell");
+
+          if (v >= 12) td.classList.add("score-high");
+          else if (v >= 8) td.classList.add("score-medium");
+          else td.classList.add("score-low");
+        }
+        else {
+          td.textContent = d[col] ?? "";
+          td.dataset.raw = (d[col] ?? "").toString();
+        }
+
+        tr.appendChild(td);
+      });
+
+      const tdA = document.createElement("td");
+      tdA.classList.add("action-buttons");
+
+      const btE = document.createElement("button");
+      btE.textContent = "Modifica";
+      btE.onclick = () => openEditModal(id);
+
+      const btD = document.createElement("button");
+      btD.textContent = "Cancella";
+      btD.onclick = async () => {
+        if (!confirm("Confermi cancellazione?")) return;
+        await deleteDoc(doc(db,"portafoglio",id));
+        await loadData();
+      };
+
+      tdA.appendChild(btE);
+      tdA.appendChild(btD);
+      tr.appendChild(tdA);
+
+      const pa  = Number(d.prezzo_acquisto||0);
+      const pc  = Number(d.prezzo_corrente||0);
+      const div = Number(d.dividendi||0);
+      const pre = Number(d.prelevato||0);
+
+      const profit = pc - pa + div + pre;
+
+      if (profit > 0) tr.classList.add("profit-positive");
+      else if (profit < 0) tr.classList.add("profit-negative");
+      else tr.classList.add("profit-neutral");
+
+      tableBody.appendChild(tr);
+    });
+
+    updateStats(snap.docs);
+    enableSorting();
+
+  } catch (e) {
+    console.error("loadData error", e);
+    alert("Errore caricamento dati");
+  }
+}
+
+// -------------------------------------------------------------
+// START
+// -------------------------------------------------------------
+loadData();
+
+// -------------------------------------------------------------
+// DARK MODE
+// -------------------------------------------------------------
+const themeBtn = document.getElementById("toggle-theme");
+const body = document.body;
+
+// Tema salvato
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "dark") {
+  body.setAttribute("data-theme", "dark");
+  themeBtn.textContent = "☀️ Light Mode";
+}
+
+// Toggle
+themeBtn.addEventListener("click", () => {
+  const isDark = body.getAttribute("data-theme") === "dark";
+
+  if (isDark) {
+    body.setAttribute("data-theme", "light");
+    themeBtn.textContent = "🌙 Dark Mode";
+    localStorage.setItem("theme", "light");
+  } else {
+    body.setAttribute("data-theme", "dark");
+    themeBtn.textContent = "☀️ Light Mode";
+    localStorage.setItem("theme", "dark");
+  }
+});
