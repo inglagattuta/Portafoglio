@@ -1,88 +1,27 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portafoglio</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portafoglio Investimenti</title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css?v=4">
 
-  <!-- CSS con cache busting -->
-  <link rel="stylesheet" href="style.css?v=5">
+  <!-- Firebase -->
+  <script type="module" src="firebase-config.js?v=4"></script>
+
+  <!-- MAIN JS -->
+  <script type="module" src="main.js?v=4" defer></script>
 </head>
 
-<body data-theme="light">
-  <div class="container">
+<body class="dark-mode">
+  <header>
+    <h1>Portafoglio Investimenti</h1>
+  </header>
 
-    <!-- Switch Dark Mode SENZA testo -->
-    <div class="theme-toggle">
-      <label class="switch">
-        <input type="checkbox" id="themeSwitch">
-        <span class="slider round"></span>
-      </label>
-    </div>
-
-    <header>
-      <h1>💼 Portfolio Manager</h1>
-      <p class="subtitle">Francesco La Gattuta</p>
-    </header>
-
-    <!-- STATISTICHE -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Totale Investito</div>
-        <div class="stat-value" id="totInvestito">0.00 €</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Valore Attuale</div>
-        <div class="stat-value" id="valoreAttuale">0.00 €</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Totale Dividendi</div>
-        <div class="stat-value" id="totDividendi">0.00 €</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Profitto Totale</div>
-        <div class="stat-value" id="totProfitto">0.00 €</div>
-      </div>
-    </div>
-
-    <!-- CONTROLLI -->
-    <div class="controls">
-
-      <label class="file-label">
-        📥 Importa Excel
-        <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
-      </label>
-
-      <button onclick="exportExcel()">📤 Esporta Excel</button>
-
-      <button onclick="window.location.href='dashboard.html'" class="dashboard-btn">
-        📊 Dashboard
-      </button>
-    </div>
-
-    <!-- TABELLA -->
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr id="headerRow"></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-
-  </div>
-
-  <!-- Modal -->
-  <div id="modal-root"></div>
-
-  <!-- Excel JS -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- Script principale -->
-  <script type="module" src="main.js?v=5"></script>
-
+  <main id="root">
+    <!-- La dashboard verrà generata da main.js -->
+  </main>
 </body>
 </html>
