@@ -335,4 +335,9 @@ tr:nth-child(even) {
   margin-bottom: 15px;
   font-size: 1.2rem;
 }
+/* Rimuove ogni residuo dello switch light/dark */
+#themeSwitch,
+.switch {
+  display: none !important;
+}
 
