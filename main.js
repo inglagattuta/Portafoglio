@@ -336,18 +336,24 @@ function updateStats(docs) {
   const profit = totVal - totInv + totDiv + totPre;
   const percProfit = totInv > 0 ? (profit / totInv) * 100 : 0;
 
-  if (bxInvestito)  bxInvestito.textContent  = fmtEuro(totInv);
-  if (bxValore)     bxValore.textContent     = fmtEuro(totVal);
-  if (bxDividendi)  bxDividendi.textContent  = fmtEuro(totDiv);
-  if (bxProfitto) {
-    bxProfitto.textContent = fmtEuro(profit);
-    bxProfitto.style.color = profit >= 0 ? "#2ecc71" : "#e74c3c";
-  }
+  // Aggiorna valori principali
+  bxInvestito.textContent = fmtEuro(totInv);
+  bxValore.textContent    = fmtEuro(totVal);
+  bxDividendi.textContent = fmtEuro(totDiv);
+
+  // Aggiorna profitto totale
+  bxProfitto.textContent  = fmtEuro(profit);
+  bxProfitto.style.color  = profit >= 0 ? "#2ecc71" : "#e74c3c";
+
+  // NUOVO: aggiorna % profitto con colore
+  const elPerc = document.getElementById("totProfittoPerc");
   if (elPerc) {
-    elPerc.textContent = fmtPerc(percProfit);
-    elPerc.style.color = profit >= 0 ? "#2ecc71" : "#e74c3c";
+    elPerc.textContent = percProfit.toFixed(2) + " %";
+    elPerc.style.color = percProfit >= 0 ? "#2ecc71" : "#e74c3c";
+    elPerc.className = percProfit >= 0 ? "profit-positive" : "profit-negative";
   }
 }
+
 
 // -------------------------------------------------------------
 // LOAD DATA
