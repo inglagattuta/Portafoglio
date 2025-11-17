@@ -25,6 +25,7 @@ const bxInvestito = document.getElementById("totInvestito");
 const bxValore    = document.getElementById("valoreAttuale");
 const bxDividendi = document.getElementById("totDividendi");
 const bxProfitto  = document.getElementById("totProfitto");
+const elPerc      = document.getElementById("totProfittoPerc");
 
 // -------------------------------------------------------------
 // COLUMNS DEFINITIONS
@@ -229,9 +230,9 @@ async function openEditModal(docId) {
     });
 
     updated.profitto =
-      (updated.prezzo_corrente || 0) -
-      (updated.prezzo_acquisto || 0) +
-      (updated.dividendi || 0) +
+      (updated.prezzo_corrente || 0) - 
+      (updated.prezzo_acquisto || 0) + 
+      (updated.dividendi || 0) + 
       (updated.prelevato || 0);
 
     updated.score = Number(updated.score || 0);
@@ -333,20 +334,19 @@ function updateStats(docs) {
   });
 
   const profit = totVal - totInv + totDiv + totPre;
+  const percProfit = totInv > 0 ? (profit / totInv) * 100 : 0;
 
-  bxInvestito.textContent = fmtEuro(totInv);
-  bxValore.textContent    = fmtEuro(totVal);
-  bxDividendi.textContent = fmtEuro(totDiv);
-
-  bxProfitto.textContent  = fmtEuro(profit);
-  bxProfitto.style.color  = profit >= 0 ? "#2ecc71" : "#e74c3c";
-  // NUOVO: aggiorna % profitto
-const percProfit = totInv > 0 ? (profit / totInv) * 100 : 0;
-const elPerc = document.getElementById("totProfittoPerc");
-if (elPerc) {
-  elPerc.textContent = percProfit.toFixed(2) + " %";
-  elPerc.style.color = profit >= 0 ? "#2ecc71" : "#e74c3c";
-}
+  if (bxInvestito)  bxInvestito.textContent  = fmtEuro(totInv);
+  if (bxValore)     bxValore.textContent     = fmtEuro(totVal);
+  if (bxDividendi)  bxDividendi.textContent  = fmtEuro(totDiv);
+  if (bxProfitto) {
+    bxProfitto.textContent = fmtEuro(profit);
+    bxProfitto.style.color = profit >= 0 ? "#2ecc71" : "#e74c3c";
+  }
+  if (elPerc) {
+    elPerc.textContent = fmtPerc(percProfit);
+    elPerc.style.color = profit >= 0 ? "#2ecc71" : "#e74c3c";
+  }
 }
 
 // -------------------------------------------------------------
@@ -371,32 +371,23 @@ async function loadData() {
         if (hiddenCols.has(col)) td.style.display = "none";
 
         if (col === "profitto") {
-          const p =
-            (Number(d.prezzo_corrente) || 0) -
-            (Number(d.prezzo_acquisto) || 0) +
-            (Number(d.dividendi) || 0) +
-            (Number(d.prelevato) || 0);
-
+          const p = (Number(d.prezzo_corrente)||0) - (Number(d.prezzo_acquisto)||0) + 
+                    (Number(d.dividendi)||0) + (Number(d.prelevato)||0);
           td.textContent = fmtEuro(p);
           td.dataset.raw = p;
-        }
-        else if (euroCols.has(col)) {
+        } else if (euroCols.has(col)) {
           const v = Number(d[col] || 0);
           td.textContent = fmtEuro(v);
           td.dataset.raw = v;
-        }
-        else if (percCols.has(col)) {
+        } else if (percCols.has(col)) {
           const v = Number(d[col] || 0);
           td.textContent = fmtPerc(v);
           td.dataset.raw = v;
-        }
-        else if (col === "score") {
+        } else if (col === "score") {
           const v = Number(d[col] || 0);
           td.textContent = fmtScore(v);
           td.dataset.raw = v;
-          td.classList.add("score-cell");
-        }
-        else {
+        } else {
           td.textContent = d[col] ?? "";
           td.dataset.raw = (d[col] ?? "").toString();
         }
@@ -405,7 +396,6 @@ async function loadData() {
       });
 
       const tdA = document.createElement("td");
-      tdA.classList.add("action-buttons");
 
       const btE = document.createElement("button");
       btE.textContent = "Modifica";
@@ -421,7 +411,6 @@ async function loadData() {
 
       tdA.appendChild(btE);
       tdA.appendChild(btD);
-
       tr.appendChild(tdA);
 
       tableBody.appendChild(tr);
