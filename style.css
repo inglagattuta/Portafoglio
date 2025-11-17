@@ -409,10 +409,10 @@ tr:nth-child(even) {
   box-sizing: border-box;
 }
 
-/* Canvas adattabile */
 #chartTopScore12 {
-  min-width: 900px;     /* larghezza minima per grafico lungo */
+  min-width: 1500px !important;
 }
+
 
 
 
