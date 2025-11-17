@@ -34,14 +34,15 @@ function buildCategoryChart(rows) {
   });
 
   new Chart(document.getElementById("chartCategory"), {
-    type: "pie",
-    data: {
-      labels: Object.keys(byCategory),
-      datasets: [{
-        data: Object.values(byCategory)
-      }]
+  type: "pie",
+  data: { ... },
+  options: {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { font: { size: 10 } } }
     }
-  });
+  }
+});
 }
 
 // -----------------------------------------------------
@@ -52,14 +53,15 @@ function buildInvestedChart(rows) {
   const value    = rows.reduce((a,b)=>a+Number(b.prezzo_corrente||0), 0);
 
   new Chart(document.getElementById("chartInvested"), {
-    type: "bar",
-    data: {
-      labels: ["Investito", "Valore"],
-      datasets: [{
-        data: [invested, value]
-      }]
+  type: "pie",
+  data: { ... },
+  options: {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { font: { size: 10 } } }
     }
-  });
+  }
+});
 }
 
 // -----------------------------------------------------
@@ -71,14 +73,16 @@ function buildTopScoreChart(rows) {
     .slice(0,5);
 
   new Chart(document.getElementById("chartTopScore"), {
-    type: "bar",
-    data: {
-      labels: top.map(t => t.nome),
-      datasets: [{
-        data: top.map(t => t.score)
-      }]
+
+  type: "pie",
+  data: { ... },
+  options: {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { font: { size: 10 } } }
     }
-  });
+  }
+});
 }
 
 // -----------------------------------------------------
@@ -93,14 +97,17 @@ function buildTypeChart(rows) {
   });
 
   new Chart(document.getElementById("chartByType"), {
-    type: "doughnut",
-    data: {
-      labels: Object.keys(byType),
-      datasets: [{
-        data: Object.values(byType)
-      }]
+
+  type: "pie",
+  data: { ... },
+  options: {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { font: { size: 10 } } }
     }
-  });
+  }
+});
+
 }
 
 loadCharts();
