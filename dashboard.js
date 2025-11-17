@@ -133,58 +133,68 @@ function buildInvestedChart(rows) {
 function buildTopScore12Chart(rows) {
   const top = rows
     .filter(x => Number(x.score) > 12)
-    .sort((a, b) => Number(b.score) - Number(a.score));
+    .sort((a, b) => Number(b.score) - Number(a.score))
+    .slice(0, 5);   // <-- SOLO TOP 5
 
-  // --- Se non ci sono dati, esci ---
   if (!top.length) return;
 
-  // --- Altezza dinamica del grafico ---
-  const perBar = 40;  // px per ogni barra
-  const minH = 450;   // altezza minima
-  const totalH = Math.max(minH, top.length * perBar);
-
-  const wrapper = document.getElementById("topScoreWrapper");
-  if (wrapper) wrapper.style.height = totalH + "px";
-
-  // --- Preparazione dei dati ---
   const labels = top.map(x => x.nome || "N/A");
   const values = top.map(x => Number(x.score));
 
-  // --- Creazione del grafico ---
+  // Rende il canvas più basso e compatto
+  const wrapper = document.getElementById("topScoreWrapper");
+  if (wrapper) wrapper.style.height = "260px";
+
   new Chart(document.getElementById("chartTopScore12"), {
     type: "bar",
     data: {
       labels: labels,
       datasets: [{
-        label: "Score",
+        label: "",
         data: values,
-        borderWidth: 1,
-        backgroundColor: "rgba(54, 162, 235, 0.6)",
-        borderColor: "rgba(54, 162, 235, 1)"
+        borderWidth: 0,
+        backgroundColor: [
+          "rgba(54, 162, 235, 0.8)",
+          "rgba(75, 192, 192, 0.8)",
+          "rgba(255, 206, 86, 0.8)",
+          "rgba(153, 102, 255, 0.8)",
+          "rgba(255, 99, 132, 0.8)"
+        ],
+        hoverBackgroundColor: [
+          "rgba(54, 162, 235, 1)",
+          "rgba(75, 192, 192, 1)",
+          "rgba(255, 206, 86, 1)",
+          "rgba(153, 102, 255, 1)",
+          "rgba(255, 99, 132, 1)"
+        ]
       }]
     },
     options: {
       maintainAspectRatio: false,
-      indexAxis: 'y',    // <-- Rende il grafico orizzontale
+      indexAxis: 'y',
       plugins: {
         legend: { display: false },
         title: {
           display: true,
-          text: "Ranking Titoli con Score > 12",
-          font: { size: 20 }
+          text: "Top 5 Titoli per Score",
+          font: { size: 18, weight: "bold" },
+          padding: { bottom: 15 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `Score: ${ctx.raw.toFixed(2)}`
+          }
         }
       },
       scales: {
         x: {
           beginAtZero: true,
-          ticks: {
-            font: { size: 12 }
-          }
+          grid: { display: false },
+          ticks: { font: { size: 12 } }
         },
         y: {
-          ticks: {
-            font: { size: 12 }
-          }
+          grid: { display: false },
+          ticks: { font: { size: 13, weight: "bold" } }
         }
       }
     }
