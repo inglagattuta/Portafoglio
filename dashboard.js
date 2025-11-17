@@ -131,75 +131,64 @@ function buildInvestedChart(rows) {
 // CHART 3: TOP SCORE (TUTTI score > 12)
 // -----------------------------------------------------
 function buildTopScore12Chart(rows) {
-    const container = document.getElementById("chartTopScore12");
-    container.innerHTML = ""; // reset
+  const top = rows
+    .filter(x => Number(x.score) > 12)
+    .sort((a, b) => Number(b.score) - Number(a.score));
 
-    const filtered = rows
-        .filter(r => r.score > 12)
-        .sort((a, b) => b.score - a.score);
+  // --- Se non ci sono dati, esci ---
+  if (!top.length) return;
 
-    const labels = filtered.map(r => r.nome);
-    const values = filtered.map(r => r.score);
+  // --- Altezza dinamica del grafico ---
+  const perBar = 40;  // px per ogni barra
+  const minH = 450;   // altezza minima
+  const totalH = Math.max(minH, top.length * perBar);
 
-    const canvas = document.createElement("canvas");
-    container.appendChild(canvas);
+  const wrapper = document.getElementById("topScoreWrapper");
+  if (wrapper) wrapper.style.height = totalH + "px";
 
-    new Chart(canvas, {
-        type: "bar",
-        data: {
-            labels: labels,
-            datasets: [{
-                label: "Score",
-                data: values,
-                backgroundColor: "rgba(54, 162, 235, 0.7)",
-                borderColor: "rgba(54, 162, 235, 1)",
-                borderWidth: 2,
-                borderRadius: 6,
-                barThickness: 22
-            }]
-        },
-        options: {
-            indexAxis: "y",  // 👉 QUI LA MAGIA: grafico orizzontale
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                title: {
-                    display: true,
-                    text: "Top Titoli con Score > 12",
-                    color: "#333",
-                    font: { size: 22, weight: "bold" },
-                    padding: 20
-                },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => ` Score: ${ctx.raw.toFixed(2)}`
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        color: "#333",
-                        font: { size: 14 }
-                    },
-                    grid: {
-                        color: "rgba(0,0,0,0.1)"
-                    }
-                },
-                y: {
-                    ticks: {
-                        color: "#333",
-                        font: { size: 14 }
-                    },
-                    grid: { display: false }
-                }
-            },
-            layout: {
-                padding: { left: 20, right: 20, top: 10, bottom: 10 }
-            }
+  // --- Preparazione dei dati ---
+  const labels = top.map(x => x.nome || "N/A");
+  const values = top.map(x => Number(x.score));
+
+  // --- Creazione del grafico ---
+  new Chart(document.getElementById("chartTopScore12"), {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Score",
+        data: values,
+        borderWidth: 1,
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
+        borderColor: "rgba(54, 162, 235, 1)"
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      indexAxis: 'y',    // <-- Rende il grafico orizzontale
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: "Ranking Titoli con Score > 12",
+          font: { size: 20 }
         }
-    });
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            font: { size: 12 }
+          }
+        },
+        y: {
+          ticks: {
+            font: { size: 12 }
+          }
+        }
+      }
+    }
+  });
 }
 
 // -----------------------------------------------------
