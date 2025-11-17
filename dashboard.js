@@ -131,7 +131,7 @@ function buildTopScoreChart(rows) {
     .sort((a, b) => Number(b.score) - Number(a.score))
     .slice(0, 5);
 
-  const labels = top.map(x => x.titolo || "N/A");
+  const labels = top.map(x => x.nome || "N/A");
   const data = top.map(x => Number(x.score) || 0);
 
   new Chart(document.getElementById("chartTopScore"), {
