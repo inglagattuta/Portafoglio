@@ -23,70 +23,19 @@ const CRESCITA_LIST = [
 
 const CRYPTO_LIST = ["BTC", "ETH", "XRP"];
 
-// -------------------------
-// CALCOLO MINI CARDS
-// -------------------------
-const totInvestito = rows.reduce((sum, r) => sum + Number(r.prezzo_acquisto || 0), 0);
-if (totInvestito === 0) {
-  document.getElementById("pctDividendi").innerText = "0%";
-  document.getElementById("pctCrescita").innerText = "0%";
-  document.getElementById("pctCripto").innerText = "0%";
-  return;
-}
-
-// Liste categorie (tutto in MAIUSCOLO)
-const DIVIDENDI = new Set([
-  "AGNC","AMLP","ARCC","ARR","BKLN","BOAT","EFC","EPR","HAUTO.OL","HRZN","HTGC",
-  "IIPR","IUS7","LQDE.L","MAIN","MPCC.OL","NLY","NORAM.OL","O","OHI","OMF","ORC",
-  "PSEC","QYLD","SCHD","SDIV","SHYG","SRLN","TPVG","TRMD-A.OL","VAR.OL","WES",
-  "XIFR","ZIM"
-]);
-
-const CRESCITA = new Set([
-  "AAPL","AMZN","DOCU","GOOG","HDX1E.DE","META","MSFT","NUGT","NVDA","TQQQ","UPRO"
-]);
-
-const CRIPTO = new Set([
-  "BTC","ETH","XRP"
-]);
-
-let sommaDiv = 0;
-let sommaCrescita = 0;
-let sommaCripto = 0;
-
-rows.forEach(r => {
-  const name = (r.nome || "").toUpperCase().trim();
-  const investito = Number(r.prezzo_acquisto || 0);
-
-  if (DIVIDENDI.has(name)) sommaDiv += investito;
-  else if (CRESCITA.has(name)) sommaCrescita += investito;
-  else if (CRIPTO.has(name)) sommaCripto += investito;
-});
-
-// Calcolo percentuali
-const pctDiv = (sommaDiv / totInvestito * 100).toFixed(2) + "%";
-const pctCresc = (sommaCrescita / totInvestito * 100).toFixed(2) + "%";
-const pctCr = (sommaCripto / totInvestito * 100).toFixed(2) + "%";
-
-// Aggiorna UI
-document.getElementById("pctDividendi").innerText = pctDiv;
-document.getElementById("pctCrescita").innerText = pctCresc;
-document.getElementById("pctCripto").innerText = pctCr;
-
-
 // -----------------------------------------------------
 // LOAD DATA
 // -----------------------------------------------------
 async function loadCharts() {
   const snap = await getDocs(collection(db, "portafoglio"));
   const rows = snap.docs.map(d => d.data());
-  
+
   if (!rows.length) return;
 
-  // === NUOVO BLOCCO: CALCOLO 3 BOX ===================
+  // MINI CARDS PERCENTUALI
   calcCategoryBoxes(rows);
 
-  // === GRAFICI =======================================
+  // GRAFICI
   buildCategoryChart(rows);
   buildInvestedChart(rows);
   buildTopScoreChart(rows);
@@ -117,10 +66,10 @@ function calcCategoryBoxes(rows) {
   const pCrescita = totalInvested ? (sumCrescita / totalInvested * 100) : 0;
   const pCrypto = totalInvested ? (sumCrypto / totalInvested * 100) : 0;
 
-  // Aggiorna box in HTML
+  // Aggiorna box
   document.getElementById("pctDividendi").innerText = pDiv.toFixed(2) + "%";
-document.getElementById("pctCrescita").innerText = pCrescita.toFixed(2) + "%";
-document.getElementById("pctCripto").innerText = pCrypto.toFixed(2) + "%";
+  document.getElementById("pctCrescita").innerText = pCrescita.toFixed(2) + "%";
+  document.getElementById("pctCripto").innerText = pCrypto.toFixed(2) + "%";
 }
 
 // -----------------------------------------------------
@@ -138,15 +87,11 @@ function buildCategoryChart(rows) {
     type: "pie",
     data: {
       labels: Object.keys(byCategory),
-      datasets: [{
-        data: Object.values(byCategory)
-      }]
+      datasets: [{ data: Object.values(byCategory) }]
     },
     options: {
       maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { font: { size: 10 } } }
-      }
+      plugins: { legend: { labels: { font: { size: 10 } } } }
     }
   });
 }
@@ -162,15 +107,11 @@ function buildInvestedChart(rows) {
     type: "pie",
     data: {
       labels: ["Investito", "Valore Attuale"],
-      datasets: [{
-        data: [invested, value]
-      }]
+      datasets: [{ data: [invested, value] }]
     },
     options: {
       maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { font: { size: 10 } } }
-      }
+      plugins: { legend: { labels: { font: { size: 10 } } } }
     }
   });
 }
@@ -187,21 +128,17 @@ function buildTopScoreChart(rows) {
     type: "pie",
     data: {
       labels: top.map(x => x.titolo),
-      datasets: [{
-        data: top.map(x => x.score)
-      }]
+      datasets: [{ data: top.map(x => x.score) }]
     },
     options: {
       maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { font: { size: 10 } } }
-      }
+      plugins: { legend: { labels: { font: { size: 10 } } } }
     }
   });
 }
 
 // -----------------------------------------------------
-// CHART 4: TIPOLOGIA %
+// CHART 4: TIPI DI INVESTIMENTO
 // -----------------------------------------------------
 function buildTypeChart(rows) {
   const byType = {};
@@ -215,15 +152,11 @@ function buildTypeChart(rows) {
     type: "pie",
     data: {
       labels: Object.keys(byType),
-      datasets: [{
-        data: Object.values(byType)
-      }]
+      datasets: [{ data: Object.values(byType) }]
     },
     options: {
       maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { font: { size: 10 } } }
-      }
+      plugins: { legend: { labels: { font: { size: 10 } } } }
     }
   });
 }
