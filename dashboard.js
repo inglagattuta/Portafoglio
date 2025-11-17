@@ -53,7 +53,7 @@ function calcCategoryBoxes(rows) {
   let sumCrypto = 0;
 
   rows.forEach(r => {
-    const ticker = r.titolo?.trim().toUpperCase();
+    const ticker = r.nome?.trim().toUpperCase();
     const val = Number(r.prezzo_acquisto || 0);
 
     if (DIVIDENDI_LIST.includes(ticker)) sumDiv += val;
