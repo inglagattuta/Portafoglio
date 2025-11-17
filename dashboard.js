@@ -66,10 +66,16 @@ function calcCategoryBoxes(rows) {
   const pCrescita = totalInvested ? (sumCrescita / totalInvested * 100) : 0;
   const pCrypto = totalInvested ? (sumCrypto / totalInvested * 100) : 0;
 
-  // Aggiorna box
-  document.getElementById("pctDividendi").innerText = pDiv.toFixed(2) + "%";
-  document.getElementById("pctCrescita").innerText = pCrescita.toFixed(2) + "%";
-  document.getElementById("pctCripto").innerText = pCrypto.toFixed(2) + "%";
+  // Aggiorna box in HTML (percentuale + valore in €)
+document.getElementById("pctDividendi").innerText =
+  `${pDiv.toFixed(2)}% — ${sumDiv.toFixed(2)} €`;
+
+document.getElementById("pctCrescita").innerText =
+  `${pCrescita.toFixed(2)}% — ${sumCrescita.toFixed(2)} €`;
+
+document.getElementById("pctCripto").innerText =
+  `${pCrypto.toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
+
 }
 
 // -----------------------------------------------------
