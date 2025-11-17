@@ -141,7 +141,6 @@ function buildTopScore12Chart(rows) {
     const labels = filtered.map(r => r.nome);
     const values = filtered.map(r => r.score);
 
-    // canvas
     const canvas = document.createElement("canvas");
     container.appendChild(canvas);
 
@@ -152,14 +151,15 @@ function buildTopScore12Chart(rows) {
             datasets: [{
                 label: "Score",
                 data: values,
-                backgroundColor: "rgba(54, 162, 235, 0.65)",
+                backgroundColor: "rgba(54, 162, 235, 0.7)",
                 borderColor: "rgba(54, 162, 235, 1)",
                 borderWidth: 2,
                 borderRadius: 6,
-                barThickness: 30
+                barThickness: 22
             }]
         },
         options: {
+            indexAxis: "y",  // 👉 QUI LA MAGIA: grafico orizzontale
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
@@ -181,24 +181,22 @@ function buildTopScore12Chart(rows) {
                 x: {
                     ticks: {
                         color: "#333",
-                        font: { size: 14 },
-                        maxRotation: 0,
-                        minRotation: 0
+                        font: { size: 14 }
                     },
-                    grid: { display: false }
+                    grid: {
+                        color: "rgba(0,0,0,0.1)"
+                    }
                 },
                 y: {
                     ticks: {
                         color: "#333",
                         font: { size: 14 }
                     },
-                    grid: {
-                        color: "rgba(0,0,0,0.1)"
-                    }
+                    grid: { display: false }
                 }
             },
             layout: {
-                padding: { left: 10, right: 10, top: 10, bottom: 10 }
+                padding: { left: 20, right: 20, top: 10, bottom: 10 }
             }
         }
     });
