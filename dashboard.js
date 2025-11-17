@@ -131,70 +131,77 @@ function buildInvestedChart(rows) {
 // CHART 3: TOP SCORE (TUTTI score > 12)
 // -----------------------------------------------------
 function buildTopScore12Chart(rows) {
-  const top = rows
-    .filter(x => Number(x.score) > 12)
-    .sort((a, b) => Number(b.score) - Number(a.score));
+    const container = document.getElementById("chartTopScore12");
+    container.innerHTML = ""; // reset
 
-  const labels = top.map(x => x.nome || "N/A");
-  const values = top.map(x => Number(x.score));
+    const filtered = rows
+        .filter(r => r.score > 12)
+        .sort((a, b) => b.score - a.score);
 
-  const ctx = document.getElementById("chartTopScore12");
+    const labels = filtered.map(r => r.nome);
+    const values = filtered.map(r => r.score);
 
-  // Forza il grafico ad essere molto largo
-  ctx.parentElement.style.height = (labels.length * 28) + "px";
+    // canvas
+    const canvas = document.createElement("canvas");
+    container.appendChild(canvas);
 
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Score",
-        data: values,
-        borderWidth: 1,
-        backgroundColor: "#4A90E2",
-        borderColor: "#1C5FAF",
-        borderRadius: 6,
-        barThickness: 20
-      }]
-    },
-    options: {
-      indexAxis: "y",
-      maintainAspectRatio: false,
-      responsive: true,
-      scales: {
-        x: {
-          beginAtZero: true,
-          ticks: {
-            font: { size: 14 },
-            color: "#333"
-          },
-          grid: { display: false }
+    new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Score",
+                data: values,
+                backgroundColor: "rgba(54, 162, 235, 0.65)",
+                borderColor: "rgba(54, 162, 235, 1)",
+                borderWidth: 2,
+                borderRadius: 6,
+                barThickness: 30
+            }]
         },
-        y: {
-          ticks: {
-            font: { size: 14 },
-            color: "#444"
-          }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: "Top Titoli con Score > 12",
+                    color: "#333",
+                    font: { size: 22, weight: "bold" },
+                    padding: 20
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` Score: ${ctx.raw.toFixed(2)}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: "#333",
+                        font: { size: 14 },
+                        maxRotation: 0,
+                        minRotation: 0
+                    },
+                    grid: { display: false }
+                },
+                y: {
+                    ticks: {
+                        color: "#333",
+                        font: { size: 14 }
+                    },
+                    grid: {
+                        color: "rgba(0,0,0,0.1)"
+                    }
+                }
+            },
+            layout: {
+                padding: { left: 10, right: 10, top: 10, bottom: 10 }
+            }
         }
-      },
-      plugins: {
-        legend: { display: false },
-        title: {
-          display: true,
-          text: "Top Titoli per Score (>12)",
-          color: "#222",
-          font: { size: 20, weight: "bold" },
-          padding: { top: 10, bottom: 20 }
-        },
-        tooltip: {
-          backgroundColor: "rgba(0,0,0,0.8)",
-          padding: 10,
-          titleFont: { size: 14 },
-          bodyFont: { size: 13 }
-        }
-      }
-    }
-  });
+    });
 }
 
 // -----------------------------------------------------
