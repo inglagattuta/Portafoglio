@@ -32,16 +32,21 @@ async function loadCharts() {
 
   if (!rows.length) return;
 
+  console.log(
+    "DEBUG >12:", 
+    rows.filter(x => Number(x.score) > 12).length,
+    rows.filter(x => Number(x.score) > 12).map(x => x.nome)
+  );
+
   // MINI CARDS
   calcCategoryBoxes(rows);
 
   // GRAFICI ESISTENTI
   buildCategoryChart(rows);
   buildInvestedChart(rows);
-
   buildTypeChart(rows);
 
-  // ⭐ NUOVO GRAFICO QUI
+  // ⭐ NUOVO GRAFICO: TUTTI I TITOLI CON SCORE > 12
   buildTopScore12Chart(rows);
 }
 
@@ -64,21 +69,18 @@ function calcCategoryBoxes(rows) {
     else if (CRYPTO_LIST.includes(ticker)) sumCrypto += val;
   });
 
-  // Percentuali
   const pDiv = totalInvested ? (sumDiv / totalInvested * 100) : 0;
   const pCrescita = totalInvested ? (sumCrescita / totalInvested * 100) : 0;
   const pCrypto = totalInvested ? (sumCrypto / totalInvested * 100) : 0;
 
-  // Aggiorna box in HTML (percentuale + valore in €)
-document.getElementById("pctDividendi").innerText =
-  `${pDiv.toFixed(2)}% — ${sumDiv.toFixed(2)} €`;
+  document.getElementById("pctDividendi").innerText =
+    `${pDiv.toFixed(2)}% — ${sumDiv.toFixed(2)} €`;
 
-document.getElementById("pctCrescita").innerText =
-  `${pCrescita.toFixed(2)}% — ${sumCrescita.toFixed(2)} €`;
+  document.getElementById("pctCrescita").innerText =
+    `${pCrescita.toFixed(2)}% — ${sumCrescita.toFixed(2)} €`;
 
-document.getElementById("pctCripto").innerText =
-  `${pCrypto.toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
-
+  document.getElementById("pctCripto").innerText =
+    `${pCrypto.toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
 }
 
 // -----------------------------------------------------
@@ -126,7 +128,7 @@ function buildInvestedChart(rows) {
 }
 
 // -----------------------------------------------------
-// CHART 3: TOP SCORE (bar chart, solo score > 12)
+// CHART 3: TOP SCORE (TUTTI score > 12)
 // -----------------------------------------------------
 function buildTopScore12Chart(rows) {
   const top = rows
@@ -171,8 +173,6 @@ function buildTopScore12Chart(rows) {
     }
   });
 }
-
-
 
 // -----------------------------------------------------
 // CHART 4: TIPI DI INVESTIMENTO
