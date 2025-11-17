@@ -368,4 +368,33 @@ tr:nth-child(even) {
   margin-bottom: 10px;
 }
 
+/* MINI CARDS */
+.mini-cards {
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+  justify-content: space-between;
+}
+
+.mini-card {
+  flex: 1;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  padding: 15px;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.mini-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.mini-card p {
+  margin: 8px 0 0;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+
 
