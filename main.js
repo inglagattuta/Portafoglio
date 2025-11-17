@@ -374,11 +374,14 @@ async function loadData() {
       columns.forEach(col => {
         const td = document.createElement("td");
 
+        // Mostra o nasconde colonne
         if (hiddenCols.has(col)) td.style.display = "none";
+        else td.style.display = "table-cell";
 
+        // Contenuto celle
         if (col === "profitto") {
-          const p = (Number(d.prezzo_corrente)||0) - (Number(d.prezzo_acquisto)||0) + 
-                    (Number(d.dividendi)||0) + (Number(d.prelevato)||0);
+          const p = (Number(d.prezzo_corrente) || 0) - (Number(d.prezzo_acquisto) || 0) + 
+                    (Number(d.dividendi) || 0) + (Number(d.prelevato) || 0);
           td.textContent = fmtEuro(p);
           td.dataset.raw = p;
         } else if (euroCols.has(col)) {
@@ -393,6 +396,7 @@ async function loadData() {
           const v = Number(d[col] || 0);
           td.textContent = fmtScore(v);
           td.dataset.raw = v;
+          td.classList.add("score-cell");
         } else {
           td.textContent = d[col] ?? "";
           td.dataset.raw = (d[col] ?? "").toString();
@@ -401,7 +405,10 @@ async function loadData() {
         tr.appendChild(td);
       });
 
+      // Colonna azioni
       const tdA = document.createElement("td");
+      tdA.classList.add("action-buttons");
+      tdA.style.display = "table-cell"; // importante per allineamento
 
       const btE = document.createElement("button");
       btE.textContent = "Modifica";
@@ -422,6 +429,7 @@ async function loadData() {
       tableBody.appendChild(tr);
     });
 
+    // Aggiorna statistiche
     updateStats(snap.docs);
     enableSorting();
 
@@ -430,8 +438,3 @@ async function loadData() {
     alert("Errore nel caricamento dati.");
   }
 }
-
-// -------------------------------------------------------------
-// START
-// -------------------------------------------------------------
-loadData();
