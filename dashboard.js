@@ -126,48 +126,47 @@ function buildInvestedChart(rows) {
 // CHART 3: TOP SCORE (bar chart, solo score > 12)
 // -----------------------------------------------------
 function buildTopScoreChart(rows) {
+  // Ordina per score e prendi sempre i primi 5
+  const top = rows
+    .sort((a, b) => Number(b.score) - Number(a.score))
+    .slice(0, 5);
 
-  // Filtra titoli con score > 12
-  const filtered = rows
-    .filter(r => Number(r.score) > 12)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 10);  // prendi anche più di 5 se ci sono
-
-  if (!filtered.length) return;
-
-  const labels = filtered.map(r => r.titolo);
-  const values = filtered.map(r => Number(r.score));
+  const labels = top.map(x => x.titolo || "N/A");
+  const data = top.map(x => Number(x.score) || 0);
 
   new Chart(document.getElementById("chartTopScore"), {
     type: "bar",
     data: {
-      labels,
+      labels: labels,
       datasets: [{
         label: "Score",
-        data: values
+        data: data,
+        borderWidth: 1
       }]
     },
     options: {
+      indexAxis: "x",
       maintainAspectRatio: false,
       responsive: true,
-
       scales: {
         y: {
           beginAtZero: true,
-          ticks: { font: { size: 10 } }
+          ticks: { font: { size: 12 } }
         },
         x: {
-          ticks: { font: { size: 10 } }
+          ticks: { font: { size: 12 } }
         }
       },
-
       plugins: {
         legend: { display: false },
-        tooltip: { enabled: true }
+        title: {
+          display: true,
+          text: "Top 5 Titoli per Score",
+          font: { size: 14 }
+        }
       }
     }
   });
-
 }
 
 
