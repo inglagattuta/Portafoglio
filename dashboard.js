@@ -38,7 +38,7 @@ async function loadCharts() {
   // GRAFICI ESISTENTI
   buildCategoryChart(rows);
   buildInvestedChart(rows);
-  buildTopScoreChart(rows);
+
   buildTypeChart(rows);
 
   // ⭐ NUOVO GRAFICO QUI
