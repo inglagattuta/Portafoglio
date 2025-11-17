@@ -123,25 +123,53 @@ function buildInvestedChart(rows) {
 }
 
 // -----------------------------------------------------
-// CHART 3: TOP SCORE
+// CHART 3: TOP SCORE (bar chart, solo score > 12)
 // -----------------------------------------------------
 function buildTopScoreChart(rows) {
-  const top = rows
-    .sort((a,b)=>b.score - a.score)
-    .slice(0,5);
+
+  // Filtra titoli con score > 12
+  const filtered = rows
+    .filter(r => Number(r.score) > 12)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);  // prendi anche più di 5 se ci sono
+
+  if (!filtered.length) return;
+
+  const labels = filtered.map(r => r.titolo);
+  const values = filtered.map(r => Number(r.score));
 
   new Chart(document.getElementById("chartTopScore"), {
-    type: "pie",
+    type: "bar",
     data: {
-      labels: top.map(x => x.titolo),
-      datasets: [{ data: top.map(x => x.score) }]
+      labels,
+      datasets: [{
+        label: "Score",
+        data: values
+      }]
     },
     options: {
       maintainAspectRatio: false,
-      plugins: { legend: { labels: { font: { size: 10 } } } }
+      responsive: true,
+
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { font: { size: 10 } }
+        },
+        x: {
+          ticks: { font: { size: 10 } }
+        }
+      },
+
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: true }
+      }
     }
   });
+
 }
+
 
 // -----------------------------------------------------
 // CHART 4: TIPI DI INVESTIMENTO
