@@ -129,11 +129,9 @@ function buildInvestedChart(rows) {
 // CHART 3: TOP SCORE (bar chart, solo score > 12)
 // -----------------------------------------------------
 function buildTopScore12Chart(rows) {
-  console.log("SCORE TROVATI:", rows.map(r => ({ nome: r.nome, score: r.score })));
   const top = rows
     .filter(x => Number(x.score) > 12)
-    .sort((a, b) => Number(b.score) - Number(a.score))
-    .slice(0, 5);
+    .sort((a, b) => Number(b.score) - Number(a.score));
 
   const labels = top.map(x => x.nome || "N/A");
   const values = top.map(x => Number(x.score));
