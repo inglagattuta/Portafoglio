@@ -23,6 +23,57 @@ const CRESCITA_LIST = [
 
 const CRYPTO_LIST = ["BTC", "ETH", "XRP"];
 
+// -------------------------
+// CALCOLO MINI CARDS
+// -------------------------
+const totInvestito = rows.reduce((sum, r) => sum + Number(r.prezzo_acquisto || 0), 0);
+if (totInvestito === 0) {
+  document.getElementById("pctDividendi").innerText = "0%";
+  document.getElementById("pctCrescita").innerText = "0%";
+  document.getElementById("pctCripto").innerText = "0%";
+  return;
+}
+
+// Liste categorie (tutto in MAIUSCOLO)
+const DIVIDENDI = new Set([
+  "AGNC","AMLP","ARCC","ARR","BKLN","BOAT","EFC","EPR","HAUTO.OL","HRZN","HTGC",
+  "IIPR","IUS7","LQDE.L","MAIN","MPCC.OL","NLY","NORAM.OL","O","OHI","OMF","ORC",
+  "PSEC","QYLD","SCHD","SDIV","SHYG","SRLN","TPVG","TRMD-A.OL","VAR.OL","WES",
+  "XIFR","ZIM"
+]);
+
+const CRESCITA = new Set([
+  "AAPL","AMZN","DOCU","GOOG","HDX1E.DE","META","MSFT","NUGT","NVDA","TQQQ","UPRO"
+]);
+
+const CRIPTO = new Set([
+  "BTC","ETH","XRP"
+]);
+
+let sommaDiv = 0;
+let sommaCrescita = 0;
+let sommaCripto = 0;
+
+rows.forEach(r => {
+  const name = (r.nome || "").toUpperCase().trim();
+  const investito = Number(r.prezzo_acquisto || 0);
+
+  if (DIVIDENDI.has(name)) sommaDiv += investito;
+  else if (CRESCITA.has(name)) sommaCrescita += investito;
+  else if (CRIPTO.has(name)) sommaCripto += investito;
+});
+
+// Calcolo percentuali
+const pctDiv = (sommaDiv / totInvestito * 100).toFixed(2) + "%";
+const pctCresc = (sommaCrescita / totInvestito * 100).toFixed(2) + "%";
+const pctCr = (sommaCripto / totInvestito * 100).toFixed(2) + "%";
+
+// Aggiorna UI
+document.getElementById("pctDividendi").innerText = pctDiv;
+document.getElementById("pctCrescita").innerText = pctCresc;
+document.getElementById("pctCripto").innerText = pctCr;
+
+
 // -----------------------------------------------------
 // LOAD DATA
 // -----------------------------------------------------
