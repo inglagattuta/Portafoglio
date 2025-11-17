@@ -80,11 +80,7 @@ document.getElementById("pctCripto").innerText =
   `${pCrypto.toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
 
 }
-console.log(
-  "DEBUG >12:", 
-  rows.filter(x => Number(x.score) > 12).length,
-  rows.filter(x => Number(x.score) > 12).map(x => x.nome)
-);
+
 // -----------------------------------------------------
 // CHART 1: CATEGORIA
 // -----------------------------------------------------
