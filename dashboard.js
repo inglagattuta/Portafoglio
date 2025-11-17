@@ -138,7 +138,12 @@ function buildTopScore12Chart(rows) {
   const labels = top.map(x => x.nome || "N/A");
   const values = top.map(x => Number(x.score));
 
-  new Chart(document.getElementById("chartTopScore12"), {
+  const ctx = document.getElementById("chartTopScore12");
+
+  // Forza il grafico ad essere molto largo
+  ctx.parentElement.style.height = (labels.length * 28) + "px";
+
+  new Chart(ctx, {
     type: "bar",
     data: {
       labels: labels,
@@ -146,28 +151,46 @@ function buildTopScore12Chart(rows) {
         label: "Score",
         data: values,
         borderWidth: 1,
-        backgroundColor: "rgba(54, 162, 235, 0.5)",
-        borderColor: "rgba(54, 162, 235, 1)"
+        backgroundColor: "#4A90E2",
+        borderColor: "#1C5FAF",
+        borderRadius: 6,
+        barThickness: 20
       }]
     },
     options: {
+      indexAxis: "y",
       maintainAspectRatio: false,
-      indexAxis: "x",
+      responsive: true,
       scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { font: { size: 12 } }
-        },
         x: {
-          ticks: { font: { size: 12 } }
+          beginAtZero: true,
+          ticks: {
+            font: { size: 14 },
+            color: "#333"
+          },
+          grid: { display: false }
+        },
+        y: {
+          ticks: {
+            font: { size: 14 },
+            color: "#444"
+          }
         }
       },
       plugins: {
         legend: { display: false },
         title: {
           display: true,
-          text: "Top Titoli con Score > 12",
-          font: { size: 16 }
+          text: "Top Titoli per Score (>12)",
+          color: "#222",
+          font: { size: 20, weight: "bold" },
+          padding: { top: 10, bottom: 20 }
+        },
+        tooltip: {
+          backgroundColor: "rgba(0,0,0,0.8)",
+          padding: 10,
+          titleFont: { size: 14 },
+          bodyFont: { size: 13 }
         }
       }
     }
