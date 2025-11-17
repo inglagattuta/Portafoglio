@@ -340,7 +340,7 @@ function updateStats(docs) {
 
   bxProfitto.textContent  = fmtEuro(profit);
   bxProfitto.style.color  = profit >= 0 ? "#2ecc71" : "#e74c3c";
-  / NUOVO: aggiorna % profitto
+  // NUOVO: aggiorna % profitto
 const percProfit = totInv > 0 ? (profit / totInv) * 100 : 0;
 const elPerc = document.getElementById("totProfittoPerc");
 if (elPerc) {
