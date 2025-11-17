@@ -125,29 +125,30 @@ function buildInvestedChart(rows) {
 // -----------------------------------------------------
 // CHART 3: TOP SCORE (bar chart, solo score > 12)
 // -----------------------------------------------------
-function buildTopScoreChart(rows) {
-  // Ordina per score e prendi sempre i primi 5
+function buildTopScore12Chart(rows) {
   const top = rows
+    .filter(x => Number(x.score) > 12)
     .sort((a, b) => Number(b.score) - Number(a.score))
     .slice(0, 5);
 
   const labels = top.map(x => x.nome || "N/A");
-  const data = top.map(x => Number(x.score) || 0);
+  const values = top.map(x => Number(x.score));
 
-  new Chart(document.getElementById("chartTopScore"), {
+  new Chart(document.getElementById("chartTopScore12"), {
     type: "bar",
     data: {
       labels: labels,
       datasets: [{
         label: "Score",
-        data: data,
-        borderWidth: 1
+        data: values,
+        borderWidth: 1,
+        backgroundColor: "rgba(54, 162, 235, 0.5)",
+        borderColor: "rgba(54, 162, 235, 1)"
       }]
     },
     options: {
-      indexAxis: "x",
       maintainAspectRatio: false,
-      responsive: true,
+      indexAxis: "x",
       scales: {
         y: {
           beginAtZero: true,
@@ -161,13 +162,14 @@ function buildTopScoreChart(rows) {
         legend: { display: false },
         title: {
           display: true,
-          text: "Top 5 Titoli per Score",
-          font: { size: 14 }
+          text: "Top Titoli con Score > 12",
+          font: { size: 16 }
         }
       }
     }
   });
 }
+
 
 
 // -----------------------------------------------------
