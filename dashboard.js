@@ -32,14 +32,17 @@ async function loadCharts() {
 
   if (!rows.length) return;
 
-  // MINI CARDS PERCENTUALI
+  // MINI CARDS
   calcCategoryBoxes(rows);
 
-  // GRAFICI
+  // GRAFICI ESISTENTI
   buildCategoryChart(rows);
   buildInvestedChart(rows);
   buildTopScoreChart(rows);
   buildTypeChart(rows);
+
+  // ⭐ NUOVO GRAFICO QUI
+  buildTopScore12Chart(rows);
 }
 
 // -----------------------------------------------------
