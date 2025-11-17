@@ -340,4 +340,32 @@ tr:nth-child(even) {
 .switch {
   display: none !important;
 }
+/* --- DASHBOARD GRAFICI COMPACT MODE --- */
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Contenitore del grafico */
+.chart-card {
+  padding: 15px;
+  border-radius: 14px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+/* Rimpiccioliamo i grafici */
+.chart-card canvas {
+  max-height: 220px !important;
+}
+
+/* Titolo più compatto */
+.chart-card h2 {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
 
