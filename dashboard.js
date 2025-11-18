@@ -8,9 +8,10 @@ import {
 const db = getFirestore(app);
 
 let currentLimit = 5;
+let rowsGlobal = [];   // 🔥 serve per aggiornare solo grafico TopPrezzi
 
 // =============================
-// LISTE TITOLI PER CATEGORIA
+// LISTE TITOLI
 // =============================
 const DIVIDENDI_LIST = [
   "AGNC","AMLP","ARCC","ARR","BKLN","BOAT","EFC","EPR","HAUTO.OL","HRZN","HTGC",
@@ -30,16 +31,16 @@ const CRYPTO_LIST = ["BTC", "ETH", "XRP"];
 // ==========================================================
 async function loadCharts() {
   const snap = await getDocs(collection(db, "portafoglio"));
-  const rows = snap.docs.map(d => d.data());
+  rowsGlobal = snap.docs.map(d => d.data());
 
-  if (!rows.length) return;
+  if (!rowsGlobal.length) return;
 
-  calcCategoryBoxes(rows);
-  buildCategoryChart(rows);
-  buildInvestedChart(rows);
-  buildTypeChart(rows);
-  buildTopScore12Chart(rows);
-  buildTopPriceChart(rows, currentLimit);
+  calcCategoryBoxes(rowsGlobal);
+  buildCategoryChart(rowsGlobal);
+  buildInvestedChart(rowsGlobal);
+  buildTypeChart(rowsGlobal);
+  buildTopScore12Chart(rowsGlobal);
+  buildTopPriceChart(rowsGlobal, currentLimit);
 }
 
 // ==========================================================
@@ -91,7 +92,7 @@ function buildCategoryChart(rows) {
 }
 
 // ==========================================================
-// CHART 2: INVESTITO / VALORE ATTUALE
+// CHART 2: INVESTITO VS VALORE
 // ==========================================================
 function buildInvestedChart(rows) {
   const invested = rows.reduce((a,b)=>a+Number(b.prezzo_acquisto||0), 0);
@@ -108,7 +109,7 @@ function buildInvestedChart(rows) {
 }
 
 // ==========================================================
-// CHART 3: TOP SCORE (ORIZZONTALE)
+// CHART 3: TOP SCORE
 // ==========================================================
 function buildTopScore12Chart(rows) {
   const top = rows
@@ -171,7 +172,8 @@ function buildTopPriceChart(rows, limit = 5) {
     .slice(0, limit);
 
   const labels = top.map(t => t.nome);
-  const prices = top.map(t => Number(t.prezzo_corrente));
+  const prezziAcq = top.map(t => Number(t.prezzo_acquisto || 0));
+  const prezziCorr = top.map(t => Number(t.prezzo_corrente || 0));
 
   chartTopPriceInstance = new Chart(ctx, {
     type: "bar",
@@ -179,38 +181,43 @@ function buildTopPriceChart(rows, limit = 5) {
       labels,
       datasets: [
         {
-          label: `Top ${limit} Prezzi`,
-          data: prices
+          label: "Prezzo Acquisto",
+          data: prezziAcq,
+          backgroundColor: "rgba(54, 162, 235, 0.7)"
+        },
+        {
+          label: "Prezzo Corrente",
+          data: prezziCorr,
+          backgroundColor: "rgba(255, 99, 132, 0.7)"
         }
       ]
     },
     options: {
       responsive: true,
       indexAxis: "y",
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } }
+      maintainAspectRatio: false
     }
   });
 }
 
 // ==========================================================
-// 🔥 EVENTI TOGGLE (Top 5 / Top 10)
+// 🔥 TOGGLE BUTTONS (Top 5 / Top 10)
 // ==========================================================
 document.getElementById("btnTop5Price")?.addEventListener("click", () => {
   currentLimit = 5;
-  setActiveToggle("btnTop5Price", "btnTop10Price");
-  loadCharts();
+  updateToggleButtons();
+  buildTopPriceChart(rowsGlobal, currentLimit);
 });
 
 document.getElementById("btnTop10Price")?.addEventListener("click", () => {
   currentLimit = 10;
-  setActiveToggle("btnTop10Price", "btnTop5Price");
-  loadCharts();
+  updateToggleButtons();
+  buildTopPriceChart(rowsGlobal, currentLimit);
 });
 
-function setActiveToggle(activeId, inactiveId) {
-  document.getElementById(activeId)?.classList.add("active");
-  document.getElementById(inactiveId)?.classList.remove("active");
+function updateToggleButtons() {
+  document.getElementById("btnTop5Price")?.classList.toggle("active", currentLimit === 5);
+  document.getElementById("btnTop10Price")?.classList.toggle("active", currentLimit === 10);
 }
 
 // ==========================================================
