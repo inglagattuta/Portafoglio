@@ -25,7 +25,6 @@ const CRESCITA_LIST = [
 
 const CRYPTO_LIST = ["BTC", "ETH", "XRP"];
 
-
 // ==========================================================
 // 🔵 LOAD CHARTS — FUNZIONE PRINCIPALE
 // ==========================================================
@@ -35,19 +34,13 @@ async function loadCharts() {
 
   if (!rows.length) return;
 
-  // Mini cards
   calcCategoryBoxes(rows);
-
-  // Grafici
   buildCategoryChart(rows);
   buildInvestedChart(rows);
   buildTypeChart(rows);
   buildTopScore12Chart(rows);
-
-  // Grafico prezzi Top 5 / 10
-  renderTopPrezziChart(rows, currentLimit);
+  buildTopPriceChart(rows, currentLimit);
 }
-
 
 // ==========================================================
 // MINI CARDS
@@ -76,7 +69,6 @@ function calcCategoryBoxes(rows) {
     `${(sumCrypto/totalInvested*100).toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
 }
 
-
 // ==========================================================
 // CHART 1: ALLOCAZIONE PER CATEGORIA
 // ==========================================================
@@ -98,7 +90,6 @@ function buildCategoryChart(rows) {
   });
 }
 
-
 // ==========================================================
 // CHART 2: INVESTITO / VALORE ATTUALE
 // ==========================================================
@@ -115,7 +106,6 @@ function buildInvestedChart(rows) {
     options: { maintainAspectRatio: false }
   });
 }
-
 
 // ==========================================================
 // CHART 3: TOP SCORE (ORIZZONTALE)
@@ -142,7 +132,6 @@ function buildTopScore12Chart(rows) {
   });
 }
 
-
 // ==========================================================
 // CHART 4: TIPOLOGIA
 // ==========================================================
@@ -164,46 +153,48 @@ function buildTypeChart(rows) {
   });
 }
 
-
 // ==========================================================
-// 🔥 CHART 5: TOP PREZZI (ACQUISTO VS CORRENTE)
+// 🔥 CHART 5: TOP PREZZI
 // ==========================================================
-let chartPrezzi = null;
+let chartTopPriceInstance = null;
 
-function renderTopPrezziChart(rows, limit = 5) {
-  const canvas = document.getElementById("chartTopPrezzi");
+function buildTopPriceChart(rows, limit = 5) {
+  const canvas = document.getElementById("chartTopPrice");
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
+
+  if (chartTopPriceInstance) chartTopPriceInstance.destroy();
+
   const top = [...rows]
     .sort((a, b) => Number(b.prezzo_corrente) - Number(a.prezzo_corrente))
     .slice(0, limit);
 
   const labels = top.map(t => t.nome);
-  const prezziAcq = top.map(t => Number(t.prezzo_acquisto || 0));
-  const prezziCorr = top.map(t => Number(t.prezzo_corrente || 0));
+  const prices = top.map(t => Number(t.prezzo_corrente));
 
-  if (chartPrezzi) chartPrezzi.destroy();
-
-  chartPrezzi = new Chart(ctx, {
+  chartTopPriceInstance = new Chart(ctx, {
     type: "bar",
     data: {
       labels,
       datasets: [
-        { label: "Prezzo Acquisto", data: prezziAcq },
-        { label: "Prezzo Corrente", data: prezziCorr }
+        {
+          label: `Top ${limit} Prezzi`,
+          data: prices
+        }
       ]
     },
     options: {
+      responsive: true,
       indexAxis: "y",
-      maintainAspectRatio: false
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } }
     }
   });
 }
 
-
 // ==========================================================
-// 🔥 EVENTI TOGGLE (Top 5 / Top 10) — ID CORRETTI!
+// 🔥 EVENTI TOGGLE (Top 5 / Top 10)
 // ==========================================================
 document.getElementById("btnTop5Price")?.addEventListener("click", () => {
   currentLimit = 5;
@@ -217,12 +208,10 @@ document.getElementById("btnTop10Price")?.addEventListener("click", () => {
   loadCharts();
 });
 
-
 function setActiveToggle(activeId, inactiveId) {
   document.getElementById(activeId)?.classList.add("active");
   document.getElementById(inactiveId)?.classList.remove("active");
 }
-
 
 // ==========================================================
 // 🚀 AVVIO
