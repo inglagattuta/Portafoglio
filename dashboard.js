@@ -7,6 +7,8 @@ import {
 
 const db = getFirestore(app);
 
+let currentLimit = 5;
+
 // =============================
 // LISTE TITOLI PER CATEGORIA
 // =============================
@@ -24,9 +26,9 @@ const CRESCITA_LIST = [
 const CRYPTO_LIST = ["BTC", "ETH", "XRP"];
 
 
-// ======================================================================
-// 🔵 LOAD CHARTS — VERSIONE CORRETTA (UNA SOLA FUNZIONE!)
-// ======================================================================
+// ==========================================================
+// 🔵 LOAD CHARTS — FUNZIONE PRINCIPALE
+// ==========================================================
 async function loadCharts() {
   const snap = await getDocs(collection(db, "portafoglio"));
   const rows = snap.docs.map(d => d.data());
@@ -36,39 +38,20 @@ async function loadCharts() {
   // Mini cards
   calcCategoryBoxes(rows);
 
-  // Grafici esistenti
+  // Grafici
   buildCategoryChart(rows);
   buildInvestedChart(rows);
   buildTypeChart(rows);
   buildTopScore12Chart(rows);
 
-  // Grafico prezzi: default = Top 5
-  renderTopPrezziChart(rows, 5);
-
-  // Toggle bottoni
-  const btn5 = document.getElementById("btnTop5Prezzi");
-  const btn10 = document.getElementById("btnTop10Prezzi");
-
-  if (btn5 && btn10) {
-    btn5.addEventListener("click", () => {
-      renderTopPrezziChart(rows, 5);
-      btn5.classList.add("active");
-      btn10.classList.remove("active");
-    });
-
-    btn10.addEventListener("click", () => {
-      renderTopPrezziChart(rows, 10);
-      btn10.classList.add("active");
-      btn5.classList.remove("active");
-    });
-  }
+  // Grafico prezzi Top 5 / 10
+  renderTopPrezziChart(rows, currentLimit);
 }
 
 
-
-// ======================================================================
+// ==========================================================
 // MINI CARDS
-// ======================================================================
+// ==========================================================
 function calcCategoryBoxes(rows) {
   const totalInvested = rows.reduce((a,b)=> a + Number(b.prezzo_acquisto || 0), 0);
 
@@ -94,10 +77,9 @@ function calcCategoryBoxes(rows) {
 }
 
 
-
-// ======================================================================
-// CHART 1: CATEGORIA
-// ======================================================================
+// ==========================================================
+// CHART 1: ALLOCAZIONE PER CATEGORIA
+// ==========================================================
 function buildCategoryChart(rows) {
   const byCategory = {};
 
@@ -117,10 +99,9 @@ function buildCategoryChart(rows) {
 }
 
 
-
-// ======================================================================
-// CHART 2: INVESTITO VS VALORE
-// ======================================================================
+// ==========================================================
+// CHART 2: INVESTITO / VALORE ATTUALE
+// ==========================================================
 function buildInvestedChart(rows) {
   const invested = rows.reduce((a,b)=>a+Number(b.prezzo_acquisto||0), 0);
   const value    = rows.reduce((a,b)=>a+Number(b.prezzo_corrente||0), 0);
@@ -136,10 +117,9 @@ function buildInvestedChart(rows) {
 }
 
 
-
-// ======================================================================
-// CHART 3: TOP SCORE (orizzontale, come lo volevi)
-// ======================================================================
+// ==========================================================
+// CHART 3: TOP SCORE (ORIZZONTALE)
+// ==========================================================
 function buildTopScore12Chart(rows) {
   const top = rows
     .filter(x => Number(x.score) > 12)
@@ -163,10 +143,9 @@ function buildTopScore12Chart(rows) {
 }
 
 
-
-// ======================================================================
+// ==========================================================
 // CHART 4: TIPOLOGIA
-// ======================================================================
+// ==========================================================
 function buildTypeChart(rows) {
   const byType = {};
 
@@ -186,10 +165,9 @@ function buildTypeChart(rows) {
 }
 
 
-
-// ======================================================================
-// 🔥 NUOVO GRAFICO: PREZZO ACQUISTO VS CORRENTE (TOP 5 / TOP 10)
-// ======================================================================
+// ==========================================================
+// 🔥 CHART 5: TOP PREZZI (ACQUISTO VS CORRENTE)
+// ==========================================================
 let chartPrezzi = null;
 
 function renderTopPrezziChart(rows, limit = 5) {
@@ -224,5 +202,29 @@ function renderTopPrezziChart(rows, limit = 5) {
 }
 
 
-// ======================================================================
+// ==========================================================
+// 🔥 EVENTI TOGGLE (Top 5 / Top 10) — ID CORRETTI!
+// ==========================================================
+document.getElementById("btnTop5Price")?.addEventListener("click", () => {
+  currentLimit = 5;
+  setActiveToggle("btnTop5Price", "btnTop10Price");
+  loadCharts();
+});
+
+document.getElementById("btnTop10Price")?.addEventListener("click", () => {
+  currentLimit = 10;
+  setActiveToggle("btnTop10Price", "btnTop5Price");
+  loadCharts();
+});
+
+
+function setActiveToggle(activeId, inactiveId) {
+  document.getElementById(activeId)?.classList.add("active");
+  document.getElementById(inactiveId)?.classList.remove("active");
+}
+
+
+// ==========================================================
+// 🚀 AVVIO
+// ==========================================================
 loadCharts();
