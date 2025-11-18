@@ -228,20 +228,19 @@ function buildTypeChart(rows) {
 }
 
 
-function buildTopPrezziChart(data) {
+function buildTopPrezziChart(rows) {
   const canvas = document.getElementById("chartTopPrezzi");
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
 
-  // Prendiamo i 5 con il prezzo corrente più alto
-  const top5 = [...data]
-    .sort((a, b) => b.prezzo_corrente - a.prezzo_corrente)
+  const top5 = [...rows]
+    .sort((a, b) => Number(b.prezzo_corrente) - Number(a.prezzo_corrente))
     .slice(0, 5);
 
-  const labels = top5.map(t => t.nome || "N/A");
-  const prezziAcq = top5.map(t => t.prezzo_acquisto || 0);
-  const prezziCorr = top5.map(t => t.prezzo_corrente || 0);
+  const labels = top5.map(t => t.nome);
+  const prezziAcq = top5.map(t => Number(t.prezzo_acquisto || 0));
+  const prezziCorr = top5.map(t => Number(t.prezzo_corrente || 0));
 
   new Chart(ctx, {
     type: "bar",
@@ -263,9 +262,7 @@ function buildTopPrezziChart(data) {
     options: {
       responsive: true,
       scales: {
-        y: {
-          beginAtZero: true
-        }
+        y: { beginAtZero: true }
       }
     }
   });
