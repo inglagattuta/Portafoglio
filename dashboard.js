@@ -49,7 +49,7 @@ async function loadCharts() {
   // ⭐ NUOVO GRAFICO: TUTTI I TITOLI CON SCORE > 12
   buildTopScore12Chart(rows);
 
-  buildTopPrezziChart(data);
+  buildTopPrezziChart(row);
 }
 
 // -----------------------------------------------------
@@ -239,7 +239,7 @@ function buildTopPrezziChart(data) {
     .sort((a, b) => b.prezzo_corrente - a.prezzo_corrente)
     .slice(0, 5);
 
-  const labels = top5.map(t => t.titolo);
+  const labels = top5.map(t => t.nome || "N/A");
   const prezziAcq = top5.map(t => t.prezzo_acquisto || 0);
   const prezziCorr = top5.map(t => t.prezzo_corrente || 0);
 
