@@ -38,6 +38,54 @@ async function loadCharts() {
     rows.filter(x => Number(x.score) > 12).map(x => x.nome)
   );
 
+async function loadCharts() {
+  const snap = await getDocs(collection(db, "portafoglio"));
+  const rows = snap.docs.map(d => d.data());
+
+  if (!rows.length) return;
+
+  console.log(
+    "DEBUG >12:", 
+    rows.filter(x => Number(x.score) > 12).length,
+    rows.filter(x => Number(x.score) > 12).map(x => x.nome)
+  );
+
+  // =====================================================
+  // 🟦 TOGGLE TOP 5 / TOP 10 PREZZI
+  // =====================================================
+
+  // Prima chiamata: Top 5 di default
+  renderTopPrezziChart(rows, 5);
+
+  const btn5 = document.getElementById("btnTop5Prezzi");
+  const btn10 = document.getElementById("btnTop10Prezzi");
+
+  if (btn5 && btn10) {
+    btn5.addEventListener("click", () => {
+      renderTopPrezziChart(rows, 5);
+      btn5.classList.add("active");
+      btn10.classList.remove("active");
+    });
+
+    btn10.addEventListener("click", () => {
+      renderTopPrezziChart(rows, 10);
+      btn10.classList.add("active");
+      btn5.classList.remove("active");
+    });
+  }
+
+  // =====================================================
+  // (SOTTO QUI LASCI TUTTO COME PRIMA)
+  // =====================================================
+
+  calcCategoryBoxes(rows);
+  buildCategoryChart(rows);
+  buildInvestedChart(rows);
+  buildTypeChart(rows);
+  buildTopScore12Chart(rows);
+}
+
+  
   // MINI CARDS
   calcCategoryBoxes(rows);
 
@@ -228,21 +276,30 @@ function buildTypeChart(rows) {
 }
 
 
-function buildTopPrezziChart(rows) {
+let chartPrezzi = null; // per distruggere il grafico prima di ridisegnarlo
+
+function renderTopPrezziChart(rows, limit = 5) {
   const canvas = document.getElementById("chartTopPrezzi");
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
 
-  const top5 = [...rows]
+  // 🔥 Ordina e prendi i top N (5 o 10)
+  const top = [...rows]
     .sort((a, b) => Number(b.prezzo_corrente) - Number(a.prezzo_corrente))
-    .slice(0, 5);
+    .slice(0, limit);
 
-  const labels = top5.map(t => t.nome);
-  const prezziAcq = top5.map(t => Number(t.prezzo_acquisto || 0));
-  const prezziCorr = top5.map(t => Number(t.prezzo_corrente || 0));
+  const labels = top.map(t => t.nome);
+  const prezziAcq = top.map(t => Number(t.prezzo_acquisto || 0));
+  const prezziCorr = top.map(t => Number(t.prezzo_corrente || 0));
 
-  new Chart(ctx, {
+  // 🚫 Se esiste già un grafico, lo distruggo per evitare overlay
+  if (chartPrezzi) {
+    chartPrezzi.destroy();
+  }
+
+  // 🎨 Creo il grafico orizzontale
+  chartPrezzi = new Chart(ctx, {
     type: "bar",
     data: {
       labels,
@@ -257,15 +314,58 @@ function buildTopPrezziChart(rows) {
           data: prezziCorr,
           backgroundColor: "rgba(255, 99, 132, 0.7)"
         }
-      ]
+
+
+function renderTopPriceChart(portfolio, limit) {
+  const sorted = [...portfolio]
+    .sort((a, b) => b.prezzo_corrente - a.prezzo_corrente)
+    .slice(0, limit);
+
+  const labels = sorted.map(t => t.titolo);
+  const pricesCurrent = sorted.map(t => t.prezzo_corrente);
+  const pricesBuy = sorted.map(t => t.prezzo_acquisto);
+
+  const chartDom = document.getElementById('chartTopPrice');
+
+  if (!window.topPriceChart) {
+    window.topPriceChart = echarts.init(chartDom);
+  }
+
+  const option = {
+    tooltip: {
+      trigger: 'axis'
     },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
+    legend: {
+      data: ['Prezzo Corrente', 'Prezzo Acquisto']
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'value'
+    },
+    yAxis: {
+      type: 'category',
+      data: labels
+    },
+    series: [
+      {
+        name: 'Prezzo Corrente',
+        type: 'bar',
+        data: pricesCurrent
+      },
+      {
+        name: 'Prezzo Acquisto',
+        type: 'bar',
+        data: pricesBuy
       }
-    }
-  });
+    ]
+  };
+
+  window.topPriceChart.setOption(option);
 }
 
 // -----------------------------------------------------
