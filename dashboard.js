@@ -225,5 +225,49 @@ function buildTypeChart(rows) {
   });
 }
 
+
+function buildTopPrezziChart(data) {
+  const canvas = document.getElementById("chartTopPrezzi");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  // Prendiamo i 5 con il prezzo corrente più alto
+  const top5 = [...data]
+    .sort((a, b) => b.prezzo_corrente - a.prezzo_corrente)
+    .slice(0, 5);
+
+  const labels = top5.map(t => t.titolo);
+  const prezziAcq = top5.map(t => t.prezzo_acquisto || 0);
+  const prezziCorr = top5.map(t => t.prezzo_corrente || 0);
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Prezzo Acquisto",
+          data: prezziAcq,
+          backgroundColor: "rgba(54, 162, 235, 0.7)"
+        },
+        {
+          label: "Prezzo Corrente",
+          data: prezziCorr,
+          backgroundColor: "rgba(255, 99, 132, 0.7)"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
 // -----------------------------------------------------
 loadCharts();
