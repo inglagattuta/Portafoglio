@@ -374,11 +374,9 @@ async function loadData() {
       columns.forEach(col => {
         const td = document.createElement("td");
 
-        // Mostra o nasconde colonne
-        if (hiddenCols.has(col)) td.style.display = "none";
-        else td.style.display = "table-cell";
+        td.style.display = hiddenCols.has(col) ? "none" : "table-cell";
+        td.style.textAlign = "center"; // allinea il contenuto al centro
 
-        // Contenuto celle
         if (col === "profitto") {
           const p = (Number(d.prezzo_corrente) || 0) - (Number(d.prezzo_acquisto) || 0) + 
                     (Number(d.dividendi) || 0) + (Number(d.prelevato) || 0);
@@ -405,17 +403,21 @@ async function loadData() {
         tr.appendChild(td);
       });
 
-      // Colonna azioni
+      // TD con bottoni Azioni
       const tdA = document.createElement("td");
       tdA.classList.add("action-buttons");
-      tdA.style.display = "table-cell"; // importante per allineamento
+      tdA.style.textAlign = "center";
 
       const btE = document.createElement("button");
       btE.textContent = "Modifica";
+      btE.style.backgroundColor = "#27ae60";
+      btE.style.color = "white";
       btE.onclick = () => openEditModal(id);
 
       const btD = document.createElement("button");
       btD.textContent = "Cancella";
+      btD.style.backgroundColor = "#e74c3c";
+      btD.style.color = "white";
       btD.onclick = async () => {
         if (!confirm("Confermi?")) return;
         await deleteDoc(doc(db, "portafoglio", id));
@@ -429,7 +431,6 @@ async function loadData() {
       tableBody.appendChild(tr);
     });
 
-    // Aggiorna statistiche
     updateStats(snap.docs);
     enableSorting();
 
@@ -438,3 +439,4 @@ async function loadData() {
     alert("Errore nel caricamento dati.");
   }
 }
+loadData();
