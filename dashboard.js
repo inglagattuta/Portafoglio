@@ -23,40 +23,29 @@ const CRESCITA_LIST = [
 
 const CRYPTO_LIST = ["BTC", "ETH", "XRP"];
 
-// -----------------------------------------------------
-// LOAD DATA
-// -----------------------------------------------------
+
+// ======================================================================
+// 🔵 LOAD CHARTS — VERSIONE CORRETTA (UNA SOLA FUNZIONE!)
+// ======================================================================
 async function loadCharts() {
   const snap = await getDocs(collection(db, "portafoglio"));
   const rows = snap.docs.map(d => d.data());
 
   if (!rows.length) return;
 
-  console.log(
-    "DEBUG >12:", 
-    rows.filter(x => Number(x.score) > 12).length,
-    rows.filter(x => Number(x.score) > 12).map(x => x.nome)
-  );
+  // Mini cards
+  calcCategoryBoxes(rows);
 
-async function loadCharts() {
-  const snap = await getDocs(collection(db, "portafoglio"));
-  const rows = snap.docs.map(d => d.data());
+  // Grafici esistenti
+  buildCategoryChart(rows);
+  buildInvestedChart(rows);
+  buildTypeChart(rows);
+  buildTopScore12Chart(rows);
 
-  if (!rows.length) return;
-
-  console.log(
-    "DEBUG >12:", 
-    rows.filter(x => Number(x.score) > 12).length,
-    rows.filter(x => Number(x.score) > 12).map(x => x.nome)
-  );
-
-  // =====================================================
-  // 🟦 TOGGLE TOP 5 / TOP 10 PREZZI
-  // =====================================================
-
-  // Prima chiamata: Top 5 di default
+  // Grafico prezzi: default = Top 5
   renderTopPrezziChart(rows, 5);
 
+  // Toggle bottoni
   const btn5 = document.getElementById("btnTop5Prezzi");
   const btn10 = document.getElementById("btnTop10Prezzi");
 
@@ -73,42 +62,17 @@ async function loadCharts() {
       btn5.classList.remove("active");
     });
   }
-
-  // =====================================================
-  // (SOTTO QUI LASCI TUTTO COME PRIMA)
-  // =====================================================
-
-  calcCategoryBoxes(rows);
-  buildCategoryChart(rows);
-  buildInvestedChart(rows);
-  buildTypeChart(rows);
-  buildTopScore12Chart(rows);
 }
 
-  
-  // MINI CARDS
-  calcCategoryBoxes(rows);
 
-  // GRAFICI ESISTENTI
-  buildCategoryChart(rows);
-  buildInvestedChart(rows);
-  buildTypeChart(rows);
 
-  // ⭐ NUOVO GRAFICO: TUTTI I TITOLI CON SCORE > 12
-  buildTopScore12Chart(rows);
-
-  buildTopPrezziChart(rows);
-}
-
-// -----------------------------------------------------
-// CALCOLO PERCENTUALI BOX
-// -----------------------------------------------------
+// ======================================================================
+// MINI CARDS
+// ======================================================================
 function calcCategoryBoxes(rows) {
   const totalInvested = rows.reduce((a,b)=> a + Number(b.prezzo_acquisto || 0), 0);
 
-  let sumDiv = 0;
-  let sumCrescita = 0;
-  let sumCrypto = 0;
+  let sumDiv = 0, sumCrescita = 0, sumCrypto = 0;
 
   rows.forEach(r => {
     const ticker = r.nome?.trim().toUpperCase();
@@ -119,23 +83,21 @@ function calcCategoryBoxes(rows) {
     else if (CRYPTO_LIST.includes(ticker)) sumCrypto += val;
   });
 
-  const pDiv = totalInvested ? (sumDiv / totalInvested * 100) : 0;
-  const pCrescita = totalInvested ? (sumCrescita / totalInvested * 100) : 0;
-  const pCrypto = totalInvested ? (sumCrypto / totalInvested * 100) : 0;
-
   document.getElementById("pctDividendi").innerText =
-    `${pDiv.toFixed(2)}% — ${sumDiv.toFixed(2)} €`;
+    `${(sumDiv/totalInvested*100).toFixed(2)}% — ${sumDiv.toFixed(2)} €`;
 
   document.getElementById("pctCrescita").innerText =
-    `${pCrescita.toFixed(2)}% — ${sumCrescita.toFixed(2)} €`;
+    `${(sumCrescita/totalInvested*100).toFixed(2)}% — ${sumCrescita.toFixed(2)} €`;
 
   document.getElementById("pctCripto").innerText =
-    `${pCrypto.toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
+    `${(sumCrypto/totalInvested*100).toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
 }
 
-// -----------------------------------------------------
+
+
+// ======================================================================
 // CHART 1: CATEGORIA
-// -----------------------------------------------------
+// ======================================================================
 function buildCategoryChart(rows) {
   const byCategory = {};
 
@@ -150,16 +112,15 @@ function buildCategoryChart(rows) {
       labels: Object.keys(byCategory),
       datasets: [{ data: Object.values(byCategory) }]
     },
-    options: {
-      maintainAspectRatio: false,
-      plugins: { legend: { labels: { font: { size: 10 } } } }
-    }
+    options: { maintainAspectRatio: false }
   });
 }
 
-// -----------------------------------------------------
-// CHART 2: INVESTITO vs VALORE
-// -----------------------------------------------------
+
+
+// ======================================================================
+// CHART 2: INVESTITO VS VALORE
+// ======================================================================
 function buildInvestedChart(rows) {
   const invested = rows.reduce((a,b)=>a+Number(b.prezzo_acquisto||0), 0);
   const value    = rows.reduce((a,b)=>a+Number(b.prezzo_corrente||0), 0);
@@ -170,90 +131,42 @@ function buildInvestedChart(rows) {
       labels: ["Investito", "Valore Attuale"],
       datasets: [{ data: [invested, value] }]
     },
-    options: {
-      maintainAspectRatio: false,
-      plugins: { legend: { labels: { font: { size: 10 } } } }
-    }
+    options: { maintainAspectRatio: false }
   });
 }
 
-// -----------------------------------------------------
-// CHART 3: TOP SCORE (TUTTI score > 12)
-// -----------------------------------------------------
+
+
+// ======================================================================
+// CHART 3: TOP SCORE (orizzontale, come lo volevi)
+// ======================================================================
 function buildTopScore12Chart(rows) {
   const top = rows
     .filter(x => Number(x.score) > 12)
     .sort((a, b) => Number(b.score) - Number(a.score))
-    .slice(0, 5);   // <-- SOLO TOP 5
+    .slice(0, 5);
 
   if (!top.length) return;
-
-  const labels = top.map(x => x.nome || "N/A");
-  const values = top.map(x => Number(x.score));
-
-  // Rende il canvas più basso e compatto
-  const wrapper = document.getElementById("topScoreWrapper");
-  if (wrapper) wrapper.style.height = "260px";
 
   new Chart(document.getElementById("chartTopScore12"), {
     type: "bar",
     data: {
-      labels: labels,
-      datasets: [{
-        label: "",
-        data: values,
-        borderWidth: 0,
-        backgroundColor: [
-          "rgba(54, 162, 235, 0.8)",
-          "rgba(75, 192, 192, 0.8)",
-          "rgba(255, 206, 86, 0.8)",
-          "rgba(153, 102, 255, 0.8)",
-          "rgba(255, 99, 132, 0.8)"
-        ],
-        hoverBackgroundColor: [
-          "rgba(54, 162, 235, 1)",
-          "rgba(75, 192, 192, 1)",
-          "rgba(255, 206, 86, 1)",
-          "rgba(153, 102, 255, 1)",
-          "rgba(255, 99, 132, 1)"
-        ]
-      }]
+      labels: top.map(x => x.nome),
+      datasets: [{ data: top.map(x => Number(x.score)) }]
     },
     options: {
+      indexAxis: "y",
       maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: {
-        legend: { display: false },
-        title: {
-          display: true,
-          text: "Top 5 Titoli per Score",
-          font: { size: 18, weight: "bold" },
-          padding: { bottom: 15 }
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => `Score: ${ctx.raw.toFixed(2)}`
-          }
-        }
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          grid: { display: false },
-          ticks: { font: { size: 12 } }
-        },
-        y: {
-          grid: { display: false },
-          ticks: { font: { size: 13, weight: "bold" } }
-        }
-      }
+      plugins: { legend: { display: false } }
     }
   });
 }
 
-// -----------------------------------------------------
-// CHART 4: TIPI DI INVESTIMENTO
-// -----------------------------------------------------
+
+
+// ======================================================================
+// CHART 4: TIPOLOGIA
+// ======================================================================
 function buildTypeChart(rows) {
   const byType = {};
 
@@ -268,23 +181,22 @@ function buildTypeChart(rows) {
       labels: Object.keys(byType),
       datasets: [{ data: Object.values(byType) }]
     },
-    options: {
-      maintainAspectRatio: false,
-      plugins: { legend: { labels: { font: { size: 10 } } } }
-    }
+    options: { maintainAspectRatio: false }
   });
 }
 
 
-let chartPrezzi = null; // per distruggere il grafico prima di ridisegnarlo
+
+// ======================================================================
+// 🔥 NUOVO GRAFICO: PREZZO ACQUISTO VS CORRENTE (TOP 5 / TOP 10)
+// ======================================================================
+let chartPrezzi = null;
 
 function renderTopPrezziChart(rows, limit = 5) {
   const canvas = document.getElementById("chartTopPrezzi");
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
-
-  // 🔥 Ordina e prendi i top N (5 o 10)
   const top = [...rows]
     .sort((a, b) => Number(b.prezzo_corrente) - Number(a.prezzo_corrente))
     .slice(0, limit);
@@ -293,80 +205,24 @@ function renderTopPrezziChart(rows, limit = 5) {
   const prezziAcq = top.map(t => Number(t.prezzo_acquisto || 0));
   const prezziCorr = top.map(t => Number(t.prezzo_corrente || 0));
 
-  // 🚫 Se esiste già un grafico, lo distruggo per evitare overlay
-  if (chartPrezzi) {
-    chartPrezzi.destroy();
-  }
+  if (chartPrezzi) chartPrezzi.destroy();
 
-  // 🎨 Creo il grafico orizzontale
   chartPrezzi = new Chart(ctx, {
     type: "bar",
     data: {
       labels,
       datasets: [
-        {
-          label: "Prezzo Acquisto",
-          data: prezziAcq,
-          backgroundColor: "rgba(54, 162, 235, 0.7)"
-        },
-        {
-          label: "Prezzo Corrente",
-          data: prezziCorr,
-          backgroundColor: "rgba(255, 99, 132, 0.7)"
-        }
-
-
-function renderTopPriceChart(portfolio, limit) {
-  const sorted = [...portfolio]
-    .sort((a, b) => b.prezzo_corrente - a.prezzo_corrente)
-    .slice(0, limit);
-
-  const labels = sorted.map(t => t.titolo);
-  const pricesCurrent = sorted.map(t => t.prezzo_corrente);
-  const pricesBuy = sorted.map(t => t.prezzo_acquisto);
-
-  const chartDom = document.getElementById('chartTopPrice');
-
-  if (!window.topPriceChart) {
-    window.topPriceChart = echarts.init(chartDom);
-  }
-
-  const option = {
-    tooltip: {
-      trigger: 'axis'
+        { label: "Prezzo Acquisto", data: prezziAcq },
+        { label: "Prezzo Corrente", data: prezziCorr }
+      ]
     },
-    legend: {
-      data: ['Prezzo Corrente', 'Prezzo Acquisto']
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'value'
-    },
-    yAxis: {
-      type: 'category',
-      data: labels
-    },
-    series: [
-      {
-        name: 'Prezzo Corrente',
-        type: 'bar',
-        data: pricesCurrent
-      },
-      {
-        name: 'Prezzo Acquisto',
-        type: 'bar',
-        data: pricesBuy
-      }
-    ]
-  };
-
-  window.topPriceChart.setOption(option);
+    options: {
+      indexAxis: "y",
+      maintainAspectRatio: false
+    }
+  });
 }
 
-// -----------------------------------------------------
+
+// ======================================================================
 loadCharts();
