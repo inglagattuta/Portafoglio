@@ -399,19 +399,21 @@ tr:nth-child(even) {
   grid-column: span 2;   /* Occupa lo spazio di due grafici */
   height: 350px;         /* Aumenta l'altezza */
 }
-/* Contenitore del grafico Top Score > 12 */
-#chartTopScore12Container {
-  width: 100%;
-  height: 320px;        /* puoi aumentare a 400 se vuoi */
-  overflow-x: auto;     /* scroll orizzontale se tanti nomi */
-  overflow-y: hidden;   /* evita scrollbar verticale inutile */
-  padding-bottom: 10px; /* piccolo spazio per evitare tagli */
-  box-sizing: border-box;
+
+
+/* --- Grafico Top 5: stessa dimensione degli altri --- */
+.chart-card {
+  height: 320px;               /* altezza uniforme */
+  display: flex;
+  flex-direction: column;
 }
 
-#chartTopScore12 {
-  min-width: 1500px !important;
+.chart-card canvas {
+  flex: 1;
+  width: 100% !important;
+  height: 100% !important;
 }
+
 
 
 
