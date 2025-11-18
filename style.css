@@ -436,3 +436,32 @@ tr:nth-child(even) {
   box-shadow: 0 0 12px rgba(0, 255, 180, 0.8);
   transform: translateY(-2px) scale(1.05);
 }
+
+
+.toggle-wrapper {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 20px;
+}
+
+.toggle-button {
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.25s ease;
+}
+
+.toggle-button:hover {
+  background: #cfcfcf;
+  transform: translateY(-2px);
+}
+
+.toggle-button.active {
+  background: #007bff;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4);
+  transform: translateY(-2px) scale(1.03);
+}
