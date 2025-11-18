@@ -355,30 +355,58 @@ function updateStats(docs) {
 }
 
 
-// -------------------------------------------------------------
-// LOAD DATA
-// -------------------------------------------------------------
 async function loadData() {
+  // Pulisce la tabella
   tableBody.innerHTML = "";
   renderHeader();
 
-  try {
-    const snap = await getDocs(collection(db, "portafoglio"));
+  if (!db) {
+    console.error("Firestore non inizializzato!");
+    alert("Errore: Firestore non inizializzato.");
+    return;
+  }
 
+  try {
+    console.log("Caricamento dati da Firebase...");
+    const snap = await getDocs(collection(db, "portafoglio"));
+    console.log("Documenti trovati:", snap.docs.length);
+
+    if (snap.docs.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = columns.length + 1; // include la colonna Azioni
+      td.textContent = "Nessun dato trovato!";
+      td.style.textAlign = "center";
+      td.style.fontStyle = "italic";
+      tr.appendChild(td);
+      tableBody.appendChild(tr);
+
+      // Azzera anche i box principali
+      bxInvestito.textContent = "0 €";
+      bxValore.textContent = "0 €";
+      bxDividendi.textContent = "0 €";
+      bxProfitto.textContent = "0 €";
+      elPerc.textContent = "0 %";
+
+      return;
+    }
+
+    // Popola la tabella
     snap.docs.forEach(docSnap => {
       const d = docSnap.data();
       const id = docSnap.id;
+
+      console.log("Documento:", id, d);
 
       const tr = document.createElement("tr");
 
       columns.forEach(col => {
         const td = document.createElement("td");
-
+        td.style.textAlign = "center";
         td.style.display = hiddenCols.has(col) ? "none" : "table-cell";
-        td.style.textAlign = "center"; // allinea il contenuto al centro
 
         if (col === "profitto") {
-          const p = (Number(d.prezzo_corrente) || 0) - (Number(d.prezzo_acquisto) || 0) + 
+          const p = (Number(d.prezzo_corrente) || 0) - (Number(d.prezzo_acquisto) || 0) +
                     (Number(d.dividendi) || 0) + (Number(d.prelevato) || 0);
           td.textContent = fmtEuro(p);
           td.dataset.raw = p;
@@ -435,8 +463,9 @@ async function loadData() {
     enableSorting();
 
   } catch (e) {
-    console.error("load error:", e);
-    alert("Errore nel caricamento dati.");
+    console.error("Errore nel caricamento dati:", e);
+    alert("Errore nel caricamento dati, controlla console.");
   }
 }
+
 loadData();
