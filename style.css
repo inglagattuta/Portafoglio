@@ -317,55 +317,46 @@ tr:nth-child(even) {
   color: white;
 }
 
-/* ----------- DASHBOARD CHARTS ----------- */
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
+/* =========================================================
+   DASHBOARD CHARTS (VERSIONE CORRETTA)
+   ========================================================= */
 
-.chart-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.12);
-}
-
-.chart-card h2 {
-  margin-bottom: 15px;
-  font-size: 1.2rem;
-}
-/* Rimuove ogni residuo dello switch light/dark */
-#themeSwitch,
-.switch {
-  display: none !important;
-}
-/* --- DASHBOARD GRAFICI COMPACT MODE --- */
-
+/* Layout responsive per i grafici */
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
 }
 
-/* Contenitore del grafico */
+/* Card contenitore singolo grafico */
 .chart-card {
+  background: white;
   padding: 15px;
   border-radius: 14px;
-  background: var(--card-bg);
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.12);
   text-align: center;
 }
 
-/* Rimpiccioliamo i grafici */
+/* Titolo grafico */
+.chart-card h2 {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+/* Canvas compatto */
 .chart-card canvas {
   max-height: 220px !important;
 }
 
-/* Titolo più compatto */
-.chart-card h2 {
-  font-size: 1rem;
-  margin-bottom: 10px;
+/* Grafico Top 5 uguale agli altri */
+#chartTopScore12 {
+  max-height: 220px !important;
+}
+
+/* Ampiezza doppia opzionale */
+.chart-wide {
+  grid-column: span 2;
+  height: 350px;
 }
 
 /* MINI CARDS */
@@ -378,8 +369,8 @@ tr:nth-child(even) {
 
 .mini-card {
   flex: 1;
-  background: var(--card-bg);
-  box-shadow: var(--shadow);
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.12);
   padding: 15px;
   border-radius: 14px;
   text-align: center;
@@ -395,26 +386,4 @@ tr:nth-child(even) {
   font-size: 1.4rem;
   font-weight: bold;
 }
-.chart-wide {
-  grid-column: span 2;   /* Occupa lo spazio di due grafici */
-  height: 350px;         /* Aumenta l'altezza */
-}
-
-
-/* --- Grafico Top 5: stessa dimensione degli altri --- */
-.chart-card {
-  height: 320px;               /* altezza uniforme */
-  display: flex;
-  flex-direction: column;
-}
-
-.chart-card canvas {
-  flex: 1;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-
-
-
 
