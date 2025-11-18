@@ -49,7 +49,7 @@ async function loadCharts() {
   // ⭐ NUOVO GRAFICO: TUTTI I TITOLI CON SCORE > 12
   buildTopScore12Chart(rows);
 
-  buildTopPrezziChart(row);
+  buildTopPrezziChart(rows);
 }
 
 // -----------------------------------------------------
