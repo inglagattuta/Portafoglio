@@ -13,15 +13,15 @@ const fmtEuro = v => Number(v || 0).toFixed(2) + " €";
 
 // ============ COLORI PER TIPOLOGIA =============
 function getTypeColor(tip) {
-  if (!tip) return "#888888"; // default grigio neutro
+  if (!tip) return "#8884"; // grigio default
   const t = tip.toLowerCase();
-  if (t.includes("ETF")) return "#007bff";       // blu
-  if (t.includes("bond") || t.includes("obbl")) return "#9c27b0"; // viola
-  if (t.includes("reit")) return "#ff9800";      // arancione
-  if (t.includes("stock") || t.includes("Azione")) return "#28a745"; // verde
-  if (t.includes("cripto")) return "#ffb347";    // giallo/arancio
-  return "#888888"; // default
+  if (t.includes("etf")) return "#0095ff";     // blu ETF
+  if (t.includes("bond") || t.includes("obbl")) return "#9c27b0"; // viola bond
+  if (t.includes("reit")) return "#ff9800";   // arancio REIT
+  if (t.includes("stock") || t.includes("azione")) return "#4caf50"; // verde stock
+  return "#8884"; // default
 }
+
 
 
 // ===============================================
