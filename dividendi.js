@@ -8,17 +8,30 @@ let rows = [];
 let viewRows = [];
 let currentSort = { column: "nome", asc: true };
 
-// helpers
+// helper formatting
 const fmtEuro = v => Number(v || 0).toFixed(2) + " €";
-const fmtPerc = v => (Number(v || 0) * 100).toFixed(2) + " %";
+
+// ============ COLORI PER TIPOLOGIA =============
+function getTypeColor(tip) {
+  if (!tip) return "var(--card-default)";
+  const t = tip.toLowerCase();
+  if (t.includes("etf")) return "var(--card-etf)";
+  if (t.includes("bond") || t.includes("obbl")) return "var(--card-bond)";
+  if (t.includes("reit")) return "var(--card-reit)";
+  if (t.includes("stock") || t.includes("azione")) return "var(--card-stock)";
+  return "var(--card-default)";
+}
+
+// ===============================================
 
 async function loadDividendiData() {
   try {
     const snap = await getDocs(collection(db, "portafoglio"));
     rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // keep only those with dividends > 0
+
     rows = rows.filter(r => Number(r.dividendi) > 0);
     viewRows = [...rows];
+
     renderAll();
   } catch (e) {
     console.error("Errore caricamento dividendi:", e);
@@ -31,7 +44,9 @@ function renderAll() {
   renderChart(viewRows);
 }
 
-// --- RENDER CARDS ---
+// ===================================================
+// RENDER CARDS
+// ===================================================
 function renderCards(data) {
   const container = document.getElementById("cardsContainer");
   if (!container) return;
@@ -47,14 +62,19 @@ function renderCards(data) {
   container.innerHTML = data
     .map((r) => {
       const tip = r.tipologia || "-";
+      const bgcolor = getTypeColor(tip);
       const perc = (Number(r.percentuale_portafoglio || 0) * 100).toFixed(2);
 
       return `
-      <article class="card-item card-colored" role="article" tabindex="0" aria-labelledby="name-${r.id}">
-        
+      <article class="card-item"
+        style="border-left: 10px solid ${bgcolor};"
+        role="article" tabindex="0" aria-labelledby="name-${r.id}">
+
         <div class="card-header">
           <h3 class="card-title" id="name-${r.id}">${r.nome}</h3>
-          <span class="card-badge">${tip}</span>
+          <span class="card-badge" style="background:${bgcolor}; color:#fff;">
+            ${tip}
+          </span>
         </div>
 
         <div class="card-body">
@@ -62,12 +82,10 @@ function renderCards(data) {
             <span>Dividendo:</span>
             <strong>${fmtEuro(r.dividendi)}</strong>
           </div>
-
           <div class="card-row">
             <span>Prezzo:</span>
             <strong>${fmtEuro(r.prezzo_corrente || r.prezzo_acquisto)}</strong>
           </div>
-
           <div class="card-row">
             <span>% Portafoglio:</span>
             <strong>${perc}%</strong>
@@ -79,19 +97,19 @@ function renderCards(data) {
           <span>Yield: <b>${(Number(r.rendimento_percentuale || 0) * 100).toFixed(2)}%</b></span>
         </div>
 
-      </article>
-      `;
+      </article>`;
     })
     .join("");
 }
 
-  
-
-// --- RENDER STATISTICHE (mini cards in alto) ---
+// ===================================================
+// RENDER STATISTICHE
+// ===================================================
 function renderStats(data) {
   const totale = data.reduce((s, x) => s + Number(x.dividendi || 0), 0);
   const media = data.length ? totale / 12 : 0;
   const top = data.length ? data.reduce((mx, r) => r.dividendi > mx.dividendi ? r : mx, data[0]) : null;
+
   const totaleValore = data.reduce((s, x) => s + Number(x.prezzo_corrente || 0), 0);
   const yieldPerc = totaleValore ? (totale / totaleValore * 100) : 0;
 
@@ -101,12 +119,15 @@ function renderStats(data) {
   document.getElementById("divYield").textContent = `${yieldPerc.toFixed(2)}%`;
 }
 
-// --- CHART TOP5 ---
+// ===================================================
+// CHART TOP5
+// ===================================================
 let chartTop = null;
 function renderChart(data) {
   const top5 = [...data].sort((a,b) => Number(b.dividendi)-Number(a.dividendi)).slice(0,5);
   const ctx = document.getElementById("chartTopDiv");
   if (!ctx) return;
+
   try {
     if (chartTop) chartTop.destroy();
     chartTop = new Chart(ctx, {
@@ -131,23 +152,24 @@ function renderChart(data) {
   }
 }
 
-// --- SORTING / FILTER / SEARCH ---
+// ===================================================
+// SORTING + SEARCH + FILTER
+// ===================================================
 function sortView(column) {
   if (currentSort.column === column) currentSort.asc = !currentSort.asc;
   else { currentSort.column = column; currentSort.asc = true; }
 
   viewRows.sort((a,b) => {
-    const A = (a[column] !== undefined && a[column] !== null) ? a[column] : "";
-    const B = (b[column] !== undefined && b[column] !== null) ? b[column] : "";
-    // numeric?
+    const A = a[column] ?? "";
+    const B = b[column] ?? "";
     const nA = Number(A), nB = Number(B);
+
     if (!isNaN(nA) && !isNaN(nB)) {
       return currentSort.asc ? nA - nB : nB - nA;
     }
-    // string compare
-    const sA = String(A).toLowerCase();
-    const sB = String(B).toLowerCase();
-    return currentSort.asc ? sA.localeCompare(sB) : sB.localeCompare(sA);
+    return currentSort.asc
+      ? String(A).localeCompare(String(B))
+      : String(B).localeCompare(String(A));
   });
 
   updateSortButtonsUI();
@@ -174,36 +196,27 @@ function applySearchAndFilter() {
     return true;
   });
 
-  // apply current sort
   sortView(currentSort.column);
-  // sortView will call renderAll
 }
 
-// --- EVENT LISTENERS ---
 function bindControls() {
   document.querySelectorAll(".sort-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const col = btn.dataset.column;
-      sortView(col);
+      sortView(btn.dataset.column);
     });
   });
 
   const search = document.getElementById("searchCard");
   if (search) {
-    search.addEventListener("input", () => {
-      applySearchAndFilter();
-    });
+    search.addEventListener("input", applySearchAndFilter);
   }
 
   const filter = document.getElementById("filterType");
   if (filter) {
-    filter.addEventListener("change", () => {
-      applySearchAndFilter();
-    });
+    filter.addEventListener("change", applySearchAndFilter);
   }
 }
 
-// on load
 document.addEventListener("DOMContentLoaded", () => {
   bindControls();
   loadDividendiData();
