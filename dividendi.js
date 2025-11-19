@@ -13,14 +13,16 @@ const fmtEuro = v => Number(v || 0).toFixed(2) + " €";
 
 // ============ COLORI PER TIPOLOGIA =============
 function getTypeColor(tip) {
-  if (!tip) return "var(--card-default)";
+  if (!tip) return "#888888"; // default grigio neutro
   const t = tip.toLowerCase();
-  if (t.includes("etf")) return "var(--card-etf)";
-  if (t.includes("bond") || t.includes("obbl")) return "var(--card-bond)";
-  if (t.includes("reit")) return "var(--card-reit)";
-  if (t.includes("stock") || t.includes("azione")) return "var(--card-stock)";
-  return "var(--card-default)";
+  if (t.includes("ETF")) return "#007bff";       // blu
+  if (t.includes("bond") || t.includes("obbl")) return "#9c27b0"; // viola
+  if (t.includes("reit")) return "#ff9800";      // arancione
+  if (t.includes("stock") || t.includes("Azione")) return "#28a745"; // verde
+  if (t.includes("cripto")) return "#ffb347";    // giallo/arancio
+  return "#888888"; // default
 }
+
 
 // ===============================================
 
@@ -58,28 +60,28 @@ function renderCards(data) {
 
   container.innerHTML = data
     .map((r) => {
-      const tip = (r.tipologia || "").trim().toLowerCase();
-      
-      // Gradient moderni
-      let gradient = "linear-gradient(135deg, #888 0%, #bbb 100%)"; // default grigio
-      if (tip === "etf") gradient = "linear-gradient(135deg, #0095ff 0%, #00d4ff 100%)";
-      else if (tip === "azione") gradient = "linear-gradient(135deg, #4caf50 0%, #81e07f 100%)";
-
+      const tip = r.tipologia || "-";
+      const bgcolor = getTypeColor(tip);
       const perc = (Number(r.percentuale_portafoglio || 0) * 100).toFixed(2);
+
+      // Calcolo corretto del profitto
+      const profitto = 
+        (Number(r.prezzo_corrente || 0) - Number(r.prezzo_acquisto || 0)) +
+        Number(r.dividendi || 0) +
+        Number(r.prelevato || 0);
 
       return `
       <article class="card-item"
-        style="background: ${gradient};"
         role="article" tabindex="0" aria-labelledby="name-${r.id}">
 
-        <div class="card-header" style="background: rgba(255,255,255,0.15); padding: 6px 10px; border-radius: 6px;">
-          <h3 class="card-title" id="name-${r.id}" style="color: #fff;">${r.nome}</h3>
-          <span class="card-badge" style="background: rgba(0,0,0,0.25); color:#fff; font-weight:600; padding: 3px 8px; border-radius: 999px;">
-            ${r.tipologia || "-"}
+        <div class="card-header">
+          <h3 class="card-title" id="name-${r.id}">${r.nome}</h3>
+          <span class="card-badge" style="background:${bgcolor}; color:white;">
+            ${tip}
           </span>
         </div>
 
-        <div class="card-body" style="color: #fff; margin-top: 10px;">
+        <div class="card-body">
           <div class="card-row">
             <span>Dividendo:</span>
             <strong>${fmtEuro(r.dividendi)}</strong>
@@ -94,8 +96,8 @@ function renderCards(data) {
           </div>
         </div>
 
-        <div class="card-footer" style="margin-top: 10px; display:flex; justify-content:space-between; color:#fff;">
-          <span>Profitto: <b>${fmtEuro(r.profitto)}</b></span>
+        <div class="card-footer">
+          <span>Profitto: <b>${fmtEuro(profitto)}</b></span>
           <span>Yield: <b>${(Number(r.rendimento_percentuale || 0) * 100).toFixed(2)}%</b></span>
         </div>
 
