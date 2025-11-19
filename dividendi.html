@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dividendi - Portfolio Manager</title>
 
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=10">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -13,52 +13,62 @@
   <div class="container">
 
     <header>
-      <h1>💰 Dividendi Mensili</h1>
+      <h1>💰 Dividendi</h1>
       <p class="subtitle">Francesco La Gattuta</p>
     </header>
 
-    <!-- STESSA BARRA CONTROLLI DELLA DASHBOARD -->
+    <!-- BOTTONI COME DASHBOARD -->
     <div class="controls">
       <button onclick="window.location.href='index.html'">🏠 Home</button>
       <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
     </div>
 
-    <!-- MINI CARDS – puoi cambiarle dopo -->
+    <!-- MINI CARDS -->
     <div class="mini-cards">
       <div class="mini-card">
-        <h3>Dividendi Mensili</h3>
-        <p id="divMensili">0 €</p>
+        <h3>Totale Dividendi</h3>
+        <p id="divTotale">0 €</p>
       </div>
 
       <div class="mini-card">
-        <h3>Dividendi Annuo Stimato</h3>
-        <p id="divAnnui">0 €</p>
+        <h3>Media Mensile</h3>
+        <p id="divMensile">0 €</p>
       </div>
 
       <div class="mini-card">
-        <h3>Yield Medio</h3>
-        <p id="yieldMedio">0%</p>
+        <h3>Top Payer</h3>
+        <p id="topPayer">-</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Rendimento / Investito</h3>
+        <p id="divYield">0%</p>
       </div>
     </div>
 
-    <!-- GRAFICO -->
-    <div class="charts-grid">
-      <div class="chart-card">
-        <h2>Dividendi per Mese</h2>
-        <canvas id="chartDividendiMese"></canvas>
-      </div>
+    <!-- GRAFICO TOP 5 DIVIDENDI -->
+    <div class="chart-card">
+      <h2>Top 5 Titoli per Dividendi</h2>
+      <canvas id="chartTopDiv"></canvas>
+    </div>
 
-      <div class="chart-card">
-        <h2>Top Titoli per Dividendo</h2>
-        <canvas id="chartTopDividendi"></canvas>
-      </div>
+    <!-- TABELLA DIVIDENDI -->
+    <div class="table-container" style="margin-top:18px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Dividendi (€)</th>
+            <th>Tipologia</th>
+            <th>% Portafoglio</th>
+          </tr>
+        </thead>
+        <tbody id="tableDividendi"></tbody>
+      </table>
     </div>
 
   </div>
 
-  <!-- Script -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script type="module" src="dividendi.js?v=1"></script>
-
 </body>
 </html>
