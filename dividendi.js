@@ -1,14 +1,10 @@
-import { db, collection, getDocs } from "./firebase-config.js";
+import { db } from "./firebase-config.js";
 
 async function loadDividendi() {
-  const snap = await getDocs(collection(db, "portafoglio"));
+  const snap = await db.collection("portafoglio").get();
   const rows = snap.docs.map(d => d.data());
 
-  // calcolo totale portafoglio = somma delle percentuali
-  // (dovrebbe fare 1.0 se i dati sono coerenti)
   const totalePeso = rows.reduce((sum, r) => sum + (r.percentuale_portafoglio || 0), 0);
-
-  // normalizziamo (serve nel caso la somma non sia esattamente 1)
   const totaleInvestito = totalePeso > 0 ? totalePeso * 100 : 0;
 
   buildStats(rows, totaleInvestito);
@@ -17,20 +13,15 @@ async function loadDividendi() {
 }
 
 // ------------------------------------------------------------
-// 1. STATISTICHE SUPERIORI
+// 1. STATISTICHE
 // ------------------------------------------------------------
 function buildStats(rows, totaleInvestito) {
 
-  // dividend annuali totali
   const totDiv = rows.reduce((sum, r) => sum + (r.dividendi || 0), 0);
-
-  // dividendo mensile
   const divMensile = totDiv / 12;
 
-  // top payer
-  const top = rows.sort((a, b) => (b.dividendi || 0) - (a.dividendi || 0))[0];
+  const top = [...rows].sort((a, b) => (b.dividendi || 0) - (a.dividendi || 0))[0];
 
-  // yield totale
   const divYield = totaleInvestito > 0 ? (totDiv / totaleInvestito) * 100 : 0;
 
   document.getElementById("divTotale").textContent = totDiv.toFixed(2) + " €";
@@ -39,9 +30,8 @@ function buildStats(rows, totaleInvestito) {
   document.getElementById("divYield").textContent = divYield.toFixed(2) + "%";
 }
 
-
 // ------------------------------------------------------------
-// 2. TABELLA RIEPILOGATIVA
+// 2. TABELLA
 // ------------------------------------------------------------
 function buildTable(rows, totaleInvestito) {
   const tbody = document.getElementById("tableDividendi");
@@ -57,16 +47,15 @@ function buildTable(rows, totaleInvestito) {
       <td>${r.nome}</td>
       <td>${(r.dividendi || 0).toFixed(2)} €</td>
       <td>${r.tipologia || "-"}</td>
-      <td>${(investito).toFixed(2)} €</td>
+      <td>${investito.toFixed(2)} €</td>
       <td>${((r.percentuale_portafoglio || 0) * 100).toFixed(2)}%</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-
 // ------------------------------------------------------------
-// 3. GRAFICO TOP 5
+// 3. GRAFICO
 // ------------------------------------------------------------
 function buildChart(rows) {
   const top5 = [...rows]
