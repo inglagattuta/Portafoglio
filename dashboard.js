@@ -32,9 +32,9 @@ async function loadDividendi() {
 
   if (!divRows.length) return;
 
-  renderMiniCards(divRows);
-  renderTable(divRows);
-  renderChart(divRows);
+  // renderMiniCards(divRows);
+  // renderTable(divRows);
+  // renderChart(divRows);
 }
 
 // ===============================
