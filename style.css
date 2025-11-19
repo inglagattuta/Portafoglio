@@ -873,4 +873,11 @@ tr:nth-child(even) {
   transform: translateY(-3px);
   box-shadow: 0 8px 18px rgba(0,0,0,0.12);
 }
+:root {
+  --card-default: #8884;
+  --card-etf: #0095ff;
+  --card-bond: #9c27b0;
+  --card-reit: #ff9800;
+  --card-stock: #4caf50;
+}
 
