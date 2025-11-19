@@ -66,15 +66,16 @@ function renderStats(data) {
 // FETCH DATI DA FIREBASE
 // ===============================
 async function loadDividendi() {
-  const snap = await getDocs(collection(db, "portafoglio")); // <-- CORRETTO
+  const snap = await getDocs(collection(db, "portafoglio"));
   const rows = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-  // 🔥 FILTRO: SOLO dividendi > 0
-  filteredRows = rows.filter(r => r.dividendi && r.dividendi > 0);
+  // 🔥 Mostra SOLO titoli che pagano dividendi
+  filteredRows = rows.filter(r => Number(r.dividendi) > 0);
 
   renderStats(filteredRows);
   renderTable(filteredRows);
 }
+
 
 // ===============================
 // CLICK SULLE COLONNE
