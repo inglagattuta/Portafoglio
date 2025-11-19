@@ -123,24 +123,20 @@ function renderStats(data) {
 // CHART TOP5 MODERNO
 // ===================================================
 let chartTop = null;
-function renderChart(data) {
-  const top5 = [...data].sort((a,b) => Number(b.dividendi)-Number(a.dividendi)).slice(0,5);
-  const ctx = document.getElementById("chartTopDiv");
-  if (!ctx) return;
 
-  // Gradienti barre
-  const colors = top5.map((_, i) => {
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    switch(i) {
-      case 0: gradient.addColorStop(0, 'rgba(75,192,192,0.8)'); gradient.addColorStop(1,'rgba(75,192,192,0.3)'); break;
-      case 1: gradient.addColorStop(0, 'rgba(255,159,64,0.8)'); gradient.addColorStop(1,'rgba(255,159,64,0.3)'); break;
-      case 2: gradient.addColorStop(0, 'rgba(153,102,255,0.8)'); gradient.addColorStop(1,'rgba(153,102,255,0.3)'); break;
-      case 3: gradient.addColorStop(0, 'rgba(54,162,235,0.8)'); gradient.addColorStop(1,'rgba(54,162,235,0.3)'); break;
-      case 4: gradient.addColorStop(0, 'rgba(255,99,132,0.8)'); gradient.addColorStop(1,'rgba(255,99,132,0.3)'); break;
-      default: gradient.addColorStop(0,'rgba(200,200,200,0.8)'); gradient.addColorStop(1,'rgba(200,200,200,0.3)');
-    }
-    return gradient;
-  });
+function renderChart(data) {
+  const top5 = [...data]
+    .sort((a, b) => Number(b.dividendi) - Number(a.dividendi))
+    .slice(0, 5);
+
+  const canvas = document.getElementById("chartTopDiv");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  // Creiamo un gradiente verticale moderno
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, "#4caf50");   // verde brillante in alto
+  gradient.addColorStop(1, "#81c784");   // verde chiaro in basso
 
   try {
     if (chartTop) chartTop.destroy();
@@ -151,10 +147,9 @@ function renderChart(data) {
         datasets: [{
           label: "Dividendi €",
           data: top5.map(x => Number(x.dividendi)),
-          backgroundColor: colors,
+          backgroundColor: gradient,
           borderRadius: 8,
-          barPercentage: 0.6,
-          categoryPercentage: 0.5
+          borderSkipped: false
         }]
       },
       options: {
@@ -162,33 +157,28 @@ function renderChart(data) {
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: {
-            backgroundColor: '#222',
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            padding: 10,
-            cornerRadius: 6
+          tooltip: { 
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue} €`
+            }
           }
         },
         scales: {
           y: {
             beginAtZero: true,
-            grid: { drawBorder: false, color: 'rgba(200,200,200,0.2)' },
-            ticks: { stepSize: 20, font: { size: 12 } }
+            ticks: { stepSize: 50 },
+            grid: { drawBorder: false }
           },
           x: {
-            grid: { display: false },
-            ticks: { font: { size: 12, weight: '600' } }
+            grid: { display: false }
           }
-        },
-        animation: { duration: 1000, easing: 'easeOutQuart' }
+        }
       }
     });
   } catch (e) {
     console.error("Errore Chart:", e);
   }
 }
-
 
 // ===================================================
 // SORTING + SEARCH + FILTER
