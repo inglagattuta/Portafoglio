@@ -465,3 +465,75 @@ tr:nth-child(even) {
   box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4);
   transform: translateY(-2px) scale(1.03);
 }
+
+/* =========================================================
+   RESPONSIVE FIX — Mobile & Tablet
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 600px) {
+
+  /* Layout generale */
+  body {
+    padding: 12px;
+  }
+
+  .container {
+    padding: 0;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+  .subtitle {
+    font-size: 0.85rem;
+  }
+
+  /* STAT CARDS — 1 colonna */
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 1.2rem;
+  }
+
+  /* CONTROLLI */
+  .controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .controls button,
+  .file-label,
+  .dashboard-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* TABELLA RESPONSIVE */
+  .table-container {
+    overflow-x: auto;
+    width: 100%;
+    border-radius: 10px;
+  }
+
+  table {
+    min-width: 700px; /* impedisce il collasso su mobile */
+  }
+
+  th, td {
+    padding: 8px;
+  }
+}
+
