@@ -1004,6 +1004,13 @@ tr:nth-child(even) {
     max-height: 180px !important;
   }
 }
+:root {
+  --card-default: #8884;
+  --card-etf: #0095ff;
+  --card-bond: #9c27b0;
+  --card-reit: #ff9800;
+  --card-stock: #4caf50;
+}
 
 .card-badge {
   display: inline-block;
