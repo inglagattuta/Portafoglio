@@ -61,11 +61,11 @@ function renderCards(data) {
 
   // Mappa colori tipologia con testo leggibile
   const typeColors = {
-    "etf": { bg: "var(--card-etf)", color: "#fff" },
+    "ETF": { bg: "var(--card-etf)", color: "#fff" },
     "bond": { bg: "var(--card-bond)", color: "#fff" },
     "obbl": { bg: "var(--card-bond)", color: "#fff" },
     "reit": { bg: "var(--card-reit)", color: "#000" },
-    "azione": { bg: "var(--card-stock)", color: "#fff" },
+    "Azione": { bg: "var(--card-stock)", color: "#fff" },
     "stock": { bg: "var(--card-stock)", color: "#fff" },
     "default": { bg: "var(--card-default)", color: "#000" }
   };
