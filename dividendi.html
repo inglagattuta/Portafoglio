@@ -1,44 +1,64 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dividendi Mensili</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dividendi - Portfolio Manager</title>
 
-  <link rel="stylesheet" href="style.css?v=10">
-
-  <!-- Firebase -->
-  <script type="module" src="firebase-config.js?v=4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- Script Dividendi -->
-  <script type="module" src="dividendi.js?v=1"></script>
+  <link rel="stylesheet" href="style.css?v=4">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body data-theme="light">
+<body>
   <div class="container">
 
     <header>
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <h1>💵 Dividendi</h1>
-        <a href="index.html" class="dashboard-btn">⬅ Torna al Portfolio</a>
-      </div>
+      <h1>💰 Dividendi Mensili</h1>
+      <p class="subtitle">Francesco La Gattuta</p>
     </header>
 
-    <div class="table-container" style="margin-top:18px;">
-      <table>
-        <thead>
-          <tr>
-            <th>Titolo</th>
-            <th>Dividendi (€)</th>
-            <th>Tipologia</th>
-            <th>Score</th>
-          </tr>
-        </thead>
-        <tbody id="divTable"></tbody>
-      </table>
+    <!-- STESSA BARRA CONTROLLI DELLA DASHBOARD -->
+    <div class="controls">
+      <button onclick="window.location.href='index.html'">🏠 Home</button>
+      <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
+    </div>
+
+    <!-- MINI CARDS – puoi cambiarle dopo -->
+    <div class="mini-cards">
+      <div class="mini-card">
+        <h3>Dividendi Mensili</h3>
+        <p id="divMensili">0 €</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Dividendi Annuo Stimato</h3>
+        <p id="divAnnui">0 €</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Yield Medio</h3>
+        <p id="yieldMedio">0%</p>
+      </div>
+    </div>
+
+    <!-- GRAFICO -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h2>Dividendi per Mese</h2>
+        <canvas id="chartDividendiMese"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h2>Top Titoli per Dividendo</h2>
+        <canvas id="chartTopDividendi"></canvas>
+      </div>
     </div>
 
   </div>
+
+  <!-- Script -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script type="module" src="dividendi.js?v=1"></script>
+
 </body>
 </html>
