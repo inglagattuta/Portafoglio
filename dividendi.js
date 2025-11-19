@@ -44,9 +44,6 @@ function renderAll() {
   renderChart(viewRows);
 }
 
-// ===================================================
-// RENDER CARDS CORRETTO CON COLORI BADGE
-// ===================================================
 function renderCards(data) {
   const container = document.getElementById("cardsContainer");
   if (!container) return;
@@ -61,34 +58,27 @@ function renderCards(data) {
 
   container.innerHTML = data
     .map((r) => {
-      const tip = r.tipologia || "-";
+      const tip = (r.tipologia || "").toLowerCase();
 
-      // Colori personalizzati per tipologia
-      const colors = {
-        bg: "#888", // default
-        color: "#fff"
-      };
-
-      const t = tip.toLowerCase();
-      if (t.includes("ETF")) colors.bg = "#0095ff";
-      else if (t.includes("bond") || t.includes("obbl")) colors.bg = "#9c27b0";
-      else if (t.includes("reit")) colors.bg = "#ff9800";
-      else if (t.includes("stock") || t.includes("Azione")) colors.bg = "#4caf50";
-
-      // Contrasto testo automatico
-      colors.color = "#fff"; // sempre bianco sopra colori saturi
+      // Imposta colori distinti per ciascun tipo
+      let bgColor = "#888"; // default grigio
+      if (tip.includes("ETF")) bgColor = "#0095ff";
+      else if (tip.includes("bond") || tip.includes("obbl")) bgColor = "#9c27b0";
+      else if (tip.includes("reit")) bgColor = "#ff9800";
+      else if (tip.includes("stock") || tip.includes("Azione")) bgColor = "#4caf50";
+      else if (tip.includes("cripto")) bgColor = "#ff8c00";
 
       const perc = (Number(r.percentuale_portafoglio || 0) * 100).toFixed(2);
 
       return `
       <article class="card-item"
-        style="border-left: 10px solid ${colors.bg};"
+        style="border-left: 10px solid ${bgColor};"
         role="article" tabindex="0" aria-labelledby="name-${r.id}">
 
         <div class="card-header">
           <h3 class="card-title" id="name-${r.id}">${r.nome}</h3>
-          <span class="card-badge" style="background:${colors.bg}; color:${colors.color};">
-            ${tip}
+          <span class="card-badge" style="background:${bgColor}; color:#fff;">
+            ${r.tipologia || "-"}
           </span>
         </div>
 
@@ -116,6 +106,7 @@ function renderCards(data) {
     })
     .join("");
 }
+
 
 // ===================================================
 // RENDER STATISTICHE
