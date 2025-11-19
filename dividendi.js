@@ -1,94 +1,70 @@
-// ===============================
-// IMPORT FIREBASE
-// ===============================
-import { db } from "./firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+document.addEventListener("DOMContentLoaded", () => {
 
-// ===============================
-// VARIABILI GLOBALI
-// ===============================
-let filteredRows = [];
-let currentSort = { column: null, asc: true };
+  import app from "./firebase-config.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// ===============================
-// ORDINAMENTO
-// ===============================
-function sortData(column, data) {
-  if (currentSort.column === column) {
-    currentSort.asc = !currentSort.asc;
-  } else {
-    currentSort.column = column;
-    currentSort.asc = true;
+  const db = getFirestore(app);
+
+  async function loadDividendi() {
+    const snap = await getDocs(collection(db, "dividendi"));
+    const data = snap.docs.map(d => d.data());
+
+    renderTable(data);
+    renderStats(data);
+    renderChart(data);
   }
 
-  return data.sort((a, b) => {
-    if (a[column] < b[column]) return currentSort.asc ? -1 : 1;
-    if (a[column] > b[column]) return currentSort.asc ? 1 : -1;
-    return 0;
-  });
-}
+  function renderTable(data) {
+    const tbody = document.getElementById("tableDividendi");
+    if (!tbody) return;
 
-// ===============================
-// RENDER TABELLA
-// ===============================
-function renderTable(data) {
-  const tableBody = document.getElementById("tableDividendi");
-  tableBody.innerHTML = "";
+    tbody.innerHTML = data
+      .map(d => `
+        <tr>
+          <td>${d.nome}</td>
+          <td>${d.dividendo} €</td>
+          <td>${d.tipo}</td>
+          <td>${d.percentuale}%</td>
+        </tr>
+      `)
+      .join("");
+  }
 
-  data.forEach(r => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.nome}</td>
-      <td>${r.tipologia}</td>
-      <td>${r.dividendi.toFixed(2)} €</td>
-      <td>${(r.percentuale_portafoglio * 100).toFixed(2)}%</td>
-      <td>${r.profitto.toFixed(2)} €</td>
-      <td>${(r.rendimento_percentuale * 100).toFixed(2)}%</td>
-    `;
-    tableBody.appendChild(tr);
-  });
-}
+  function renderStats(data) {
+    let totale = data.reduce((s, x) => s + Number(x.dividendo), 0);
+    document.getElementById("totaleDividendi").innerHTML = totale.toFixed(2) + " €";
 
-// ===============================
-// RENDER BOX STATISTICHE
-// ===============================
-function renderStats(data) {
-  const totaleDiv = data.reduce((acc, r) => acc + r.dividendi, 0);
-  const mediaDiv = data.length > 0 ? totaleDiv / data.length : 0;
-  const top = data.length > 0 ? data.reduce((max, r) => r.dividendi > max.dividendi ? r : max) : null;
+    document.getElementById("mediaDividendi").innerHTML = (totale / 12).toFixed(2) + " €";
 
-  document.getElementById("totaleDividendi").textContent = totaleDiv.toFixed(2) + " €";
-  document.getElementById("mediaDividendi").textContent = mediaDiv.toFixed(2) + " €";
-  document.getElementById("topDividendo").textContent = top ? `${top.nome} (${top.dividendi.toFixed(2)} €)` : "-";
-}
+    let top = data.sort((a, b) => b.dividendo - a.dividendo)[0];
+    document.getElementById("topDividendo").innerHTML = top ? top.nome : "-";
 
-// ===============================
-// FETCH DATI DA FIREBASE
-// ===============================
-async function loadDividendi() {
-  const snap = await getDocs(collection(db, "portafoglio"));
-  const rows = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Yield finto per ora
+    document.getElementById("divYield").innerHTML = "3.5%";
+  }
 
-  // 🔥 Mostra SOLO titoli che pagano dividendi
-  filteredRows = rows.filter(r => Number(r.dividendi) > 0);
+  function renderChart(data) {
+    const ctx = document.getElementById("chartTopDiv");
+    if (!ctx) return console.error("❌ chartTopDiv non trovato nell’HTML");
 
-  renderStats(filteredRows);
-  renderTable(filteredRows);
-}
+    let top5 = data.sort((a, b) => b.dividendo - a.dividendo).slice(0, 5);
 
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: top5.map(x => x.nome),
+        datasets: [{
+          label: "Dividendi €",
+          data: top5.map(x => x.dividendo)
+        }]
+      }
+    });
+  }
 
-// ===============================
-// CLICK SULLE COLONNE
-// ===============================
-document.querySelectorAll("#dividendiTable thead th[data-sort]").forEach(th => {
-  th.addEventListener("click", () => {
-    const column = th.dataset.sort;
-    const sorted = sortData(column, filteredRows);
-    renderTable(sorted);
-  });
+  loadDividendi();
+
 });
-
-// ===============================
-// AVVIO
-// ===============================
-loadDividendi();
