@@ -99,6 +99,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log("📈 Grafico generato!");
   }
+// ============================
+// ORDINAMENTO COLONNE TABELLA
+// ============================
+
+function sortTable(tableId, colIndex) {
+  const table = document.getElementById(tableId);
+  const rows = Array.from(table.querySelectorAll("tbody tr"));
+  const isNumber = !isNaN(rows[0].children[colIndex].innerText);
+
+  rows.sort((a, b) => {
+    const A = a.children[colIndex].innerText.trim();
+    const B = b.children[colIndex].innerText.trim();
+    return isNumber ? (parseFloat(A) - parseFloat(B)) : A.localeCompare(B);
+  });
+
+  rows.forEach(r => table.querySelector("tbody").appendChild(r));
+}
+
+// Attiva il sort al click
+document.querySelectorAll("#divTable th.sortable").forEach((th, index) => {
+  th.addEventListener("click", () => sortTable("divTable", index));
+});
 
   // ===============================
   // AVVIO
