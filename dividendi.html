@@ -1,105 +1,84 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dividendi - Portafoglio</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dividendi</title>
 
-  <!-- CSS esistente -->
-  <link rel="stylesheet" href="style.css?v=10">
-
-  <!-- Chart.js -->
+  <link rel="stylesheet" href="style.css?v=5">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- XLSX (se vuoi importare/esportare da qui in futuro) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- firebase-config come module -->
-  <script type="module" src="firebase-config.js?v=4"></script>
-  <!-- dividendi.js verrà caricato come module in fondo al body -->
 </head>
-<body data-theme="light">
-  <div class="container">
-    <header>
-      <div class="header-top" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div>
-          <h1 style="margin:0;">💰 Dividendi - Portafoglio</h1>
-          <p class="subtitle" style="margin:4px 0 0;">Francesco La Gattuta</p>
-        </div>
 
-        <div class="controls">
-          <button onclick="window.location.href='index.html'">🏠 Home</button>
-          <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
-        </div>
-      </div>
+<body>
+  <div class="container">
+
+    <!-- HEADER come Dashboard -->
+    <header>
+      <h1>💰 Dividendi</h1>
+      <p class="subtitle">Francesco La Gattuta</p>
     </header>
 
-    <!-- STATISTICHE (stile Dashboard) -->
-    <div class="stats-grid" style="margin-top:18px;">
-      <div class="stat-card">
-        <div class="stat-label">Dividendi Totali</div>
-        <div class="stat-value" id="divTotale">0.00 €</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Dividendi / anno (stimato)</div>
-        <div class="stat-value" id="divAnnuale">0.00 €</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Top Payer</div>
-        <div class="stat-value" id="topPayer">-</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-label">Dividend Yield (su investito)</div>
-        <div class="stat-value" id="divYield">0.00%</div>
-      </div>
+    <!-- CONTROLLI come Dashboard -->
+    <div class="controls">
+      <button onclick="window.location.href='index.html'">🏠 Home</button>
+      <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
     </div>
 
-    <!-- MINI CARDS (opzionali, riusabili dalla dashboard) -->
-    <div class="mini-cards" style="margin-top:14px;">
+    <!-- MINI CARDS -->
+    <div class="mini-cards">
+
       <div class="mini-card">
-        <h3>Top 5 Dividend Payers</h3>
-        <p id="miniTop5">-</p>
+        <h3>Totale Dividendi</h3>
+        <p id="divTotale">0 €</p>
       </div>
 
       <div class="mini-card">
-        <h3>#Titoli con dividendo</h3>
-        <p id="countPayers">0</p>
+        <h3>Mensile Stimato</h3>
+        <p id="divMensile">0 €</p>
       </div>
 
       <div class="mini-card">
-        <h3>Tot Investito</h3>
-        <p id="totInvestDiv">0.00 €</p>
+        <h3>Top Payer</h3>
+        <p id="topPayer">-</p>
       </div>
+
+      <div class="mini-card">
+        <h3>Dividend Yield</h3>
+        <p id="divYield">0%</p>
+      </div>
+
     </div>
 
-    <!-- TABELLA DIVIDENDI -->
-    <div class="table-container" style="margin-top:18px;">
-      <table>
-        <thead>
-          <tr>
-            <th>Titolo</th>
-            <th>Dividendi (€)</th>
-            <th>Tipologia</th>
-            <th>% Portafoglio</th>
-            <th>Investito (€)</th>
-          </tr>
-        </thead>
-        <tbody id="tableDividendi"></tbody>
-      </table>
-    </div>
+    <!-- GRID GRAFICI + TABELLA -->
+    <div class="charts-grid">
 
-    <!-- GRAFICO TOP DIVIDENDI -->
-    <div class="chart-card" style="margin-top:18px; height:360px;">
-      <h2>Top 10 Dividend Payers</h2>
-      <canvas id="chartTopDiv"></canvas>
+      <div class="chart-card">
+        <h2>Top 5 Dividendi</h2>
+        <canvas id="chartTopDiv"></canvas>
+      </div>
+
+      <div class="chart-card wide">
+        <h2>Lista Titoli e Dividendi</h2>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Dividendo €</th>
+              <th>Tipologia</th>
+              <th>% Portafoglio</th>
+            </tr>
+          </thead>
+          <tbody id="tableDividendi"></tbody>
+        </table>
+
+      </div>
     </div>
 
   </div>
 
-  <!-- Script della pagina -->
-  <script type="module" src="dividendi.js?v=1"></script>
+  <!-- Script Firebase + logic -->
+  <script type="module" src="dividendi.js?v=2"></script>
+
 </body>
 </html>
