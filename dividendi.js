@@ -35,10 +35,55 @@ function renderAll() {
 function renderCards(data) {
   const container = document.getElementById("cardsContainer");
   if (!container) return;
+
   if (!data.length) {
-    container.innerHTML = `<div class="card-item"><div class="card-name">Nessun titolo a dividendo trovato</div></div>`;
+    container.innerHTML = `
+      <div class="card-item">
+        <div class="card-name">Nessun titolo a dividendo trovato</div>
+      </div>`;
     return;
   }
+
+  container.innerHTML = data
+    .map((r) => {
+      const tip = r.tipologia || "-";
+      const perc = (Number(r.percentuale_portafoglio || 0) * 100).toFixed(2);
+
+      return `
+      <article class="card-item card-colored" role="article" tabindex="0" aria-labelledby="name-${r.id}">
+        
+        <div class="card-header">
+          <h3 class="card-title" id="name-${r.id}">${r.nome}</h3>
+          <span class="card-badge">${tip}</span>
+        </div>
+
+        <div class="card-body">
+          <div class="card-row">
+            <span>Dividendo:</span>
+            <strong>${fmtEuro(r.dividendi)}</strong>
+          </div>
+
+          <div class="card-row">
+            <span>Prezzo:</span>
+            <strong>${fmtEuro(r.prezzo_corrente || r.prezzo_acquisto)}</strong>
+          </div>
+
+          <div class="card-row">
+            <span>% Portafoglio:</span>
+            <strong>${perc}%</strong>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <span>Profitto: <b>${fmtEuro(r.profitto)}</b></span>
+          <span>Yield: <b>${(Number(r.rendimento_percentuale || 0) * 100).toFixed(2)}%</b></span>
+        </div>
+
+      </article>
+      `;
+    })
+    .join("");
+}
 
   container.innerHTML = data.map(r => {
     const tip = r.tipologia || "-";
