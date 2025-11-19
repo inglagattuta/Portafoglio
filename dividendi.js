@@ -58,31 +58,28 @@ function renderCards(data) {
 
   container.innerHTML = data
     .map((r) => {
-      const tip = (r.tipologia || "").toLowerCase();
-
-      // Imposta colori distinti per ciascun tipo
-      let bgColor = "#888"; // default grigio
-      if (tip.includes("ETF")) bgColor = "#0095ff";
-      else if (tip.includes("bond") || tip.includes("obbl")) bgColor = "#9c27b0";
-      else if (tip.includes("reit")) bgColor = "#ff9800";
-      else if (tip.includes("stock") || tip.includes("Azione")) bgColor = "#4caf50";
-      else if (tip.includes("cripto")) bgColor = "#ff8c00";
+      const tip = (r.tipologia || "").trim().toLowerCase();
+      
+      // Gradient moderni
+      let gradient = "linear-gradient(135deg, #888 0%, #bbb 100%)"; // default grigio
+      if (tip === "etf") gradient = "linear-gradient(135deg, #0095ff 0%, #00d4ff 100%)";
+      else if (tip === "azione") gradient = "linear-gradient(135deg, #4caf50 0%, #81e07f 100%)";
 
       const perc = (Number(r.percentuale_portafoglio || 0) * 100).toFixed(2);
 
       return `
       <article class="card-item"
-        style="border-left: 10px solid ${bgColor};"
+        style="border-left: 10px solid transparent; background: ${gradient};"
         role="article" tabindex="0" aria-labelledby="name-${r.id}">
 
-        <div class="card-header">
-          <h3 class="card-title" id="name-${r.id}">${r.nome}</h3>
-          <span class="card-badge" style="background:${bgColor}; color:#fff;">
+        <div class="card-header" style="background: rgba(255,255,255,0.15); padding: 6px 10px; border-radius: 6px;">
+          <h3 class="card-title" id="name-${r.id}" style="color: #fff;">${r.nome}</h3>
+          <span class="card-badge" style="background: rgba(0,0,0,0.25); color:#fff; font-weight:600; padding: 3px 8px; border-radius: 999px;">
             ${r.tipologia || "-"}
           </span>
         </div>
 
-        <div class="card-body">
+        <div class="card-body" style="color: #fff; margin-top: 10px;">
           <div class="card-row">
             <span>Dividendo:</span>
             <strong>${fmtEuro(r.dividendi)}</strong>
@@ -97,7 +94,7 @@ function renderCards(data) {
           </div>
         </div>
 
-        <div class="card-footer">
+        <div class="card-footer" style="margin-top: 10px; display:flex; justify-content:space-between; color:#fff;">
           <span>Profitto: <b>${fmtEuro(r.profitto)}</b></span>
           <span>Yield: <b>${(Number(r.rendimento_percentuale || 0) * 100).toFixed(2)}%</b></span>
         </div>
