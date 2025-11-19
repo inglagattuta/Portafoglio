@@ -89,28 +89,33 @@
         <canvas id="chartTopDiv"></canvas>
       </div>
 
-     <div class="chart-card wide">
+ <div class="chart-card wide">
   <h2>Lista Titoli e Dividendi</h2>
 
-  <div class="table-responsive">
-    <table class="table" id="divTable">
-
-          <thead>
-  <tr>
-    <th class="sortable">Nome</th>
-    <th class="sortable">Dividendo €</th>
-    <th class="sortable">Tipologia</th>
-    <th class="sortable">% Portafoglio</th>
-  </tr>
-</thead>
-
-          <tbody id="tableDividendi"></tbody>
-        </table>
-
-      </div>
+  <!-- CONTROLLI ORDINAMENTO -->
+  <div class="cards-controls">
+    <div class="sort-group">
+      <button class="sort-btn active" data-column="nome">Nome <span class="sort-indicator">↕</span></button>
+      <button class="sort-btn" data-column="dividendi">Dividendo € <span class="sort-indicator">↕</span></button>
+      <button class="sort-btn" data-column="tipologia">Tipologia <span class="sort-indicator">↕</span></button>
+      <button class="sort-btn" data-column="percentuale_portafoglio">% Portafoglio <span class="sort-indicator">↕</span></button>
     </div>
 
+    <div class="filter-group">
+      <input id="searchCard" type="search" placeholder="Cerca per nome..." />
+      <select id="filterType">
+        <option value="">Tutti i tipi</option>
+        <option value="Azione">Azione</option>
+        <option value="Cripto">Cripto</option>
+        <option value="ETF">ETF</option>
+      </select>
+    </div>
   </div>
+
+  <!-- CARDS GRID -->
+  <div id="cardsContainer" class="cards-grid" aria-live="polite"></div>
+</div>
+
 
   <!-- Script Firebase + logic -->
   <script type="module" src="dividendi.js?v=2"></script>
