@@ -11,7 +11,7 @@ let filteredRows = [];
 let currentSort = { column: null, asc: true };
 
 // ===============================
-// FUNZIONE DI ORDINAMENTO
+// ORDINAMENTO
 // ===============================
 function sortData(column, data) {
   if (currentSort.column === column) {
@@ -50,7 +50,7 @@ function renderTable(data) {
 }
 
 // ===============================
-// RENDER BOX IN ALTO (TOTALE/MEDIA/TOP)
+// RENDER BOX STATISTICHE
 // ===============================
 function renderStats(data) {
   const totaleDiv = data.reduce((acc, r) => acc + r.dividendi, 0);
@@ -66,19 +66,18 @@ function renderStats(data) {
 // FETCH DATI DA FIREBASE
 // ===============================
 async function loadDividendi() {
-  const snap = await getDocs(collection(db, "Portafoglio"));
+  const snap = await getDocs(collection(db, "portafoglio")); // <-- CORRETTO
   const rows = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-  // 🔥 FILTRO: SOLO titoli con dividendi > 0
+  // 🔥 FILTRO: SOLO dividendi > 0
   filteredRows = rows.filter(r => r.dividendi && r.dividendi > 0);
 
-  // Primo render
   renderStats(filteredRows);
   renderTable(filteredRows);
 }
 
 // ===============================
-// ORDINAMENTO AL CLICK
+// CLICK SULLE COLONNE
 // ===============================
 document.querySelectorAll("#dividendiTable thead th[data-sort]").forEach(th => {
   th.addEventListener("click", () => {
