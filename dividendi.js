@@ -120,13 +120,27 @@ function renderStats(data) {
 }
 
 // ===================================================
-// CHART TOP5
+// CHART TOP5 MODERNO
 // ===================================================
 let chartTop = null;
 function renderChart(data) {
   const top5 = [...data].sort((a,b) => Number(b.dividendi)-Number(a.dividendi)).slice(0,5);
   const ctx = document.getElementById("chartTopDiv");
   if (!ctx) return;
+
+  // Gradienti barre
+  const colors = top5.map((_, i) => {
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    switch(i) {
+      case 0: gradient.addColorStop(0, 'rgba(75,192,192,0.8)'); gradient.addColorStop(1,'rgba(75,192,192,0.3)'); break;
+      case 1: gradient.addColorStop(0, 'rgba(255,159,64,0.8)'); gradient.addColorStop(1,'rgba(255,159,64,0.3)'); break;
+      case 2: gradient.addColorStop(0, 'rgba(153,102,255,0.8)'); gradient.addColorStop(1,'rgba(153,102,255,0.3)'); break;
+      case 3: gradient.addColorStop(0, 'rgba(54,162,235,0.8)'); gradient.addColorStop(1,'rgba(54,162,235,0.3)'); break;
+      case 4: gradient.addColorStop(0, 'rgba(255,99,132,0.8)'); gradient.addColorStop(1,'rgba(255,99,132,0.3)'); break;
+      default: gradient.addColorStop(0,'rgba(200,200,200,0.8)'); gradient.addColorStop(1,'rgba(200,200,200,0.3)');
+    }
+    return gradient;
+  });
 
   try {
     if (chartTop) chartTop.destroy();
@@ -137,20 +151,44 @@ function renderChart(data) {
         datasets: [{
           label: "Dividendi €",
           data: top5.map(x => Number(x.dividendi)),
-          borderWidth: 1
+          backgroundColor: colors,
+          borderRadius: 8,
+          barPercentage: 0.6,
+          categoryPercentage: 0.5
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#222',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            padding: 10,
+            cornerRadius: 6
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { drawBorder: false, color: 'rgba(200,200,200,0.2)' },
+            ticks: { stepSize: 20, font: { size: 12 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 12, weight: '600' } }
+          }
+        },
+        animation: { duration: 1000, easing: 'easeOutQuart' }
       }
     });
   } catch (e) {
     console.error("Errore Chart:", e);
   }
 }
+
 
 // ===================================================
 // SORTING + SEARCH + FILTER
