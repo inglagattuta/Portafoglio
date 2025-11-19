@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dividendi Mensili</title>
+
+  <link rel="stylesheet" href="style.css?v=10">
+
+  <!-- Firebase -->
+  <script type="module" src="firebase-config.js?v=4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Script Dividendi -->
+  <script type="module" src="dividendi.js?v=1"></script>
+</head>
+
+<body data-theme="light">
+  <div class="container">
+
+    <header>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <h1>💵 Dividendi</h1>
+        <a href="index.html" class="dashboard-btn">⬅ Torna al Portfolio</a>
+      </div>
+    </header>
+
+    <div class="table-container" style="margin-top:18px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Titolo</th>
+            <th>Dividendi (€)</th>
+            <th>Tipologia</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="divTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>
