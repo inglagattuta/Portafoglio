@@ -125,29 +125,30 @@ function renderStats(data) {
 let chartTop = null;
 
 function renderChart(data) {
-  const top5 = [...data]
+  const top10 = [...data]
     .sort((a, b) => Number(b.dividendi) - Number(a.dividendi))
-    .slice(0, 5);
+    .slice(0, 10);
 
   const canvas = document.getElementById("chartTopDiv");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
-  // Creiamo un gradiente verticale moderno
-  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, "#4caf50");   // verde brillante in alto
-  gradient.addColorStop(1, "#81c784");   // verde chiaro in basso
+  // Colori diversi per ogni barra
+  const colors = [
+    "#4caf50", "#81c784", "#43a047", "#66bb6a", "#388e3c",
+    "#aed581", "#2e7d32", "#9ccc65", "#1b5e20", "#c5e1a5"
+  ];
 
   try {
     if (chartTop) chartTop.destroy();
     chartTop = new Chart(ctx, {
       type: "bar",
       data: {
-        labels: top5.map(x => x.nome),
+        labels: top10.map(x => x.nome),
         datasets: [{
           label: "Dividendi €",
-          data: top5.map(x => Number(x.dividendi)),
-          backgroundColor: gradient,
+          data: top10.map(x => Number(x.dividendi)),
+          backgroundColor: colors,
           borderRadius: 8,
           borderSkipped: false
         }]
@@ -166,7 +167,6 @@ function renderChart(data) {
         scales: {
           y: {
             beginAtZero: true,
-            ticks: { stepSize: 50 },
             grid: { drawBorder: false }
           },
           x: {
