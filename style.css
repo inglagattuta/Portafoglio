@@ -881,3 +881,126 @@ tr:nth-child(even) {
   .cards-grid { grid-template-columns: 1fr; }
   .mini-cards { grid-template-columns: 1fr 1fr; }
 }
+/* =========================================================
+   DIVIDENDI: Grafico Top 5 + Lista Dividendi su 2 righe
+   ========================================================= */
+
+/* Contenitore principale per dividend dashboard */
+.dividendi-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* RIGA 1: Grafico Top 5 */
+.top5-chart-row {
+  width: 100%;
+}
+
+/* Card grafico */
+.top5-chart-row .chart-card {
+  width: 100%;
+  max-width: 100%;
+  margin: auto;
+}
+
+/* RIGA 2: Lista dividendi */
+.dividendi-list-row {
+  width: 100%;
+}
+
+/* Cards grid lista dividendi */
+.dividendi-list-row .cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+/* CARD singola lista dividendi */
+.dividendi-list-row .card-item {
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.dividendi-list-row .card-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+/* Card top: nome + tipo */
+.dividendi-list-row .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dividendi-list-row .card-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.dividendi-list-row .card-type {
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e0e4ff;
+  color: #234;
+  font-weight: 600;
+}
+
+/* Card values */
+.dividendi-list-row .card-values {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.dividendi-list-row .value-primary {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.dividendi-list-row .value-secondary {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Card footer */
+.dividendi-list-row .card-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* RESPONSIVE per mobile */
+@media (max-width: 768px) {
+  .dividendi-list-row .cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .top5-chart-row .chart-card canvas {
+    max-height: 200px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .dividendi-list-row .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .top5-chart-row .chart-card canvas {
+    max-height: 180px !important;
+  }
+}
