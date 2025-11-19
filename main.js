@@ -1,9 +1,9 @@
 // -------------------------------------------------------------
 // FIREBASE INIT
 // -------------------------------------------------------------
-import { app } from "./firebase-config.js"
+mport { db } from "./firebase-config.js";
+
 import {
-  getFirestore,
   collection,
   getDocs,
   getDoc,
@@ -11,9 +11,7 @@ import {
   setDoc,
   deleteDoc,
   doc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-const db = getFirestore(app);
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // -------------------------------------------------------------
 // DOM ELEMENTS
