@@ -1,15 +1,12 @@
-import app from "./firebase-config.js";
-import {
-  getFirestore,
-  collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+// ===============================
+// IMPORT FIREBASE v11
+// ===============================
+import { db } from "./firebase-config.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-const db = getFirestore(app);
-
-// =============================
+// ===============================
 // LISTA TITOLI A DIVIDENDI
-// =============================
+// ===============================
 const DIVIDENDI_LIST = [
   "AGNC","AMLP","ARCC","ARR","BKLN","BOAT","EFC","EPR","HAUTO.OL","HRZN","HTGC",
   "IIPR","IUS7","LQDE.L","MAIN","MPCC.OL","NLY","NORAM.OL","O","OHI","OMF","ORC",
@@ -17,17 +14,21 @@ const DIVIDENDI_LIST = [
   "XIFR","ZIM"
 ];
 
-// =============================
+// ===============================
 // FUNZIONE PRINCIPALE
-// =============================
+// ===============================
 async function loadDividendi() {
+  console.log("📡 Dashboard → carico dati Firebase...");
+
   const snap = await getDocs(collection(db, "portafoglio"));
-  let rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   // Filtra SOLO titoli con dividendi
-  let divRows = rows.filter(r =>
+  const divRows = rows.filter(r =>
     DIVIDENDI_LIST.includes(r.nome?.trim().toUpperCase())
   );
+
+  console.log("📊 Trovati titoli a dividendo:", divRows.length);
 
   if (!divRows.length) return;
 
@@ -36,9 +37,9 @@ async function loadDividendi() {
   renderChart(divRows);
 }
 
-// =============================
+// ===============================
 // MINI CARDS
-// =============================
+// ===============================
 function renderMiniCards(rows) {
   const totale = rows.reduce((a,b)=> a + Number(b.dividendi || 0), 0);
 
@@ -55,9 +56,9 @@ function renderMiniCards(rows) {
   document.getElementById("divYield").innerText = `${yieldPerc.toFixed(1)}%`;
 }
 
-// =============================
+// ===============================
 // TABELLA
-// =============================
+// ===============================
 function renderTable(rows) {
   const tbody = document.getElementById("tableDividendi");
   if (!tbody) return;
@@ -72,9 +73,9 @@ function renderTable(rows) {
   `).join("");
 }
 
-// =============================
+// ===============================
 // TOP 5 DIVIDENDI – Grafico
-// =============================
+// ===============================
 function renderChart(rows) {
   const top5 = [...rows]
     .sort((a,b) => Number(b.dividendi) - Number(a.dividendi))
@@ -102,7 +103,7 @@ function renderChart(rows) {
   });
 }
 
-// =============================
+// ===============================
 // AVVIO
-// =============================
+// ===============================
 loadDividendi();
