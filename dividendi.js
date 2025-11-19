@@ -85,40 +85,7 @@ function renderCards(data) {
     .join("");
 }
 
-  container.innerHTML = data.map(r => {
-    const tip = r.tipologia || "-";
-    return `
-      <article class="card-item" role="article" tabindex="0" aria-labelledby="name-${r.id}">
-        <div class="card-top">
-          <div class="card-name" id="name-${r.id}">${r.nome}</div>
-          <div class="card-type">${tip}</div>
-        </div>
-
-        <div class="card-values">
-          <div>
-            <div class="value-primary">${fmtEuro(r.dividendi)}</div>
-            <div class="value-secondary">Dividendo</div>
-          </div>
-
-          <div>
-            <div class="value-primary">${fmtEuro(r.prezzo_corrente || r.prezzo_acquisto)}</div>
-            <div class="value-secondary">Prezzo</div>
-          </div>
-
-          <div>
-            <div class="value-primary">${(Number(r.percentuale_portafoglio||0)*100).toFixed(2)}%</div>
-            <div class="value-secondary">% portaf.</div>
-          </div>
-        </div>
-
-        <div class="card-footer">
-          <div>Profitto: ${fmtEuro(r.profitto)}</div>
-          <div>Yield: ${(Number(r.rendimento_percentuale||0)*100).toFixed(2)}%</div>
-        </div>
-      </article>
-    `;
-  }).join("");
-}
+  
 
 // --- RENDER STATISTICHE (mini cards in alto) ---
 function renderStats(data) {
