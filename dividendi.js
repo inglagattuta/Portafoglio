@@ -69,7 +69,7 @@ function renderCards(data) {
 
       return `
       <article class="card-item"
-        style="border-left: 10px solid transparent; background: ${gradient};"
+        style="background: ${gradient};"
         role="article" tabindex="0" aria-labelledby="name-${r.id}">
 
         <div class="card-header" style="background: rgba(255,255,255,0.15); padding: 6px 10px; border-radius: 6px;">
@@ -103,7 +103,6 @@ function renderCards(data) {
     })
     .join("");
 }
-
 
 // ===================================================
 // RENDER STATISTICHE
