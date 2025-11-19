@@ -45,7 +45,7 @@ function renderAll() {
 }
 
 // ===================================================
-// RENDER CARDS
+// RENDER CARDS CORRETTO CON COLORI BADGE
 // ===================================================
 function renderCards(data) {
   const container = document.getElementById("cardsContainer");
@@ -59,21 +59,25 @@ function renderCards(data) {
     return;
   }
 
-  // Mappa colori tipologia con testo leggibile
-  const typeColors = {
-    "ETF": { bg: "var(--card-etf)", color: "#fff" },
-    "bond": { bg: "var(--card-bond)", color: "#fff" },
-    "obbl": { bg: "var(--card-bond)", color: "#fff" },
-    "reit": { bg: "var(--card-reit)", color: "#000" },
-    "Azione": { bg: "var(--card-stock)", color: "#fff" },
-    "stock": { bg: "var(--card-stock)", color: "#fff" },
-    "default": { bg: "var(--card-default)", color: "#000" }
-  };
-
   container.innerHTML = data
     .map((r) => {
-      const tip = (r.tipologia || "default").toLowerCase();
-      const colors = typeColors[tip] || typeColors["default"];
+      const tip = r.tipologia || "-";
+
+      // Colori personalizzati per tipologia
+      const colors = {
+        bg: "#888", // default
+        color: "#fff"
+      };
+
+      const t = tip.toLowerCase();
+      if (t.includes("ETF")) colors.bg = "#0095ff";
+      else if (t.includes("bond") || t.includes("obbl")) colors.bg = "#9c27b0";
+      else if (t.includes("reit")) colors.bg = "#ff9800";
+      else if (t.includes("stock") || t.includes("Azione")) colors.bg = "#4caf50";
+
+      // Contrasto testo automatico
+      colors.color = "#fff"; // sempre bianco sopra colori saturi
+
       const perc = (Number(r.percentuale_portafoglio || 0) * 100).toFixed(2);
 
       return `
@@ -84,7 +88,7 @@ function renderCards(data) {
         <div class="card-header">
           <h3 class="card-title" id="name-${r.id}">${r.nome}</h3>
           <span class="card-badge" style="background:${colors.bg}; color:${colors.color};">
-            ${r.tipologia || "-"}
+            ${tip}
           </span>
         </div>
 
