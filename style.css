@@ -837,3 +837,40 @@ tr:nth-child(even) {
 .badge.orange { background: #fff4e5; color: #c57f1d; }
 .badge.purple { background: #f5e8ff; color: #8b4bd7; }
 
+/* --- COLORI PER TIPOLOGIA --- */
+.card-badge {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Azioni: blu */
+.badge-azione {
+  background: linear-gradient(135deg, #007bff, #00b7ff);
+}
+
+/* ETF: verde */
+.badge-etf {
+  background: linear-gradient(135deg, #28a745, #62d66a);
+}
+
+/* Cripto: arancione */
+.badge-cripto {
+  background: linear-gradient(135deg, #ff8c00, #ffb347);
+}
+
+/* --- CARD COLORATE --- */
+.card-colored {
+  border-left: 6px solid var(--card-color);
+  background: var(--card-bg, #ffffff);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: 0.2s;
+}
+
+.card-colored:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+
