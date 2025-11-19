@@ -7,6 +7,38 @@
 
   <link rel="stylesheet" href="style.css?v=5">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+  /* --- RESPONSIVE TABLE WRAPPER --- */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    white-space: nowrap;
+    padding: 8px;
+    text-align: left;
+  }
+
+  /* Rende le colonne cliccabili per ordinare */
+  th.sortable {
+    cursor: pointer;
+    position: relative;
+  }
+
+  th.sortable::after {
+    content: " ⇅";
+    font-size: 0.8em;
+    opacity: 0.5;
+  }
+</style>
+
 </head>
 
 <body>
@@ -64,13 +96,14 @@
     <table class="table" id="divTable">
 
           <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Dividendo €</th>
-              <th>Tipologia</th>
-              <th>% Portafoglio</th>
-            </tr>
-          </thead>
+  <tr>
+    <th class="sortable">Nome</th>
+    <th class="sortable">Dividendo €</th>
+    <th class="sortable">Tipologia</th>
+    <th class="sortable">% Portafoglio</th>
+  </tr>
+</thead>
+
           <tbody id="tableDividendi"></tbody>
         </table>
 
