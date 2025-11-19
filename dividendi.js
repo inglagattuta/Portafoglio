@@ -64,19 +64,23 @@ function renderCards(data) {
       const bgcolor = getTypeColor(tip);
       const perc = (Number(r.percentuale_portafoglio || 0) * 100).toFixed(2);
 
-      // Calcolo corretto del profitto
+      // Calcolo profitto corretto
       const profitto = 
         (Number(r.prezzo_corrente || 0) - Number(r.prezzo_acquisto || 0)) +
         Number(r.dividendi || 0) +
         Number(r.prelevato || 0);
 
       return `
-      <article class="card-item"
-        role="article" tabindex="0" aria-labelledby="name-${r.id}">
+      <article class="card-item" role="article" tabindex="0">
 
         <div class="card-header">
-          <h3 class="card-title" id="name-${r.id}">${r.nome}</h3>
-          <span class="card-badge" style="background:${bgcolor}; color:white;">
+          <h3 class="card-title">${r.nome}</h3>
+          <span class="card-badge" style="
+            background:${bgcolor};
+            color: white;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 999px;">
             ${tip}
           </span>
         </div>
@@ -105,6 +109,7 @@ function renderCards(data) {
     })
     .join("");
 }
+
 
 // ===================================================
 // RENDER STATISTICHE
