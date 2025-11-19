@@ -537,3 +537,70 @@ tr:nth-child(even) {
   }
 }
 
+/* =========================================================
+   RESPONSIVE FIX PER PAGINA DIVIDENDI
+   ========================================================= */
+
+/* MINI-CARDS responsive */
+.mini-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.mini-card {
+  background: white;
+  padding: 15px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+}
+
+/* CHART più elastici su mobile */
+.chart-card canvas {
+  max-height: 260px !important;
+  width: 100% !important;
+}
+
+/* Card larga della tabella */
+.chart-card.wide {
+  grid-column: span 2;
+}
+
+/* MOBILE FIX */
+@media (max-width: 768px) {
+
+  .chart-card.wide {
+    grid-column: span 1;
+  }
+
+  /* Forza scroll tabella senza schiacciare */
+  .chart-card table {
+    font-size: 0.85rem;
+    min-width: 450px;
+  }
+
+  .chart-card {
+    padding: 12px;
+  }
+
+  .mini-card h3 {
+    font-size: 1rem;
+  }
+
+  .mini-card p {
+    font-size: 1.2rem;
+  }
+}
+
+/* MINI FIX schermi molto piccoli */
+@media (max-width: 480px) {
+  .chart-card table {
+    min-width: 380px;
+  }
+
+  .mini-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
