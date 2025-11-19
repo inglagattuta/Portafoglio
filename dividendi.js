@@ -32,7 +32,7 @@ function sortData(column, data) {
 // RENDER TABELLA
 // ===============================
 function renderTable(data) {
-  const tableBody = document.querySelector("#dividendiTable tbody");
+  const tableBody = document.getElementById("tableDividendi");
   tableBody.innerHTML = "";
 
   data.forEach(r => {
