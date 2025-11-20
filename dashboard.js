@@ -136,32 +136,33 @@ function buildCategoryChart(rows) {
   let sumCripto = 0;
 
   rows.forEach(r => {
+    const nome = (r.nome || "").trim().toUpperCase();
     const investito = safeNum(r.prezzo_acquisto);
 
-    if (r.categoria === "Dividendi") {
+    if (DIVIDENDI_LIST.includes(nome)) {
       sumDividendi += investito;
-    } else if (r.categoria === "Crescita") {
+    } 
+    else if (CRESCITA_LIST.includes(nome)) {
       sumCrescita += investito;
-    } else if (r.categoria === "Cripto") {
+    }
+    else if (CRYPTO_LIST.includes(nome)) {
       sumCripto += investito;
     }
+    // Se non rientra in nessuna categoria → non lo conteggiamo
   });
 
   const labels = ["Dividendi", "Crescita", "Cripto"];
   const data = [sumDividendi, sumCrescita, sumCripto];
 
   destroyIfExists(chartCategory);
+
   chartCategory = new Chart(document.getElementById("chartCategory"), {
     type: "pie",
     data: {
       labels,
       datasets: [{
         data,
-        backgroundColor: [
-          "#6c5ce7", // Dividendi
-          "#00cec9", // Crescita
-          "#fdcb6e"  // Cripto
-        ],
+        backgroundColor: ["#6c5ce7", "#00cec9", "#fdcb6e"], // viola / acqua / gold
         borderWidth: 0
       }]
     },
@@ -170,11 +171,7 @@ function buildCategoryChart(rows) {
       plugins: {
         legend: {
           display: true,
-          position: "bottom",
-          labels: {
-            color: getComputedStyle(document.body)
-              .getPropertyValue("--text-color")
-          }
+          position: "bottom"
         }
       }
     }
