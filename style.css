@@ -1073,9 +1073,9 @@ body.dark tbody tr:nth-child(odd) {
   background: #111 !important;
 }
 
-/* Hover */
-body.dark tbody tr:hover {
-  background: #2a2a2a !important;
+/* Hover riga tabella - LIGHT MODE */
+tbody tr:hover {
+  background: #e6e6e6 !important; /* grigio più scuro, visibilissimo */
 }
 
 /* ==========================================
