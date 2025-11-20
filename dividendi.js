@@ -12,9 +12,10 @@ const db = getFirestore(app);
 // ===============================
 // ELEMENTI DOM
 // ===============================
-const tbody = document.getElementById("monthsTableBody");
-const ctx = document.getElementById("dividendiBarChart");
+const tbody = document.getElementById("tbodyDividendiMese");
+const ctx = document.getElementById("dividendiChart");
 let chartDividendiBar = null;
+
 
 let editId = null;
 let editData = null;
