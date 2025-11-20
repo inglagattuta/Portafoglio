@@ -1208,3 +1208,42 @@ body[data-theme="dark"] .chart-card {
   box-shadow: 0 4px 18px rgba(0,0,0,0.6);
   color: #e6eef8;
 }
+/* --- Migliora leggibilità testo dentro mini-card --- */
+.mini-card h3,
+.mini-card p {
+  color: #000 !important;        /* Testo molto più leggibile */
+}
+
+/* --- Glow soft stile macOS --- */
+.mini-card {
+  background: var(--card-default, #f1f1f1);
+  backdrop-filter: blur(4px);
+  border-radius: 14px;
+  padding: 16px;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Hover glow */
+.mini-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Glow forte in dark mode */
+body[data-theme="dark"] .mini-card {
+  background: rgba(40,40,40,0.75);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+body[data-theme="dark"] .mini-card:hover {
+  background: rgba(60,60,60,0.85);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.85);
+}
+
+/* Testo leggibile anche in dark */
+body[data-theme="dark"] .mini-card h3,
+body[data-theme="dark"] .mini-card p {
+  color: #fff !important;
+}
