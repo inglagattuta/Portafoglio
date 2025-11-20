@@ -1,11 +1,11 @@
-import app from "./firebase-config.js";
 import {
   getFirestore,
   collection,
   getDocs,
   doc,
   updateDoc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
 
 const db = getFirestore(app);
 
