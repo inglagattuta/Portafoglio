@@ -11,8 +11,12 @@
 
 <body>
   <script>
-  document.body.dataset.theme = localStorage.getItem("theme") || "light";
+  const savedTheme = localStorage.getItem("theme") || "light";
+  document.body.dataset.theme = savedTheme;
+  if (savedTheme === "dark") document.body.classList.add("dark");
+  else document.body.classList.remove("dark");
 </script>
+
 
   <div class="container">
 
