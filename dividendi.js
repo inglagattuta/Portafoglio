@@ -117,16 +117,19 @@ function renderCards(data) {
 function renderStats(data) {
   const totale = data.reduce((s, x) => s + Number(x.dividendi || 0), 0);
   const media = data.length ? totale / 12 : 0;
-  const top = data.length ? data.reduce((mx, r) => r.dividendi > mx.dividendi ? r : mx, data[0]) : null;
+
+  // Totale Investito (somma prezzo_acquisto)
+  const totaleInvestito = data.reduce((s, x) => s + Number(x.prezzo_acquisto || 0), 0);
 
   const totaleValore = data.reduce((s, x) => s + Number(x.prezzo_corrente || 0), 0);
   const yieldPerc = totaleValore ? (totale / totaleValore * 100) : 0;
 
   document.getElementById("totaleDividendi").textContent = fmtEuro(totale);
   document.getElementById("mediaDividendi").textContent = fmtEuro(media);
-  document.getElementById("topDividendo").textContent = top ? `${top.nome} (${fmtEuro(top.dividendi)})` : "-";
+  document.getElementById("totaleInvestito").textContent = fmtEuro(totaleInvestito);
   document.getElementById("divYield").textContent = `${yieldPerc.toFixed(2)}%`;
 }
+
 
 // ===================================================
 // CHART TOP5 MODERNO
