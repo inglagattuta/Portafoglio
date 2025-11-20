@@ -1023,3 +1023,26 @@ tr:nth-child(even) {
   background: inherit; 
   color: inherit;
 }
+
+/* Fix card colorate in dark mode */
+body.dark .card-item,
+body.dark .card-colored,
+body.dark .mini-card,
+body.dark .div-card,
+body.dark .chart-card {
+  background: #1a1a1a !important;
+  color: #eee;
+  border-color: #333 !important;
+}
+
+body.dark .card-name,
+body.dark .value-primary,
+body.dark .value-secondary {
+  color: #fff !important;
+}
+
+body.dark .card-type {
+  background: #333;
+  color: #ddd;
+}
+
