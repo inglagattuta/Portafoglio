@@ -1077,3 +1077,49 @@ body.dark tbody tr:nth-child(odd) {
 body.dark tbody tr:hover {
   background: #2a2a2a !important;
 }
+
+/* ==========================================
+   DARK MODE — Bordature & Highlight Premium
+   ========================================== */
+
+/* Bordature più uniformi e sottili */
+body.dark table,
+body.dark th,
+body.dark td {
+  border-color: #333 !important;
+  color: #e6e6e6 !important;
+}
+
+/* Header più elegante */
+body.dark thead {
+  background: #1d1d1d !important;
+  border-bottom: 2px solid #3c3c3c !important;
+  color: #fff !important;
+}
+
+/* Righe pari/dispari */
+body.dark tbody tr:nth-child(even) {
+  background: #181818 !important;
+}
+
+body.dark tbody tr:nth-child(odd) {
+  background: #121212 !important;
+}
+
+/* Hover highlight stile GitHub/macOS */
+body.dark tbody tr:hover {
+  background: rgba(80, 120, 255, 0.18) !important; /* blu/viola soft */
+  border-color: rgba(120, 150, 255, 0.5) !important;
+}
+
+/* Focus (quando clicchi una riga o una cella) */
+body.dark tbody tr:focus-within,
+body.dark td:focus {
+  outline: 2px solid rgba(120, 150, 255, 0.8) !important;
+  background: rgba(90, 110, 255, 0.22) !important;
+}
+
+/* Celle */
+body.dark td {
+  border-top: 1px solid #2a2a2a !important;
+}
