@@ -202,3 +202,193 @@ document.addEventListener("DOMContentLoaded",()=>{
   bindControls();
   loadDividendiData();
 });
+
+<!-- ⚡ TABELLA DIVIDENDI PER MESE -->
+<div class="chart-card">
+  <h2>Dividendi per Mese</h2>
+
+  <button id="addMonthBtn" class="export-btn" style="margin-bottom:10px;">
+    ➕ Aggiungi nuovo mese
+  </button>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Anno</th>
+          <th>Mese</th>
+          <th>Totale €</th>
+          <th>Dettaglio</th>
+          <th>Modifica</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyDividendiMese"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ⚡ MODAL MODIFICA MESE -->
+<div id="modalEditMonth" class="modal" style="display:none;">
+  <div class="modal-content">
+    <h3 id="modalTitle"></h3>
+
+    <div id="detailList"></div>
+
+    <button id="addRow" class="export-btn" style="margin-top:10px;">➕ Aggiungi riga</button>
+
+    <div style="margin-top:15px; display:flex; gap:10px;">
+      <button id="saveMonth" class="export-btn">💾 Salva</button>
+      <button id="closeModal" class="dashboard-btn">❌ Chiudi</button>
+    </div>
+  </div>
+</div>
+
+import {
+  getFirestore, collection, getDocs, addDoc, updateDoc, doc
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const db = getFirestore();
+
+const tbody = document.getElementById("tbodyDividendiMese");
+const addMonthBtn = document.getElementById("addMonthBtn");
+
+let editId = null;
+let editData = null;
+
+// ==================================================
+// 1️⃣ CARICA LISTA MESI
+// ==================================================
+async function loadMonths() {
+  tbody.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "dividendi_mensili"));
+  const mesi = [];
+
+  snap.forEach(d => mesi.push({ id: d.id, ...d.data() }));
+
+  mesi.sort((a, b) =>
+    a.anno === b.anno ? a.mese.localeCompare(b.mese) : a.anno - b.anno
+  );
+
+  mesi.forEach(m => {
+    const totale = (m.dettaglio || [])
+      .reduce((sum, r) => sum + Number(r.importo || 0), 0)
+      .toFixed(2);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${m.anno}</td>
+      <td>${m.mese}</td>
+      <td>${totale} €</td>
+      <td>${m.dettaglio?.length || 0} titoli</td>
+      <td><button class="dashboard-btn" data-id="${m.id}">✏️ Modifica</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.addEventListener("click", () => openEdit(btn.dataset.id));
+  });
+}
+
+loadMonths();
+
+// ==================================================
+// 2️⃣ MODAL — APRE UN MESE
+// ==================================================
+const modal = document.getElementById("modalEditMonth");
+const modalTitle = document.getElementById("modalTitle");
+const detailList = document.getElementById("detailList");
+
+async function openEdit(id) {
+  editId = id;
+
+  const snap = await getDocs(collection(db, "dividendi_mensili"));
+  snap.forEach(d => {
+    if (d.id === id) editData = { id: d.id, ...d.data() };
+  });
+
+  modalTitle.textContent = `Modifica ${editData.anno}-${editData.mese}`;
+  renderRows();
+  modal.style.display = "flex";
+}
+
+// ==================================================
+// 3️⃣ RENDER DELLE RIGHE
+// ==================================================
+function renderRows() {
+  detailList.innerHTML = "";
+
+  editData.dettaglio.forEach((row, idx) => {
+    const div = document.createElement("div");
+    div.style.display = "flex";
+    div.style.gap = "10px";
+    div.style.marginBottom = "6px";
+
+    div.innerHTML = `
+      <input type="text" placeholder="Ticker" value="${row.ticker}" data-row="${idx}" data-field="ticker">
+      <input type="number" placeholder="Importo" value="${row.importo}" data-row="${idx}" data-field="importo">
+      <button data-del="${idx}" class="dashboard-btn">🗑</button>
+    `;
+    detailList.appendChild(div);
+  });
+
+  detailList.addEventListener("input", e => {
+    const row = e.target.dataset.row;
+    const field = e.target.dataset.field;
+    if (row !== undefined) editData.dettaglio[row][field] = e.target.value;
+  });
+
+  detailList.querySelectorAll("button[data-del]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      editData.dettaglio.splice(btn.dataset.del, 1);
+      renderRows();
+    });
+  });
+}
+
+// ==================================================
+// 4️⃣ AGGIUNGI RIGA
+// ==================================================
+document.getElementById("addRow").addEventListener("click", () => {
+  editData.dettaglio.push({ ticker: "", importo: 0 });
+  renderRows();
+});
+
+// ==================================================
+// 5️⃣ SALVA MESE
+// ==================================================
+document.getElementById("saveMonth").addEventListener("click", async () => {
+  const ref = doc(db, "dividendi_mensili", editId);
+  await updateDoc(ref, {
+    dettaglio: editData.dettaglio
+  });
+
+  modal.style.display = "none";
+  loadMonths();
+});
+
+// ==================================================
+// 6️⃣ CHIUDI MODAL
+// ==================================================
+document.getElementById("closeModal").addEventListener("click", () => {
+  modal.style.display = "none";
+});
+
+// ==================================================
+// 7️⃣ AGGIUNGI NUOVO MESE
+// ==================================================
+addMonthBtn.addEventListener("click", async () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+
+  const docRef = await addDoc(collection(db, "dividendi_mensili"), {
+    anno: year,
+    mese: month,
+    dettaglio: []
+  });
+
+  loadMonths();
+});
+
