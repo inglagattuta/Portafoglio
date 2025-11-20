@@ -205,9 +205,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 
-import {
-  getFirestore, collection, getDocs, addDoc, updateDoc, doc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
 
 const db = getFirestore();
 
