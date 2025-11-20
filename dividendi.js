@@ -13,31 +13,27 @@ const fmtEuro = v => Number(v || 0).toFixed(2) + " €";
 
 // ============ COLORI PER TIPOLOGIA =============
 function getTypeColor(tip) {
-  if (!tip) return "#8884";
+  if (!tip) return "#8884"; // grigio default
   const t = tip.toLowerCase();
-  if (t.includes("etf")) return "#0095ff";
-  if (t.includes("bond") || t.includes("obbl")) return "#9c27b0";
-  if (t.includes("reit")) return "#ff9800";
-  if (t.includes("stock") || t.includes("azione")) return "#4caf50";
-  return "#8884";
+  if (t.includes("etf")) return "#0095ff";     // blu ETF
+  if (t.includes("bond") || t.includes("obbl")) return "#9c27b0"; // viola bond
+  if (t.includes("reit")) return "#ff9800";   // arancio REIT
+  if (t.includes("stock") || t.includes("azione")) return "#4caf50"; // verde stock
+  return "#8884"; // default
 }
 
-// ===============================================
-// =============== LOAD DATA ======================
 // ===============================================
 async function loadDividendiData() {
   try {
     const snap = await getDocs(collection(db, "portafoglio"));
     rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Mostriamo solo quelli che generano dividendi
     rows = rows.filter(r => Number(r.dividendi) > 0);
-
     viewRows = [...rows];
 
     renderAll();
   } catch (e) {
-    console.error("Errore caricamento portafoglio:", e);
+    console.error("Errore caricamento dividendi:", e);
   }
 }
 
@@ -127,31 +123,18 @@ function renderChart(data) {
   const colors = ["#4caf50","#81c784","#43a047","#66bb6a","#388e3c","#aed581","#2e7d32","#9ccc65","#1b5e20","#c5e1a5"];
 
   if (chartTop) chartTop.destroy();
-
   chartTop = new Chart(ctx, {
     type: "bar",
     data: {
       labels: top10.map(x => x.nome),
-      datasets: [
-        {
-          label: "Dividendi €",
-          data: top10.map(x => Number(x.dividendi)),
-          backgroundColor: colors,
-          borderRadius: 8,
-          borderSkipped: false
-        }
-      ]
+      datasets: [{ label:"Dividendi €", data: top10.map(x=>Number(x.dividendi)), backgroundColor: colors, borderRadius:8, borderSkipped:false }]
     },
     options: {
       responsive:true,
       maintainAspectRatio:false,
       plugins:{
         legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label: ctx => `${ctx.dataset.label}: ${ctx.formattedValue} €`
-          }
-        }
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.formattedValue} €`}}
       },
       scales:{
         y:{beginAtZero:true, grid:{drawBorder:false}},
@@ -166,14 +149,10 @@ function renderChart(data) {
 // ===================================================
 function sortView(column) {
   if (currentSort.column === column) currentSort.asc = !currentSort.asc;
-  else {
-    currentSort.column = column;
-    currentSort.asc = true;
-  }
+  else { currentSort.column = column; currentSort.asc = true; }
 
   viewRows.sort((a,b) => {
     let A,B;
-
     if(column==="yield"){
       A = Number(a.dividendi || 0) / (Number(a.prezzo_acquisto || 1));
       B = Number(b.dividendi || 0) / (Number(b.prezzo_acquisto || 1));
@@ -183,10 +162,7 @@ function sortView(column) {
       const nA = Number(A), nB = Number(B);
       if(!isNaN(nA) && !isNaN(nB)) return currentSort.asc ? nA-nB : nB-nA;
     }
-
-    return currentSort.asc 
-      ? String(A).localeCompare(String(B)) 
-      : String(B).localeCompare(String(A));
+    return currentSort.asc ? String(A).localeCompare(String(B)) : String(B).localeCompare(String(A));
   });
 
   updateSortButtonsUI();
@@ -196,11 +172,10 @@ function sortView(column) {
 function updateSortButtonsUI() {
   document.querySelectorAll(".sort-btn").forEach(btn => {
     const col = btn.dataset.column;
-    btn.classList.toggle("active", col === currentSort.column);
-
+    btn.classList.toggle("active", col===currentSort.column);
     const ind = btn.querySelector(".sort-indicator");
-    if(col === currentSort.column) ind.textContent = currentSort.asc ? "↑" : "↓";
-    else ind.textContent = "↕";
+    if(col===currentSort.column) ind.textContent = currentSort.asc?"↑":"↓";
+    else ind.textContent="↕";
   });
 }
 
@@ -209,8 +184,8 @@ function applySearchAndFilter() {
   const typ = (document.getElementById("filterType")?.value || "").trim();
 
   viewRows = rows.filter(r => {
-    if (typ && String(r.tipologia||"").toLowerCase() !== typ.toLowerCase()) return false;
-    if (q && !(String(r.nome||"").toLowerCase().includes(q))) return false;
+    if(typ && String(r.tipologia||"").toLowerCase()!==typ.toLowerCase()) return false;
+    if(q && !(String(r.nome||"").toLowerCase().includes(q))) return false;
     return true;
   });
 
@@ -218,15 +193,12 @@ function applySearchAndFilter() {
 }
 
 function bindControls() {
-  document.querySelectorAll(".sort-btn").forEach(btn =>
-    btn.addEventListener("click", () => sortView(btn.dataset.column))
-  );
-
-  document.getElementById("searchCard")?.addEventListener("input", applySearchAndFilter);
-  document.getElementById("filterType")?.addEventListener("change", applySearchAndFilter);
+  document.querySelectorAll(".sort-btn").forEach(btn => btn.addEventListener("click",()=>sortView(btn.dataset.column)));
+  document.getElementById("searchCard")?.addEventListener("input",applySearchAndFilter);
+  document.getElementById("filterType")?.addEventListener("change",applySearchAndFilter);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded",()=>{
   bindControls();
   loadDividendiData();
 });
