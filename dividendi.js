@@ -1,6 +1,13 @@
 // dividendi.js
-import { db } from "./firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  getFirestore
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
 
 console.log("dividendi.js loaded");
 
