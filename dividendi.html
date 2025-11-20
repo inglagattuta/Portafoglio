@@ -141,43 +141,66 @@
   <script type="module" src="dividendi.js?v=2"></script>
 
 
-  <!-- ⚡ TABELLA DIVIDENDI PER MESE -->
-<div class="chart-card">
-  <h2>Dividendi per Mese</h2>
+<!-- ===========================
+     📊 LAYOUT DIVIDENDI (2 colonne)
+     =========================== -->
+<div class="dividendi-layout">
 
-  <button id="addMonthBtn" class="export-btn" style="margin-bottom:10px;">
-    ➕ Aggiungi nuovo mese
-  </button>
+  <!-- =======================
+       📄 SINISTRA — TABELLA
+       ======================= -->
+  <div class="dividendi-left">
 
-  <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th>Anno</th>
-          <th>Mese</th>
-          <th>Totale €</th>
-          <th>Dettaglio</th>
-          <th>Modifica</th>
-        </tr>
-      </thead>
-      <tbody id="tbodyDividendiMese"></tbody>
-    </table>
+    <h2>Dividendi per Mese</h2>
+
+    <button id="addMonthBtn" class="export-btn" style="margin-bottom:10px;">
+      ➕ Aggiungi nuovo mese
+    </button>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Anno</th>
+            <th>Mese</th>
+            <th>Totale €</th>
+            <th>Dettaglio</th>
+            <th>Modifica</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyDividendiMese"></tbody>
+      </table>
+    </div>
+
   </div>
+
+  <!-- =======================
+       📈 DESTRA — GRAFICO
+       ======================= -->
+  <div class="dividendi-right">
+    <h2>Dividendi per Mese (€)</h2>
+    <div style="height:350px;">
+      <canvas id="dividendiChart"></canvas>
+    </div>
+  </div>
+
 </div>
 
-<!-- ⚡ MODAL MODIFICA MESE -->
+
+<!-- ===========================
+     🪟 MODAL MODIFICA MESE
+     =========================== -->
 <div id="modalEditMonth" class="modal" style="display:none;">
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
 
-<label>Anno:</label>
-<input id="editYear" type="number" min="2000" style="margin-bottom:10px;">
+    <label>Anno:</label>
+    <input id="editYear" type="number" min="2000" style="margin-bottom:10px;">
 
-<label>Mese:</label>
-<input id="editMonth" type="text" maxlength="2" style="margin-bottom:10px;">
+    <label>Mese:</label>
+    <input id="editMonth" type="text" maxlength="2" style="margin-bottom:10px;">
 
-<div id="detailList"></div>
-
+    <div id="detailList"></div>
 
     <button id="addRow" class="export-btn" style="margin-top:10px;">➕ Aggiungi riga</button>
 
@@ -187,6 +210,7 @@
     </div>
   </div>
 </div>
+
 
 </body>
 </html>
