@@ -1,13 +1,13 @@
+// dividendi.js
+import { app, db } from "./firebase-config.js";
 import {
-  getFirestore,
   collection,
   getDocs,
   doc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-
-const db = getFirestore(app);
+// Ora app E db sono già definiti, NON devi ridefinirli!
 
 // ===============================
 // ELEMENTI DOM
