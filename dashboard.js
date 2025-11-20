@@ -128,31 +128,59 @@ function calcCategoryBoxes(rows) {
 }
 
 // ===============================
-// CHART 1: ALLOCAZIONE PER CATEGORIA (pie)
+// CHART 1: ALLOCAZIONE PER CATEGORIA (Dividendi / Crescita / Cripto)
 // ===============================
 function buildCategoryChart(rows) {
-  const byCategory = {};
+  let sumDividendi = 0;
+  let sumCrescita = 0;
+  let sumCripto = 0;
+
   rows.forEach(r => {
-    const k = r.tipologia || "Altro";
-    byCategory[k] = (byCategory[k] || 0) + safeNum(r.prezzo_corrente);
+    const investito = safeNum(r.prezzo_acquisto);
+
+    if (r.categoria === "Dividendi") {
+      sumDividendi += investito;
+    } else if (r.categoria === "Crescita") {
+      sumCrescita += investito;
+    } else if (r.categoria === "Cripto") {
+      sumCripto += investito;
+    }
   });
 
-  const labels = Object.keys(byCategory);
-  const data = Object.values(byCategory);
+  const labels = ["Dividendi", "Crescita", "Cripto"];
+  const data = [sumDividendi, sumCrescita, sumCripto];
 
   destroyIfExists(chartCategory);
   chartCategory = new Chart(document.getElementById("chartCategory"), {
     type: "pie",
     data: {
       labels,
-      datasets: [{ data }]
+      datasets: [{
+        data,
+        backgroundColor: [
+          "#6c5ce7", // Dividendi
+          "#00cec9", // Crescita
+          "#fdcb6e"  // Cripto
+        ],
+        borderWidth: 0
+      }]
     },
     options: {
       maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: "bottom" } }
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: getComputedStyle(document.body)
+              .getPropertyValue("--text-color")
+          }
+        }
+      }
     }
   });
 }
+
 
 // ===============================
 // CHART 2: INVESTITO VS VALORE (pie)
