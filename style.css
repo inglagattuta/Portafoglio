@@ -1247,3 +1247,24 @@ body[data-theme="dark"] .mini-card h3,
 body[data-theme="dark"] .mini-card p {
   color: #fff !important;
 }
+/* Layout 2 colonne dividendi */
+.dividendi-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+/* Card contenitore tabella */
+.dividendi-left,
+.dividendi-right {
+  background: var(--card-default, #2a2a2a);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 8px #0003;
+}
+
+/* Fix hover riga chiara su tema chiaro */
+table tbody tr:hover {
+  background: rgba(0,0,0,0.08);
+}
