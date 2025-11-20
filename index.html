@@ -94,23 +94,24 @@
   <div id="modal-root"></div>
 <script>
   const switchEl = document.getElementById("themeSwitch");
-  const labelEl = document.getElementById("themeLabel");
+  const themeLabel = document.querySelector('.theme-toggle span') || document.getElementById("themeLabel");
 
-  // Carica preferenza
+  // Legge preferenza (o fallback a light)
   const saved = localStorage.getItem("theme") || "light";
   document.body.dataset.theme = saved;
-
-  if (switchEl) switchEl.checked = saved === "dark";
-  if (labelEl) labelEl.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
+  if (saved === "dark") document.body.classList.add("dark");
+  switchEl.checked = saved === "dark";
+  if(themeLabel) themeLabel.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
 
   switchEl.addEventListener("change", () => {
     const mode = switchEl.checked ? "dark" : "light";
     document.body.dataset.theme = mode;
-    if (labelEl) labelEl.textContent = mode === "dark" ? "🌙 Dark" : "☀️ Light";
+    if(mode === "dark") document.body.classList.add("dark");
+    else document.body.classList.remove("dark");
+    if(themeLabel) themeLabel.textContent = mode === "dark" ? "🌙 Dark" : "☀️ Light";
     localStorage.setItem("theme", mode);
   });
 </script>
-
 
 </body>
 </html>
