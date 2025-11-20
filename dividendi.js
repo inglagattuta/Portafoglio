@@ -13,7 +13,7 @@ const db = getFirestore(app);
 // ELEMENTI DOM
 // ===============================
 const tbody = document.getElementById("tbodyDividendiMese");
-const ctx = document.getElementById("dividendiChart");
+const ctx = document.getElementById("dividendiBarChart");
 let chartDividendiBar = null;
 
 
