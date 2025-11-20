@@ -1123,3 +1123,74 @@ body.dark td:focus {
 body.dark td {
   border-top: 1px solid #2a2a2a !important;
 }
+
+
+/* Supporta sia class .dark che data-theme="dark" (robusto) */
+body.dark,
+body[data-theme="dark"] {
+  background: #0f1113;
+  color: #e6eef8;
+}
+
+/* Tabelle in dark mode */
+body.dark table,
+body[data-theme="dark"] table {
+  background: #0f1113;
+}
+
+body.dark table th,
+body[data-theme="dark"] table th {
+  background: #15171a; /* header scuro */
+  color: #e6eef8;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+body.dark table td,
+body[data-theme="dark"] table td {
+  border-color: rgba(255,255,255,0.04);
+  color: #dbe9ff;
+}
+
+/* Alternanza righe - scura e leggermente più scura per leggibilità */
+body.dark table tr:nth-child(odd) td,
+body[data-theme="dark"] table tr:nth-child(odd) td {
+  background: rgba(255,255,255,0.01);
+}
+
+body.dark table tr:nth-child(even) td,
+body[data-theme="dark"] table tr:nth-child(even) td {
+  background: rgba(255,255,255,0.02);
+}
+
+/* Hover highlight - blu/viola sottile, come macOS / GitHub */
+.table tr:hover td,
+table tr:hover td {
+  background: linear-gradient(90deg, rgba(108,92,231,0.10), rgba(75,139,253,0.06));
+  transition: background 180ms ease;
+  color: #fff !important;
+}
+
+/* focus (accessibility) */
+.card-item:focus,
+table tr:focus-within {
+  outline: 3px solid rgba(108,92,231,0.14);
+  outline-offset: 2px;
+}
+
+/* Uniforma bordi in dark */
+body.dark table,
+body[data-theme="dark"] table {
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Assicura che le miniature/stat cards siano scure */
+body.dark .stat-card,
+body[data-theme="dark"] .mini-card,
+body.dark .chart-card,
+body[data-theme="dark"] .chart-card {
+  background: #121316;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+  color: #e6eef8;
+}
