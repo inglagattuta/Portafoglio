@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 
-const db = getFirestore();
+
 
 const tbody = document.getElementById("tbodyDividendiMese");
 const addMonthBtn = document.getElementById("addMonthBtn");
