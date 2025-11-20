@@ -238,6 +238,8 @@ async function loadMonths() {
   mesi.sort((a, b) =>
     a.anno === b.anno ? a.mese.localeCompare(b.mese) : a.anno - b.anno
   );
+// 🔥 aggiorna grafico
+buildBarChart(mesi);
 
   mesi.forEach(m => {
     const totale = (m.dettaglio || [])
