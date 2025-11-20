@@ -203,45 +203,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   loadDividendiData();
 });
 
-<!-- ⚡ TABELLA DIVIDENDI PER MESE -->
-<div class="chart-card">
-  <h2>Dividendi per Mese</h2>
 
-  <button id="addMonthBtn" class="export-btn" style="margin-bottom:10px;">
-    ➕ Aggiungi nuovo mese
-  </button>
-
-  <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th>Anno</th>
-          <th>Mese</th>
-          <th>Totale €</th>
-          <th>Dettaglio</th>
-          <th>Modifica</th>
-        </tr>
-      </thead>
-      <tbody id="tbodyDividendiMese"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ⚡ MODAL MODIFICA MESE -->
-<div id="modalEditMonth" class="modal" style="display:none;">
-  <div class="modal-content">
-    <h3 id="modalTitle"></h3>
-
-    <div id="detailList"></div>
-
-    <button id="addRow" class="export-btn" style="margin-top:10px;">➕ Aggiungi riga</button>
-
-    <div style="margin-top:15px; display:flex; gap:10px;">
-      <button id="saveMonth" class="export-btn">💾 Salva</button>
-      <button id="closeModal" class="dashboard-btn">❌ Chiudi</button>
-    </div>
-  </div>
-</div>
 
 import {
   getFirestore, collection, getDocs, addDoc, updateDoc, doc
