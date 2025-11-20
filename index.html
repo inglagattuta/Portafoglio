@@ -27,13 +27,14 @@
         </div>
 
         <!-- Toggle Dark Mode -->
-        <div class="theme-toggle">
+    <div class="theme-toggle">
   <label class="switch">
     <input type="checkbox" id="themeSwitch">
     <span class="slider"></span>
   </label>
-  <span>Dark Mode</span>
+  <span id="themeLabel"></span>
 </div>
+
 
 
       </div>
@@ -98,16 +99,18 @@
   // Carica preferenza
   const saved = localStorage.getItem("theme") || "light";
   document.body.dataset.theme = saved;
-  switchEl.checked = saved === "dark";
-  labelEl.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
+
+  if (switchEl) switchEl.checked = saved === "dark";
+  if (labelEl) labelEl.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
 
   switchEl.addEventListener("change", () => {
     const mode = switchEl.checked ? "dark" : "light";
     document.body.dataset.theme = mode;
-    labelEl.textContent = mode === "dark" ? "🌙 Dark" : "☀️ Light";
+    if (labelEl) labelEl.textContent = mode === "dark" ? "🌙 Dark" : "☀️ Light";
     localStorage.setItem("theme", mode);
   });
 </script>
+
 
 </body>
 </html>
