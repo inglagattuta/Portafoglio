@@ -27,7 +27,7 @@
         </div>
 
         <!-- Toggle Dark Mode -->
-        <div class="theme-toggle" style="display:none;">
+        <div class="theme-toggle">
   <label class="switch">
     <input type="checkbox" id="themeSwitch">
     <span class="slider round"></span>
@@ -90,6 +90,23 @@
 
   <!-- Modal root (main.js uses ensureModal() to append #editModal when needed) -->
   <div id="modal-root"></div>
+<script>
+  const switchEl = document.getElementById("themeSwitch");
+  const labelEl = document.getElementById("themeLabel");
+
+  // Carica preferenza
+  const saved = localStorage.getItem("theme") || "light";
+  document.body.dataset.theme = saved;
+  switchEl.checked = saved === "dark";
+  labelEl.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
+
+  switchEl.addEventListener("change", () => {
+    const mode = switchEl.checked ? "dark" : "light";
+    document.body.dataset.theme = mode;
+    labelEl.textContent = mode === "dark" ? "🌙 Dark" : "☀️ Light";
+    localStorage.setItem("theme", mode);
+  });
+</script>
 
 </body>
 </html>
