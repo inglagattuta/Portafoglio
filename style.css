@@ -1046,3 +1046,34 @@ body.dark .card-type {
   color: #ddd;
 }
 
+/* ============================
+   FIX TABELLA IN DARK MODE
+   ============================ */
+
+/* Testo generale */
+body.dark table,
+body.dark th,
+body.dark td {
+  color: #eee !important;
+}
+
+/* Header tabella */
+body.dark thead {
+  background: #222 !important;
+  color: #fff !important;
+}
+
+/* Riga pari */
+body.dark tbody tr:nth-child(even) {
+  background: #1a1a1a !important;
+}
+
+/* Riga dispari */
+body.dark tbody tr:nth-child(odd) {
+  background: #111 !important;
+}
+
+/* Hover */
+body.dark tbody tr:hover {
+  background: #2a2a2a !important;
+}
