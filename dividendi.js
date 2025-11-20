@@ -366,4 +366,44 @@ addMonthBtn.addEventListener("click", async () => {
 
   loadMonths();
 });
+// =========================================
+// 🔥 GRAFICO DIVIDENDI MENSILI
+// =========================================
+let chartDividendiBar = null;
+
+function buildBarChart(mesi) {
+  const labels = mesi.map(m => `${m.anno}-${m.mese}`);
+  const values = mesi.map(m =>
+    (m.dettaglio || []).reduce((t, r) => t + Number(r.importo || 0), 0)
+  );
+
+  const ctx = document.getElementById("dividendiBarChart");
+  if (!ctx) return;
+
+  if (chartDividendiBar) chartDividendiBar.destroy();
+
+  chartDividendiBar = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Dividendi €",
+          data: values
+        }
+      ]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
 
