@@ -465,5 +465,28 @@ async function loadData() {
     alert("Errore nel caricamento dati, controlla console.");
   }
 }
+// ======================
+// DARK MODE HANDLER
+// ======================
+const themeSwitch = document.getElementById("themeSwitch");
+
+// Carica preferenza salvata
+if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+    if (themeSwitch) themeSwitch.checked = true;
+}
+
+// Toggle manuale
+if (themeSwitch) {
+    themeSwitch.addEventListener("change", () => {
+        if (themeSwitch.checked) {
+            document.body.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+        } else {
+            document.body.classList.remove("dark");
+            localStorage.setItem("theme", "light");
+        }
+    });
+}
 
 loadData();
