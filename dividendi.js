@@ -278,6 +278,9 @@ async function openEdit(id) {
   });
 
   modalTitle.textContent = `Modifica ${editData.anno}-${editData.mese}`;
+  document.getElementById("editYear").value = editData.anno;
+document.getElementById("editMonth").value = editData.mese;
+
   renderRows();
   modal.style.display = "flex";
 }
@@ -329,9 +332,12 @@ document.getElementById("addRow").addEventListener("click", () => {
 // ==================================================
 document.getElementById("saveMonth").addEventListener("click", async () => {
   const ref = doc(db, "dividendi_mensili", editId);
-  await updateDoc(ref, {
-    dettaglio: editData.dettaglio
-  });
+ await updateDoc(ref, {
+  anno: Number(document.getElementById("editYear").value),
+  mese: document.getElementById("editMonth").value.padStart(2, "0"),
+  dettaglio: editData.dettaglio
+});
+
 
   modal.style.display = "none";
   loadMonths();
