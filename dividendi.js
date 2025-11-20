@@ -192,7 +192,7 @@ function renderChart(data) {
     console.error("Errore Chart:", e);
   }
 }
-
+const yieldPerc = (Number(r.dividendi || 0) / (Number(r.prezzo_acquisto || 0))) * 100;
 // ===================================================
 // SORTING + SEARCH + FILTER
 // ===================================================
