@@ -66,9 +66,7 @@ function renderCards(data) {
 
       // Calcolo profitto corretto
       const profitto = 
-        (Number(r.prezzo_corrente || 0) - Number(r.prezzo_acquisto || 0)) +
-        Number(r.dividendi || 0) +
-        Number(r.prelevato || 0);
+        (Number(r.prezzo_corrente || 0) / Number(r.dividendi || 0))
 
       return `
       <article class="card-item" role="article" tabindex="0">
