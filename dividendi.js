@@ -28,7 +28,11 @@ async function loadDividendiData() {
     const snap = await getDocs(collection(db, "portafoglio"));
     rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    rows = rows.filter(r => Number(r.dividendi) > 0);
+    rows = rows.map(r => ({
+  ...r,
+  dividendi: Number(r.dividendi || r.__EMPTY || 0)
+})).filter(r => r.dividendi > 0);
+
     viewRows = [...rows];
 
     renderAll();
