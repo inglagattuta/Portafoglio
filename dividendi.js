@@ -1,6 +1,6 @@
 // dividendi.js
 // dividendi.js
-import app from "./firebase-config.js";   // <-- tu usi il default export (app)
+import { app, db } from "./firebase-config.js";
 import {
   getFirestore,
   collection,
@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // Ricreo db localmente SENZA toccare firebase-config
-const db = getFirestore(app);
+// const db = getFirestore(app);
 
 // Ora puoi usare db per tutto
 
