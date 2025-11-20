@@ -196,22 +196,34 @@ const yieldPerc = (Number(r.dividendi || 0) / (Number(r.prezzo_acquisto || 0))) 
 // ===================================================
 // SORTING + SEARCH + FILTER
 // ===================================================
-function sortView(column) {
+ffunction sortView(column) {
   if (currentSort.column === column) currentSort.asc = !currentSort.asc;
   else { currentSort.column = column; currentSort.asc = true; }
 
-  viewRows.sort((a,b) => {
-    const A = a[column] ?? "";
-    const B = b[column] ?? "";
-    const nA = Number(A), nB = Number(B);
+  viewRows.sort((a, b) => {
+    let A, B;
 
-    if (!isNaN(nA) && !isNaN(nB)) {
-      return currentSort.asc ? nA - nB : nB - nA;
+    if (column === "yield") {
+      // calcolo yield per ogni riga: dividendi / prezzo_acquisto
+      A = Number(a.dividendi || 0) / (Number(a.prezzo_acquisto || 1));
+      B = Number(b.dividendi || 0) / (Number(b.prezzo_acquisto || 1));
+    } else {
+      A = a[column] ?? "";
+      B = b[column] ?? "";
+      const nA = Number(A), nB = Number(B);
+      if (!isNaN(nA) && !isNaN(nB)) {
+        return currentSort.asc ? nA - nB : nB - nA;
+      }
     }
+
     return currentSort.asc
       ? String(A).localeCompare(String(B))
       : String(B).localeCompare(String(A));
   });
+
+  updateSortButtonsUI();
+  renderAll();
+}
 
   updateSortButtonsUI();
   renderAll();
