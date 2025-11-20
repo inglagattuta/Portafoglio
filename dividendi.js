@@ -102,7 +102,8 @@ function renderCards(data) {
 
         <div class="card-footer">
           <span>Profitto: <b>${fmtEuro(profitto)}</b></span>
-          <span>Yield: <b>${(Number(r.rendimento_percentuale || 0) * 100).toFixed(2)}%</b></span>
+         <span>Yield: <b>${((Number(r.dividendi || 0) / (Number(r.prezzo_acquisto || 0))) * 100).toFixed(2)}%</b></span>
+
         </div>
 
       </article>`;
