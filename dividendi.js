@@ -189,6 +189,12 @@ function bindControls() {
   document.getElementById("searchCard")?.addEventListener("input", applySearchAndFilter);
   document.getElementById("filterType")?.addEventListener("change", applySearchAndFilter);
 }
+const toggleCards = document.getElementById("toggleCards");
+toggleCards?.addEventListener("change", () => {
+  const container = document.getElementById("cardsContainer");
+  if (!container) return;
+  container.style.display = toggleCards.checked ? "grid" : "none";
+});
 
 // ================================
 // Startup
