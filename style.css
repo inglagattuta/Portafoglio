@@ -292,13 +292,16 @@ input:checked + .slider:before {
 .table-container {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
   width: 100%;
+  min-width: 800px;
   border-collapse: collapse;
 }
 
