@@ -192,12 +192,6 @@ document.getElementById("closeModal").addEventListener("click", () => {
   modal.style.display = "none";
 });
 
-</div> <!-- chiusura container grande -->
-
-<!-- CARICA SOLO UNA VOLTA I JS QUI -->
-<script type="module" src="dividendi_mensili.js?v=2"></script>
-<script type="module" src="dividendi.js?v=2"></script>
-
 </body>
 </html>
 
