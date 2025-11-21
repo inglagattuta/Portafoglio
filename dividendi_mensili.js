@@ -5,17 +5,18 @@ console.log(">>> dividendi_mensili.js CARICATO <<<");
 // ===============================
 // 📁 dividendi_mensili.js — VERSIONE FIXATA
 // ===============================
-import app from "./firebase-config.js";
+
+// 🔥 IMPORTA SOLO IL DB DAL FILE PRINCIPALE
+import { db } from "./dividendi.js?v=3";
+
+// 🔧 IMPORTA SOLO LE FUNZIONI FIRESTORE, SENZA re-inizializzare Firebase
 import {
-  getFirestore,
   collection,
   getDocs,
   getDoc,
   doc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-
-const db = getFirestore(app);
 
 // ===============================
 // ELEMENTI DOM
