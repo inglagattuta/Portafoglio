@@ -290,13 +290,9 @@ input:checked + .slider:before {
 
 /* ----------- TABLE ----------- */
 .table-container {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
   overflow-x: auto;
-  overflow-y: visible;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
-  -webkit-overflow-scrolling: touch;
+  overflow-y: auto; /* <-- questa è la cura */
+  max-height: 70vh; /* <-- opzionale ma consigliato: evita tagli */
 }
 
 table {
