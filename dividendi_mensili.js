@@ -3,20 +3,25 @@ document.addEventListener("DOMContentLoaded", () => {
 console.log(">>> dividendi_mensili.js CARICATO <<<");
 
 // ===============================
-// 📁 dividendi_mensili.js — VERSIONE FIXATA
+// 📁 dividendi_mensili.js — VERSIONE FIXATA DEFINITIVA
 // ===============================
 
-// 🔥 IMPORTA SOLO IL DB DAL FILE PRINCIPALE
-import { db } from "./dividendi.js?v=3";
+// 👉 IMPORTA FIREBASE APP
+import app from "./firebase-config.js";
 
-// 🔧 IMPORTA SOLO LE FUNZIONI FIRESTORE, SENZA re-inizializzare Firebase
+// 👉 IMPORTA SOLO LE FUNZIONI CHE SERVONO
 import {
+  getFirestore,
   collection,
   getDocs,
   getDoc,
   doc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+// 👉 CREA IL DB QUI (NO DUPLICATI)
+const db = getFirestore(app);
+
 
 // ===============================
 // ELEMENTI DOM
