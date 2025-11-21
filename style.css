@@ -1268,3 +1268,11 @@ body[data-theme="dark"] .mini-card p {
 table tbody tr:hover {
   background: rgba(0,0,0,0.08);
 }
+
+@media (max-width: 768px) {
+  .dividendi-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
