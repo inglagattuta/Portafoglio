@@ -192,6 +192,3 @@ document.getElementById("closeModal").addEventListener("click", () => {
   modal.style.display = "none";
 });
 
-</body>
-</html>
-
