@@ -7,42 +7,41 @@
 
   <link rel="stylesheet" href="style.css?v=5">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <style>
-    /* --- RESPONSIVE TABLE WRAPPER --- */
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+  /* --- RESPONSIVE TABLE WRAPPER --- */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
 
-    th, td {
-      white-space: nowrap;
-      padding: 8px;
-      text-align: left;
-    }
+  th, td {
+    white-space: nowrap;
+    padding: 8px;
+    text-align: left;
+  }
 
-    /* Rende le colonne cliccabili per ordinare */
-    th.sortable {
-      cursor: pointer;
-      position: relative;
-    }
+  /* Rende le colonne cliccabili per ordinare */
+  th.sortable {
+    cursor: pointer;
+    position: relative;
+  }
 
-    th.sortable::after {
-      content: " ⇅";
-      font-size: 0.8em;
-      opacity: 0.5;
-    }
-  </style>
+  th.sortable::after {
+    content: " ⇅";
+    font-size: 0.8em;
+    opacity: 0.5;
+  }
+</style>
+
 </head>
 
 <body>
-
 <script>
   const savedTheme = localStorage.getItem("theme") || "light";
   document.body.dataset.theme = savedTheme;
@@ -50,95 +49,90 @@
   else document.body.classList.remove("dark");
 </script>
 
-<div class="container">
 
-  <!-- HEADER -->
-  <header>
-    <h1>💰 Dividendi</h1>
-    <p class="subtitle">Francesco La Gattuta</p>
-  </header>
+  <div class="container">
 
-  <!-- CONTROLLI -->
-  <div class="controls">
-    <button onclick="window.location.href='index.html'">🏠 Home</button>
-    <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
-  </div>
+    <header>
+      <h1>💰 Dividendi</h1>
+      <p class="subtitle">Francesco La Gattuta</p>
+    </header>
 
-  <!-- MINI CARDS -->
-  <div class="mini-cards">
-
-    <div class="mini-card">
-      <h3>Totale Dividendi</h3>
-      <p id="totaleDividendi">0 €</p>
+    <div class="controls">
+      <button onclick="window.location.href='index.html'">🏠 Home</button>
+      <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
     </div>
 
-    <div class="mini-card">
-      <h3>Mensile Stimato</h3>
-      <p id="mediaDividendi">0 €</p>
-    </div>
+    <div class="mini-cards">
 
-    <div class="mini-card">
-      <h3>Totale Investito</h3>
-      <p id="totaleInvestito">0 €</p>
-    </div>
-
-    <div class="mini-card">
-      <h3>Dividend Yield</h3>
-      <p id="divYield">0%</p>
-    </div>
-
-  </div>
-
-  <!-- CONTENITORE GRAFICI E LISTA -->
-  <div class="dividendi-container">
-
-    <!-- TOP 10 DIVIDENDI -->
-    <div class="top5-chart-row">
-      <div class="chart-card">
-        <h2>Top 10 Dividendi</h2>
-        <canvas id="chartTopDiv"></canvas>
+      <div class="mini-card">
+        <h3>Totale Dividendi</h3>
+        <p id="totaleDividendi">0 €</p>
       </div>
+
+      <div class="mini-card">
+        <h3>Mensile Stimato</h3>
+        <p id="mediaDividendi">0 €</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Totale Investito</h3>
+        <p id="totaleInvestito">0 €</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Dividend Yield</h3>
+        <p id="divYield">0%</p>
+      </div>
+
     </div>
 
-    <!-- LISTA TITOLI -->
-    <div class="dividendi-list-row">
-      <div class="chart-card wide">
-        <h2>Lista Titoli e Dividendi</h2>
+    <div class="dividendi-container">
 
-        <!-- CONTROLLI ORDINAMENTO -->
-        <div class="sort-group">
-          <button class="sort-btn active" data-column="nome">Nome <span class="sort-indicator">↕</span></button>
-          <button class="sort-btn" data-column="dividendi">Dividendo € <span class="sort-indicator">↕</span></button>
-          <button class="sort-btn" data-column="tipologia">Tipologia <span class="sort-indicator">↕</span></button>
-          <button class="sort-btn" data-column="percentuale_portafoglio">% Portafoglio <span class="sort-indicator">↕</span></button>
-          <button class="sort-btn" data-column="yield">Yield % <span class="sort-indicator">↕</span></button>
-        </div>
-
-        <!-- FILTRI -->
-        <div class="filter-group">
-          <input id="searchCard" type="search" placeholder="Cerca per nome..." />
-          <select id="filterType">
-            <option value="">Tutti i tipi</option>
-            <option value="Azione">Azione</option>
-            <option value="Cripto">Cripto</option>
-            <option value="ETF">ETF</option>
-          </select>
+      <div class="top5-chart-row">
+        <div class="chart-card">
+          <h2>Top 10 Dividendi</h2>
+          <canvas id="chartTopDiv"></canvas>
         </div>
       </div>
 
-      <!-- CARDS GRID -->
-      <div id="cardsContainer" class="cards-grid" aria-live="polite"></div>
+      <div class="dividendi-list-row">
+        <div class="chart-card wide">
+          <h2>Lista Titoli e Dividendi</h2>
 
+         <div class="sort-group">
+            <button class="sort-btn active" data-column="nome">Nome <span class="sort-indicator">↕</span></button>
+            <button class="sort-btn" data-column="dividendi">Dividendo € <span class="sort-indicator">↕</span></button>
+            <button class="sort-btn" data-column="tipologia">Tipologia <span class="sort-indicator">↕</span></button>
+            <button class="sort-btn" data-column="percentuale_portafoglio">% Portafoglio <span class="sort-indicator">↕</span></button>
+            <button class="sort-btn" data-column="yield">Yield % <span class="sort-indicator">↕</span></button>
+          </div>
+
+          <div class="filter-group">
+            <input id="searchCard" type="search" placeholder="Cerca per nome..." />
+            <select id="filterType">
+              <option value="">Tutti i tipi</option>
+              <option value="Azione">Azione</option>
+              <option value="Cripto">Cripto</option>
+              <option value="ETF">ETF</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div id="cardsContainer" class="cards-grid" aria-live="polite"></div>
+
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- =====================================
-     📄 SEZIONE DIVIDENDI PER MESE
-====================================== -->
+  </div>
+
+  <!-- QUI LA FIX IMPORTANTISSIMA -->
+  <script type="module" src="dividendi_mensili.js?v=2"></script>
+  <script type="module" src="dividendi.js?v=2"></script>
+  <!-- FINE FIX -->
+
 <div class="dividendi-layout">
 
-  <!-- SINISTRA: TABELLA -->
   <div class="dividendi-left">
 
     <h2>Dividendi per Mese</h2>
@@ -164,17 +158,15 @@
 
   </div>
 
-  <!-- DESTRA: GRAFICO -->
   <div class="dividendi-right">
     <h2>Dividendi per Mese (€)</h2>
     <div style="height:350px;">
-      <canvas id="dividendiBarChart"></canvas>
+     <canvas id="dividendiBarChart"></canvas>
     </div>
   </div>
 
 </div>
 
-<!-- MODAL EDIT -->
 <div id="modalEditMonth" class="modal" style="display:none;">
   <div class="modal-content">
     <h3 id="modalTitle"></h3>
@@ -195,16 +187,6 @@
     </div>
   </div>
 </div>
-
-<!-- =======================
-     ✔️ JAVASCRIPT FINALI
-=========================== -->
-
-<!-- CONFIG FIREBASE — OBBLIGATORIO -->
-<script type="module" src="firebase-config.js?v=1"></script>
-
-<!-- LOGIC & CHARTS -->
-<script type="module" src="dividendi_mensili.js?v=1"></script>
 
 </body>
 </html>
