@@ -67,6 +67,8 @@ function buildBarChart(mesi) {
 // 1️⃣ CARICA I MESI
 // ===============================
 async function loadMonths() {
+console.log(">>> loadMonths() avviata");
+  
   tbody.innerHTML = "";
 
   const snap = await getDocs(collection(db, "dividendi_mensili"));
