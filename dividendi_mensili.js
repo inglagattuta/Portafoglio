@@ -1,5 +1,6 @@
-console.log(">>> dividendi_mensili.js CARICATO <<<");
+document.addEventListener("DOMContentLoaded", () => {
 
+console.log(">>> dividendi_mensili.js CARICATO <<<");
 
 // ===============================
 // 📁 dividendi_mensili.js — VERSIONE FIXATA
@@ -67,8 +68,8 @@ function buildBarChart(mesi) {
 // 1️⃣ CARICA I MESI
 // ===============================
 async function loadMonths() {
-console.log(">>> loadMonths() avviata");
-  
+  console.log(">>> loadMonths() avviata");
+
   tbody.innerHTML = "";
 
   const snap = await getDocs(collection(db, "dividendi_mensili"));
@@ -78,10 +79,10 @@ console.log(">>> loadMonths() avviata");
 
   mesi.sort((a, b) =>
     a.anno === b.anno ? a.mese.localeCompare(b.mese) : a.anno - b.anno
-
-            
   );
-console.log("MESI CARICATI:", mesi);
+
+  console.log("MESI CARICATI:", mesi);
+
   buildBarChart(mesi);
 
   mesi.forEach(m => {
@@ -102,7 +103,7 @@ console.log("MESI CARICATI:", mesi);
     tbody.appendChild(tr);
   });
 
-  // listener bottoni modifica
+  // eventi modifica
   document.querySelectorAll("button[data-id]").forEach(btn => {
     btn.addEventListener("click", () => openEdit(btn.dataset.id));
   });
@@ -111,7 +112,7 @@ console.log("MESI CARICATI:", mesi);
 loadMonths();
 
 // ===============================
-// 2️⃣ APRI MODAL — GETDOC FIX
+// 2️⃣ APRI MODAL
 // ===============================
 async function openEdit(id) {
   editId = id;
@@ -130,7 +131,7 @@ async function openEdit(id) {
 }
 
 // ===============================
-// 3️⃣ RENDER RIGHE SENZA CREARE LISTENER DUPLICATI
+// 3️⃣ RENDER RIGHE
 // ===============================
 function renderRows() {
   detailList.innerHTML = "";
@@ -159,7 +160,9 @@ function renderRows() {
   });
 }
 
-// Listener UNICO per input (non duplicato)
+// ===============================
+// Listener unico per inputs
+// ===============================
 detailList.addEventListener("input", e => {
   const row = e.target.dataset.row;
   const field = e.target.dataset.field;
@@ -199,3 +202,4 @@ document.getElementById("closeModal").addEventListener("click", () => {
   modal.style.display = "none";
 });
 
+}); // ⬅️ fine DOMContentLoaded
