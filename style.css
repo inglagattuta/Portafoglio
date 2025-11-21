@@ -1276,3 +1276,17 @@ table tbody tr:hover {
     gap: 20px;
   }
 }
+
+/* Mobile fix per dividendi: grafico sopra, tabella sotto */
+@media (max-width: 768px) {
+  .dividendi-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .dividendi-left,
+  .dividendi-right {
+    width: 100%;
+  }
+}
