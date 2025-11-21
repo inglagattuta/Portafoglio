@@ -1,11 +1,12 @@
 // ===============================
-// 📁 dividendi_mensili.js
+// 📁 dividendi_mensili.js — VERSIONE FIXATA
 // ===============================
 import app from "./firebase-config.js";
 import {
   getFirestore,
   collection,
   getDocs,
+  getDoc,
   doc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
@@ -21,6 +22,10 @@ let chartDividendiBar = null;
 
 let editId = null;
 let editData = null;
+
+const modal = document.getElementById("modalEditMonth");
+const modalTitle = document.getElementById("modalTitle");
+let detailList = document.getElementById("detailList");
 
 // ===============================
 // 📊 GRAFICO MENSILE
@@ -70,10 +75,8 @@ async function loadMonths() {
     a.anno === b.anno ? a.mese.localeCompare(b.mese) : a.anno - b.anno
   );
 
-  // grafico
   buildBarChart(mesi);
 
-  // tabella
   mesi.forEach(m => {
     const totale = (m.dettaglio || [])
       .reduce((sum, r) => sum + Number(r.importo || 0), 0)
@@ -92,6 +95,7 @@ async function loadMonths() {
     tbody.appendChild(tr);
   });
 
+  // listener bottoni modifica
   document.querySelectorAll("button[data-id]").forEach(btn => {
     btn.addEventListener("click", () => openEdit(btn.dataset.id));
   });
@@ -100,19 +104,14 @@ async function loadMonths() {
 loadMonths();
 
 // ===============================
-// 2️⃣ APRI MODAL — MODIFICA MESE
+// 2️⃣ APRI MODAL — GETDOC FIX
 // ===============================
-const modal = document.getElementById("modalEditMonth");
-const modalTitle = document.getElementById("modalTitle");
-const detailList = document.getElementById("detailList");
-
 async function openEdit(id) {
   editId = id;
 
-  const snap = await getDocs(collection(db, "dividendi_mensili"));
-  snap.forEach(d => {
-    if (d.id === id) editData = { id: d.id, ...d.data() };
-  });
+  const ref = doc(db, "dividendi_mensili", id);
+  const snap = await getDoc(ref);
+  editData = { id: snap.id, ...snap.data() };
 
   modalTitle.textContent = `Modifica ${editData.anno}-${editData.mese}`;
 
@@ -124,7 +123,7 @@ async function openEdit(id) {
 }
 
 // ===============================
-// 3️⃣ RENDER LISTA DETTAGLI
+// 3️⃣ RENDER RIGHE SENZA CREARE LISTENER DUPLICATI
 // ===============================
 function renderRows() {
   detailList.innerHTML = "";
@@ -140,15 +139,11 @@ function renderRows() {
       <input type="number" value="${row.importo}" data-row="${idx}" data-field="importo">
       <button class="dashboard-btn" data-del="${idx}">🗑</button>
     `;
+
     detailList.appendChild(div);
   });
 
-  detailList.addEventListener("input", e => {
-    const row = e.target.dataset.row;
-    const field = e.target.dataset.field;
-    if (row !== undefined) editData.dettaglio[row][field] = e.target.value;
-  });
-
+  // delete
   detailList.querySelectorAll("button[data-del]").forEach(btn => {
     btn.addEventListener("click", () => {
       editData.dettaglio.splice(btn.dataset.del, 1);
@@ -156,6 +151,15 @@ function renderRows() {
     });
   });
 }
+
+// Listener UNICO per input (non duplicato)
+detailList.addEventListener("input", e => {
+  const row = e.target.dataset.row;
+  const field = e.target.dataset.field;
+  if (row !== undefined && field) {
+    editData.dettaglio[row][field] = e.target.value;
+  }
+});
 
 // ===============================
 // 4️⃣ AGGIUNGI RIGA
