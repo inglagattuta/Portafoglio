@@ -73,6 +73,8 @@ async function loadMonths() {
 
   mesi.sort((a, b) =>
     a.anno === b.anno ? a.mese.localeCompare(b.mese) : a.anno - b.anno
+
+            console.log("MESI CARICATI:", mesi);
   );
 
   buildBarChart(mesi);
