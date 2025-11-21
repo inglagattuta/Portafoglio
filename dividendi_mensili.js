@@ -1,9 +1,9 @@
 console.log(">>> dividendi_mensili.js CARICATO <<<");
 
 // ===============================
-// 📁 dividendi_mensili.js — VERSIONE CORRETTA
+// 📁 dividendi_mensili.js — VERSIONE FIXATA
 // ===============================
-import { app, db } from "./firebase-config.js";
+import app, { db } from "./firebase-config.js";
 import {
   collection,
   getDocs,
@@ -24,7 +24,7 @@ let editData = null;
 
 const modal = document.getElementById("modalEditMonth");
 const modalTitle = document.getElementById("modalTitle");
-let detailList = document.getElementById("detailList");
+const detailList = document.getElementById("detailList");
 
 // ===============================
 // 📊 GRAFICO MENSILE
@@ -78,6 +78,7 @@ async function loadMonths() {
   );
 
   console.log("MESI CARICATI:", mesi);
+
   buildBarChart(mesi);
 
   mesi.forEach(m => {
@@ -97,17 +98,19 @@ async function loadMonths() {
     `;
     tbody.appendChild(tr);
   });
-
-  // listener bottoni modifica
-  document.querySelectorAll("button[data-id]").forEach(btn => {
-    btn.addEventListener("click", () => openEdit(btn.dataset.id));
-  });
 }
 
-loadMonths();
+// ===============================
+// Listener UNICO per aprire modal (delegation)
+// ===============================
+tbody.addEventListener("click", e => {
+  const btn = e.target.closest("button[data-id]");
+  if (!btn) return;
+  openEdit(btn.dataset.id);
+});
 
 // ===============================
-// 2️⃣ APRI MODAL
+// 2️⃣ APRI MODAL — GETDOC FIX
 // ===============================
 async function openEdit(id) {
   editId = id;
@@ -126,7 +129,7 @@ async function openEdit(id) {
 }
 
 // ===============================
-// 3️⃣ RENDER RIGHE SENZA DUPLICARE LISTENER
+// 3️⃣ RENDER RIGHE SENZA DUPLICATI
 // ===============================
 function renderRows() {
   detailList.innerHTML = "";
@@ -155,7 +158,9 @@ function renderRows() {
   });
 }
 
-// listener UNICO per input
+// ===============================
+// Listener UNICO per input
+// ===============================
 detailList.addEventListener("input", e => {
   const row = e.target.dataset.row;
   const field = e.target.dataset.field;
@@ -194,3 +199,8 @@ document.getElementById("saveMonth").addEventListener("click", async () => {
 document.getElementById("closeModal").addEventListener("click", () => {
   modal.style.display = "none";
 });
+
+// ===============================
+// 🔹 CARICA INIZIALE
+// ===============================
+loadMonths();
