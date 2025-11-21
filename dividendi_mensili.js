@@ -1,3 +1,6 @@
+console.log(">>> dividendi_mensili.js CARICATO <<<");
+
+
 // ===============================
 // 📁 dividendi_mensili.js — VERSIONE FIXATA
 // ===============================
