@@ -1,23 +1,22 @@
-// dividendi.js
+// dividendi.js — versione pulita (solo portafoglio/cards/stats/top chart)
 import { db } from "./firebase-config.js";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 console.log("dividendi.js loaded");
 
+// ================================
+// Stato locale
+// ================================
 let rows = [];
 let viewRows = [];
 let currentSort = { column: "nome", asc: true };
 
-// helper
+// ================================
+// Helper
+// ================================
 const fmtEuro = v => Number(v || 0).toFixed(2) + " €";
 
-// colori per tipologia
+// Colori per tipologia
 function getTypeColor(tip) {
   if (!tip) return "#8884";
   const t = String(tip).toLowerCase();
@@ -28,17 +27,15 @@ function getTypeColor(tip) {
   return "#8884";
 }
 
-// ---------------------------
-// PARTE A: DATI PORTAFOGLIO
-// ---------------------------
+// ================================
+// Carica dati portafoglio
+// ================================
 async function loadDividendiData() {
   try {
     const qsnap = await getDocs(collection(db, "portafoglio"));
-    // Firestore v11: qsnap.docs exists
     rows = qsnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    console.log("portafoglio rows fetched:", rows.length, rows);
-    // protezione: assicurati campo 'dividendi' numerico
+    // Assicurati campo 'dividendi' numerico
     rows = rows.map(r => ({ ...r, dividendi: Number(r.dividendi || 0) }));
     rows = rows.filter(r => Number(r.dividendi) > 0);
     viewRows = [...rows];
@@ -49,13 +46,18 @@ async function loadDividendiData() {
   }
 }
 
+// ================================
+// Rendering completo
+// ================================
 function renderAll() {
   renderStats(viewRows);
   renderCards(viewRows);
   renderTopChart(viewRows);
 }
 
-// CARDS
+// ================================
+// Cards
+// ================================
 function renderCards(data) {
   const container = document.getElementById("cardsContainer");
   if (!container) return;
@@ -94,7 +96,9 @@ function renderCards(data) {
   }).join("");
 }
 
-// STATISTICHE
+// ================================
+// Statistiche
+// ================================
 function renderStats(data) {
   const totale = data.reduce((s, x) => s + Number(x.dividendi || 0), 0);
   const media = data.length ? totale / 12 : 0;
@@ -113,7 +117,9 @@ function safeSetText(id, txt) {
   if (el) el.textContent = txt;
 }
 
-// TOP CHART (titoli)
+// ================================
+// Top chart
+// ================================
 let chartTop = null;
 function renderTopChart(data) {
   const top10 = [...data].sort((a,b) => Number(b.dividendi)-Number(a.dividendi)).slice(0,10);
@@ -133,183 +139,9 @@ function renderTopChart(data) {
   });
 }
 
-// ---------------------------
-// PARTE B: DIVIDENDI MENSILI
-// ---------------------------
-const tbody = () => document.getElementById("tbodyDividendiMese");
-const addMonthBtn = () => document.getElementById("addMonthBtn");
-const modalEl = () => document.getElementById("modalEditMonth");
-const detailListEl = () => document.getElementById("detailList");
-const ctxMensile = () => document.getElementById("dividendiChart");
-let chartMensile = null;
-
-async function loadMonths() {
-  const tbodyEl = tbody();
-  if (!tbodyEl) {
-    console.warn("tbodyDividendiMese non trovato nel DOM.");
-    return;
-  }
-  tbodyEl.innerHTML = "";
-
-  try {
-    const snap = await getDocs(collection(db, "dividendi_mensili"));
-    const mesi = [];
-    snap.forEach(d => mesi.push({ id: d.id, ...d.data() }));
-
-    // ordinamento
-    mesi.sort((a, b) => a.anno === b.anno ? String(a.mese).localeCompare(String(b.mese)) : a.anno - b.anno);
-
-    // aggiorna grafico mensile
-    buildBarChart(mesi);
-
-    // render tabella
-    mesi.forEach(m => {
-      const totale = (m.dettaglio || []).reduce((sum, r) => sum + Number(r.importo || 0), 0).toFixed(2);
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${m.anno}</td>
-        <td>${m.mese}</td>
-        <td>${totale} €</td>
-        <td>${(m.dettaglio || []).length} titoli</td>
-        <td><button class="dashboard-btn" data-id="${m.id}">✏️ Modifica</button></td>
-      `;
-      tbodyEl.appendChild(tr);
-    });
-
-    // bind pulsanti modifica
-    document.querySelectorAll("button[data-id]").forEach(btn => btn.addEventListener("click", () => openEdit(btn.dataset.id)));
-  } catch (err) {
-    console.error("Errore loadMonths:", err);
-  }
-}
-
-function buildBarChart(mesi) {
-  const canvas = ctxMensile();
-  if (!canvas) {
-    console.warn("Canvas dividendiChart non trovato.");
-    return;
-  }
-  const labels = mesi.map(m => `${m.anno}-${String(m.mese).padStart(2,"0")}`);
-  const values = mesi.map(m => (m.dettaglio || []).reduce((s,r) => s + Number(r.importo || 0), 0));
-
-  if (chartMensile) chartMensile.destroy();
-  const ctx = canvas.getContext("2d");
-  chartMensile = new Chart(ctx, {
-    type: "bar",
-    data: { labels, datasets: [{ label: "Dividendi €", data: values }] },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
-  });
-}
-
-// Modal / edit helpers
-let editId = null;
-let editData = null;
-
-async function openEdit(id) {
-  try {
-    const snap = await getDocs(collection(db, "dividendi_mensili"));
-    snap.forEach(d => { if (d.id === id) editData = { id: d.id, ...d.data() }; });
-
-    if (!editData) {
-      console.warn("record mese non trovato:", id);
-      return;
-    }
-    editId = id;
-    const modal = modalEl();
-    if (!modal) return;
-    document.getElementById("modalTitle").textContent = `Modifica ${editData.anno}-${editData.mese}`;
-    document.getElementById("editYear").value = editData.anno;
-    document.getElementById("editMonth").value = editData.mese;
-    renderRows();
-    modal.style.display = "flex";
-  } catch (err) {
-    console.error("Errore openEdit:", err);
-  }
-}
-
-function renderRows() {
-  const detailList = detailListEl();
-  if (!detailList) return;
-  detailList.innerHTML = "";
-
-  (editData.dettaglio || []).forEach((row, idx) => {
-    const div = document.createElement("div");
-    div.style.display = "flex";
-    div.style.gap = "10px";
-    div.style.marginBottom = "6px";
-    div.innerHTML = `
-      <input type="text" placeholder="Ticker" value="${row.ticker || ""}" data-row="${idx}" data-field="ticker">
-      <input type="number" placeholder="Importo" value="${row.importo || 0}" data-row="${idx}" data-field="importo">
-      <button class="dashboard-btn" data-del="${idx}">🗑</button>
-    `;
-    detailList.appendChild(div);
-  });
-
-  // input listener
-  detailList.querySelectorAll("input").forEach(inp => {
-    inp.addEventListener("input", e => {
-      const row = Number(e.target.dataset.row);
-      const field = e.target.dataset.field;
-      if (Number.isInteger(row)) editData.dettaglio[row][field] = e.target.value;
-    });
-  });
-
-  // delete buttons bind
-  detailList.querySelectorAll("button[data-del]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      editData.dettaglio.splice(Number(btn.dataset.del), 1);
-      renderRows();
-    });
-  });
-}
-
-// ADD row, SAVE, CLOSE
-function bindMonthControls() {
-  const addRowBtn = document.getElementById("addRow");
-  addRowBtn?.addEventListener("click", () => {
-    if (!editData) return;
-    editData.dettaglio.push({ ticker: "", importo: 0 });
-    renderRows();
-  });
-
-  document.getElementById("saveMonth")?.addEventListener("click", async () => {
-    try {
-      if (!editId || !editData) return;
-      const ref = doc(db, "dividendi_mensili", editId);
-      await updateDoc(ref, {
-        anno: Number(document.getElementById("editYear").value),
-        mese: String(document.getElementById("editMonth").value).padStart(2, "0"),
-        dettaglio: editData.dettaglio
-      });
-      document.getElementById("modalEditMonth").style.display = "none";
-      await loadMonths();
-      // anche ricarica portafoglio-derived stats se vuoi
-    } catch (err) {
-      console.error("Errore saveMonth:", err);
-    }
-  });
-
-  document.getElementById("closeModal")?.addEventListener("click", () => {
-    document.getElementById("modalEditMonth").style.display = "none";
-  });
-
-  addMonthBtn()?.addEventListener("click", async () => {
-    try {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      await addDoc(collection(db, "dividendi_mensili"), { anno: year, mese: month, dettaglio: [] });
-      await loadMonths();
-    } catch (err) {
-      console.error("Errore addMonth:", err);
-    }
-  });
-}
-
-// ---------------
-// SORT/SEARCH UI
-// ---------------
-let currentSortBtn = currentSort;
+// ================================
+// SORT / SEARCH / FILTER
+// ================================
 function sortView(column) {
   if (currentSort.column === column) currentSort.asc = !currentSort.asc;
   else { currentSort.column = column; currentSort.asc = true; }
@@ -331,6 +163,7 @@ function sortView(column) {
   updateSortButtonsUI();
   renderAll();
 }
+
 function updateSortButtonsUI() {
   document.querySelectorAll(".sort-btn").forEach(btn => {
     const col = btn.dataset.column;
@@ -339,6 +172,7 @@ function updateSortButtonsUI() {
     if (ind) ind.textContent = col === currentSort.column ? (currentSort.asc ? "↑" : "↓") : "↕";
   });
 }
+
 function applySearchAndFilter() {
   const q = (document.getElementById("searchCard")?.value || "").trim().toLowerCase();
   const typ = (document.getElementById("filterType")?.value || "").trim();
@@ -356,12 +190,10 @@ function bindControls() {
   document.getElementById("filterType")?.addEventListener("change", applySearchAndFilter);
 }
 
-// -------------------
-// STARTUP
-// -------------------
+// ================================
+// Startup
+// ================================
 document.addEventListener("DOMContentLoaded", () => {
   bindControls();
-  bindMonthControls();
-  loadDividendiData(); // portafooglio -> cards + top chart + stats
-  loadMonths();        // dividendi_mensili -> tabella + grafico mensile
+  loadDividendiData();
 });
