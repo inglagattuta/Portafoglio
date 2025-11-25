@@ -417,10 +417,20 @@ async function loadData() {
           td.textContent = fmtPerc(v);
           td.dataset.raw = v;
         } else if (col === "score") {
-          const v = Number(d[col] || 0);
-          td.textContent = fmtScore(v);
-          td.dataset.raw = v;
-          td.classList.add("score-cell");
+  const v = Number(d[col] || 0);
+  td.textContent = fmtScore(v);
+  td.dataset.raw = v;
+
+  // --- COLORAZIONE SCORE ---
+  if (v >= 12) {
+    td.style.color = "#2ecc71";   // verde
+  } else if (v < 12 && v >= 8) {
+    td.style.color = "#f1c40f";   // giallo
+  } else {
+    td.style.color = "#e74c3c";   // rosso
+  }
+}
+
         } else {
           td.textContent = d[col] ?? "";
           td.dataset.raw = (d[col] ?? "").toString();
