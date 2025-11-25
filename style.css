@@ -851,3 +851,17 @@ tr:last-child td {
     padding: 20px;
   }
 }
+/* === FIX MODAL: rende il contenuto scrollabile === */
+.modal-container {
+  max-height: 90vh !important; /* non deve uscire dallo schermo */
+  overflow-y: auto !important; /* abilita scroll verticale */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* migliora la visualizzazione interna */
+.modal-container input,
+.modal-container select,
+.modal-container textarea {
+  max-width: 100%;
+}
