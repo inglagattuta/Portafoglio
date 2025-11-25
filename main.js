@@ -416,7 +416,7 @@ async function loadData() {
           const v = Number(d[col] || 0);
           td.textContent = fmtPerc(v);
           td.dataset.raw = v;
-        } else if (col === "score") {
+       } else if (col === "score") {
   const v = Number(d[col] || 0);
   td.textContent = fmtScore(v);
   td.dataset.raw = v;
@@ -429,12 +429,12 @@ async function loadData() {
   } else {
     td.style.color = "#e74c3c";   // rosso
   }
+
+} else {
+  td.textContent = d[col] ?? "";
+  td.dataset.raw = (d[col] ?? "").toString();
 }
 
-        } else {
-          td.textContent = d[col] ?? "";
-          td.dataset.raw = (d[col] ?? "").toString();
-        }
 
         tr.appendChild(td);
       });
