@@ -1107,3 +1107,18 @@ body.dark .nice-table td {
     display: none;
   }
 }
+
+/* ======================== */
+/* PROFITTO COLOR SCALE      */
+/* ======================== */
+.profit-color {
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+/* Rosso per negativo, giallo per zero, verde per positivo */
+.profit-0 { color: #ef4444; }   /* rosso */
+.profit-1 { color: #f97316; }
+.profit-2 { color: #fbbf24; }   /* giallo-arancio */
+.profit-3 { color: #84cc16; }
+.profit-4 { color: #10b981; }   /* verde */
