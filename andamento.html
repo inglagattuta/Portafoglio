@@ -7,6 +7,12 @@
 
   <link rel="stylesheet" href="style.css?v=10" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Sincronizza tema con quello salvato in index
+  const savedTheme = localStorage.getItem("theme") || "light";
+  document.body.dataset.theme = savedTheme;
+  if (savedTheme === "dark") document.body.classList.add("dark");
+</script>
 </head>
 <body data-theme="light">
 
@@ -29,7 +35,7 @@
       <a class="dashboard-btn" href="index.html">🏠 Home</a>
       <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>
       <a class="dashboard-btn" href="dividendi.html">💵 Dividendi</a>
-      
+      <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
     </div>
 
     <!-- GRAFICO -->
