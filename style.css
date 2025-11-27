@@ -995,3 +995,29 @@ tr:last-child td {
     max-width: 100%;
   }
 }
+
+.nice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.nice-table th, .nice-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+}
+
+.nice-table th {
+  background: rgba(0,0,0,0.05);
+  font-weight: bold;
+}
+
+body.dark .nice-table th {
+  background: rgba(255,255,255,0.1);
+}
+
+body.dark .nice-table td {
+  border-color: rgba(255,255,255,0.15);
+}
