@@ -138,21 +138,52 @@ function getColor(val, type="percent") {
 
 
 // =======================================
-//   RENDER TABELLA HTML
+//   RENDER TABELLA HTML - DARK MODE READY
 // =======================================
 function renderRiepilogoInTabella(riepilogo, andamento) {
   const tbody = document.querySelector("#tabellaRiepilogo tbody");
   tbody.innerHTML = "";
 
+  // Funzione colori soft per valori percentuali e assoluti
+  function getColor(val, type = "percent") {
+    let color = "#ffffff00"; // trasparente come default
+
+    if (type === "percent") {
+      if (val > 20) color = "rgba(0,128,0,0.3)";
+      else if (val > 10) color = "rgba(0,200,0,0.25)";
+      else if (val > 0) color = "rgba(154,205,50,0.2)";
+      else if (val === 0) color = "rgba(255,165,0,0.2)";
+      else if (val > -10) color = "rgba(255,69,0,0.25)";
+      else color = "rgba(139,0,0,0.3)";
+    } else {
+      if (val >= 10000) color = "rgba(0,128,0,0.3)";
+      else if (val >= 5000) color = "rgba(0,200,0,0.25)";
+      else if (val >= 1000) color = "rgba(154,205,50,0.2)";
+      else if (val >= 0) color = "rgba(255,165,0,0.2)";
+      else color = "rgba(255,69,0,0.25)";
+    }
+    return color;
+  }
+
+  // Funzione colore testo leggibile
+  function getTextColor(bg) {
+    if (!bg || bg === "#ffffff00") return ""; // default
+    // Estrae luminosità
+    const rgb = bg.match(/\d+/g);
+    if (!rgb) return "";
+    const brightness = (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+    return brightness < 140 ? "#fff" : "#000";
+  }
+
   riepilogo.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td style="text-align:center;">${r.mese}</td>
-      <td style="text-align:right; background-color:${getColor(r.investito,"value")};">${r.investito.toFixed(2)} €</td>
-      <td style="text-align:right; background-color:${getColor(r.valore,"value")};">${r.valore.toFixed(2)} €</td>
-      <td style="text-align:right; background-color:${getColor(r.incremento,"value")};">${r.incremento.toFixed(2)} €</td>
-      <td style="text-align:right; background-color:${getColor(r.profitto,"value")};">${r.profitto.toFixed(2)} €</td>
-      <td style="text-align:right; background-color:${getColor(r.profitPerc,"percent")};">${r.profitPerc.toFixed(2)} %</td>
+      <td style="text-align:right; background-color:${getColor(r.investito,"value")}; color:${getTextColor(getColor(r.investito,"value"))};">${r.investito.toFixed(2)} €</td>
+      <td style="text-align:right; background-color:${getColor(r.valore,"value")}; color:${getTextColor(getColor(r.valore,"value"))};">${r.valore.toFixed(2)} €</td>
+      <td style="text-align:right; background-color:${getColor(r.incremento,"value")}; color:${getTextColor(getColor(r.incremento,"value"))};">${r.incremento.toFixed(2)} €</td>
+      <td style="text-align:right; background-color:${getColor(r.profitto,"value")}; color:${getTextColor(getColor(r.profitto,"value"))};">${r.profitto.toFixed(2)} €</td>
+      <td style="text-align:right; background-color:${getColor(r.profitPerc,"percent")}; color:${getTextColor(getColor(r.profitPerc,"percent"))};">${r.profitPerc.toFixed(2)} %</td>
       <td style="text-align:center;"><button class="expand-btn">+</button></td>
     `;
     tbody.appendChild(tr);
@@ -179,9 +210,9 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
           ${giornoDelMese.map(g => `
             <tr data-id="${g.label}">
               <td style="text-align:center;">${g.label}</td>
-              <td style="text-align:right; background-color:${getColor(g.investito,"value")};">${g.investito.toFixed(2)}</td>
-              <td style="text-align:right; background-color:${getColor(g.giornaliero,"value")};">${g.giornaliero.toFixed(2)}</td>
-              <td style="text-align:right; background-color:${getColor(g.azioni,"value")};">${g.azioni.toFixed(2)}</td>
+              <td style="text-align:right; background-color:${getColor(g.investito,"value")}; color:${getTextColor(getColor(g.investito,"value"))};">${g.investito.toFixed(2)}</td>
+              <td style="text-align:right; background-color:${getColor(g.giornaliero,"value")}; color:${getTextColor(getColor(g.giornaliero,"value"))};">${g.giornaliero.toFixed(2)}</td>
+              <td style="text-align:right; background-color:${getColor(g.azioni,"value")}; color:${getTextColor(getColor(g.azioni,"value"))};">${g.azioni.toFixed(2)}</td>
               <td style="text-align:center;"><button class="edit-btn">✏️ Modifica</button></td>
             </tr>`).join('')}
         </table>
@@ -225,10 +256,14 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
         celle[3].textContent = nuoviValori.AZIONI.toFixed(2);
         btn.textContent = "✏️ Modifica";
 
-        // Aggiorna colori immediatamente
+        // Aggiorna colori
         celle[1].style.backgroundColor = getColor(nuoviValori.INVESTITO,"value");
         celle[2].style.backgroundColor = getColor(nuoviValori.GIORNALIERO,"value");
         celle[3].style.backgroundColor = getColor(nuoviValori.AZIONI,"value");
+
+        celle[1].style.color = getTextColor(getColor(nuoviValori.INVESTITO,"value"));
+        celle[2].style.color = getTextColor(getColor(nuoviValori.GIORNALIERO,"value"));
+        celle[3].style.color = getTextColor(getColor(nuoviValori.AZIONI,"value"));
 
         alert("Giornata aggiornata correttamente!");
       } catch(err) {
