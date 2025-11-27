@@ -20,13 +20,7 @@
         </div>
 
         <!-- Toggle Dark Mode -->
-        <div class="theme-toggle">
-          <label class="switch">
-            <input type="checkbox" id="themeSwitch">
-            <span class="slider"></span>
-          </label>
-          <span id="themeLabel"></span>
-        </div>
+        
       </div>
     </header>
 
@@ -35,7 +29,7 @@
       <a class="dashboard-btn" href="index.html">🏠 Home</a>
       <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>
       <a class="dashboard-btn" href="dividendi.html">💵 Dividendi</a>
-      <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
+      
     </div>
 
     <!-- GRAFICO -->
@@ -75,25 +69,4 @@
       },
     });
 
-    // === DARK MODE SYNC ===
-    const switchEl = document.getElementById("themeSwitch");
-    const themeLabel = document.getElementById("themeLabel");
-
-    const saved = localStorage.getItem("theme") || "light";
-    document.body.dataset.theme = saved;
-    if (saved === "dark") document.body.classList.add("dark");
-    switchEl.checked = saved === "dark";
-    themeLabel.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
-
-    switchEl.addEventListener("change", () => {
-      const mode = switchEl.checked ? "dark" : "light";
-      document.body.dataset.theme = mode;
-      if (mode === "dark") document.body.classList.add("dark");
-      else document.body.classList.remove("dark");
-      themeLabel.textContent = mode === "dark" ? "🌙 Dark" : "☀️ Light";
-      localStorage.setItem("theme", mode);
-    });
-  </script>
-
-</body>
-</html>
+    
