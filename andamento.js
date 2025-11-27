@@ -1,4 +1,4 @@
-// andamento.js (completo con modifica dati giornalieri)
+// andamento.js - completo con modifica dati giornalieri
 // usa la stessa versione Firebase del tuo firebase-config.js
 import { db } from "./firebase-config.js";
 import {
@@ -14,14 +14,13 @@ import {
 async function loadAndamento() {
   const ref = collection(db, "andamento");
   const snap = await getDocs(ref);
-
   const dati = [];
 
   snap.forEach((docSnap) => {
     const id = docSnap.id;
     const data = docSnap.data();
-
     const parsedDate = new Date(id);
+
     if (parsedDate.toString() === "Invalid Date") {
       console.warn("Data non valida:", id);
       return;
@@ -100,7 +99,14 @@ function generaRiepilogoMensile(dati) {
     const profitto = curr.valore - curr.investito;
     const profitPerc = curr.investito !== 0 ? (profitto / curr.investito) * 100 : 0;
 
-    return { mese: curr.data, investito: curr.investito, valore: curr.valore, incremento, profitto, profitPerc: Number(profitPerc.toFixed(2)) };
+    return {
+      mese: curr.data,
+      investito: curr.investito,
+      valore: curr.valore,
+      incremento,
+      profitto,
+      profitPerc: Number(profitPerc.toFixed(2))
+    };
   });
 }
 
@@ -150,8 +156,7 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
               <td style="text-align:right;">${g.giornaliero.toFixed(2)}</td>
               <td style="text-align:right;">${g.azioni.toFixed(2)}</td>
               <td style="text-align:center;"><button class="edit-btn">✏️ Modifica</button></td>
-            </tr>
-          `).join('')}
+            </tr>`).join('')}
         </table>
       </td>
     `;
@@ -163,7 +168,7 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
     });
   });
 
-  // --- EVENT DELEGATION per Edit/Save ---
+  // Event delegation per Edit/Save giornaliero
   tbody.addEventListener("click", async (e) => {
     if (!e.target.classList.contains("edit-btn")) return;
 
@@ -202,50 +207,6 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
   });
 }
 
-    // Expand mensile
-    tr.querySelector(".expand-btn").addEventListener("click", () => {
-      detailTr.style.display = detailTr.style.display === "none" ? "table-row" : "none";
-    });
-
-    // Edit giornaliero
-    detailTr.querySelectorAll(".edit-btn").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        const trGiorno = e.target.closest("tr");
-        const idGiorno = trGiorno.dataset.id;
-
-        const celle = trGiorno.querySelectorAll("td");
-        celle[1].innerHTML = `<input type="number" value="${celle[1].textContent.replace(' €','')}" style="width:80px">`;
-        celle[2].innerHTML = `<input type="number" value="${celle[2].textContent.replace(' €','')}" style="width:80px">`;
-        celle[3].innerHTML = `<input type="number" value="${celle[3].textContent.replace(' €','')}" style="width:80px">`;
-
-        e.target.textContent = "💾 Salva";
-        e.target.onclick = async () => {
-          const nuoviValori = {
-            INVESTITO: parseFloat(celle[1].querySelector("input").value),
-            GIORNALIERO: parseFloat(celle[2].querySelector("input").value),
-            AZIONI: parseFloat(celle[3].querySelector("input").value),
-          };
-
-          try {
-            const docRef = doc(db, "andamento", idGiorno);
-            await updateDoc(docRef, nuoviValori);
-
-            celle[1].textContent = nuoviValori.INVESTITO.toFixed(2) + " €";
-            celle[2].textContent = nuoviValori.GIORNALIERO.toFixed(2) + " €";
-            celle[3].textContent = nuoviValori.AZIONI.toFixed(2) + " €";
-            e.target.textContent = "✏️ Modifica";
-
-            alert("Giornata aggiornata correttamente!");
-          } catch(err) {
-            console.error("Errore aggiornamento Firestore:", err);
-            alert("Errore durante l'aggiornamento!");
-          }
-        };
-      });
-    });
-  });
-}
-
 // ================================
 //   MAIN
 // ================================
@@ -267,6 +228,7 @@ async function main() {
     const riepilogo = generaRiepilogoMensile(andamento);
     console.table(riepilogo);
     renderRiepilogoInTabella(riepilogo, andamento);
+
   } catch (err) {
     console.error("Errore in main andamento:", err);
   }
