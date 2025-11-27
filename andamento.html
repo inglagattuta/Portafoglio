@@ -31,27 +31,6 @@
       backdrop-filter: blur(6px);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-      font-size: 15px;
-    }
-
-    table th {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 10px;
-      text-align: left;
-    }
-
-    table td {
-      padding: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .positivo { color: #72ff8f; }
-    .negativo { color: #ff7b7b; }
-
     #grafico-container {
       background: rgba(255,255,255,0.05);
       padding: 20px;
@@ -70,20 +49,6 @@
     <canvas id="grafico"></canvas>
   </div>
 
-  <div class="card">
-    <h2>Elenco completo</h2>
-    <table id="tabella-andamento">
-      <thead>
-        <tr>
-          <th>Punto</th>
-          <th>Giornaliero</th>
-          <th>Variazione</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
 <script type="module">
 
   import { db } from "./firebase-config.js";
@@ -92,7 +57,6 @@
     getDocs
   } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  const tabellaBody = document.querySelector("#tabella-andamento tbody");
   const ctx = document.getElementById("grafico");
 
   let grafico = null;
@@ -103,43 +67,24 @@
 
     let labels = [];
     let valoriGiornaliero = [];
-    let valoriAzioni = [];
     let valoriInvestito = [];
 
-    // Ordina i documenti per ID
     let records = [];
     snap.forEach(doc => records.push({ id: doc.id, ...doc.data() }));
     records.sort((a, b) => a.id.localeCompare(b.id));
 
-    tabellaBody.innerHTML = "";
-
     records.forEach((d, i) => {
-
-      // FIX: accetta i valori = 0
-      if (d.GIORNALIERO == null || d.AZIONI == null || d.INVESTITO == null) return;
+      if (d.GIORNALIERO == null || d.INVESTITO == null) return;
 
       labels.push("Punto " + (i + 1));
       valoriGiornaliero.push(d.GIORNALIERO);
-      valoriAzioni.push(d.AZIONI);
       valoriInvestito.push(d.INVESTITO);
-
-      const variazione = ((d.GIORNALIERO - d.INVESTITO) / d.INVESTITO * 100).toFixed(2);
-
-      tabellaBody.innerHTML += `
-        <tr>
-          <td>Punto ${i + 1}</td>
-          <td>${d.GIORNALIERO} €</td>
-          <td class="${variazione >= 0 ? 'positivo' : 'negativo'}">
-            ${variazione}%
-          </td>
-        </tr>
-      `;
     });
 
-    renderGrafico(labels, valoriGiornaliero, valoriAzioni, valoriInvestito);
+    renderGrafico(labels, valoriGiornaliero, valoriInvestito);
   }
 
-  function renderGrafico(labels, giornaliero, azioni, investito) {
+  function renderGrafico(labels, giornaliero, investito) {
     if (grafico) grafico.destroy();
 
     grafico = new Chart(ctx, {
@@ -154,15 +99,6 @@
             tension: 0.35,
             borderColor: "rgba(0, 180, 255, 0.9)",
             backgroundColor: "rgba(0, 180, 255, 0.15)",
-            fill: true
-          },
-          {
-            label: "Azioni",
-            data: azioni,
-            borderWidth: 2,
-            tension: 0.35,
-            borderColor: "rgba(0, 255, 120, 0.8)",
-            backgroundColor: "rgba(0, 255, 120, 0.10)",
             fill: true
           },
           {
