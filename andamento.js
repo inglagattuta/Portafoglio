@@ -1,12 +1,6 @@
-// andamento.js - completo con modifica dati giornalieri
-// usa la stessa versione Firebase del tuo firebase-config.js
+// andamento.js - completo con refresh automatico dopo modifica
 import { db } from "./firebase-config.js";
-import {
-  collection,
-  getDocs,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // ================================
 //   CARICA DATI DA FIREBASE
@@ -113,7 +107,8 @@ function generaRiepilogoMensile(dati) {
 // =======================================
 //   RENDER RIEPILOGO IN TABELLA HTML
 // =======================================
-function renderRiepilogoInTabella(riepilogo, andamento) {
+async function renderRiepilogoInTabella(andamento) {
+  const riepilogo = generaRiepilogoMensile(andamento);
   const tbody = document.querySelector("#tabellaRiepilogo tbody");
   tbody.innerHTML = "";
 
@@ -193,10 +188,22 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
         const docRef = doc(db, "andamento", idGiorno);
         await updateDoc(docRef, nuoviValori);
 
-        celle[1].textContent = nuoviValori.INVESTITO.toFixed(2) + " €";
-        celle[2].textContent = nuoviValori.GIORNALIERO.toFixed(2) + " €";
-        celle[3].textContent = nuoviValori.AZIONI.toFixed(2) + " €";
-        btn.textContent = "✏️ Modifica";
+        // Aggiorna direttamente andamento in memoria
+        const idx = andamento.findIndex(a => a.label === idGiorno);
+        if (idx > -1) {
+          andamento[idx].investito = nuoviValori.INVESTITO;
+          andamento[idx].giornaliero = nuoviValori.GIORNALIERO;
+          andamento[idx].azioni = nuoviValori.AZIONI;
+        }
+
+        // Refresh grafico e tabella
+        const labels = andamento.map(r => r.label);
+        const investitoValues = andamento.map(r => r.investito);
+        const giornalieroValues = andamento.map(r => r.giornaliero);
+        createChart(labels, investitoValues, giornalieroValues);
+
+        // Rerender tabella
+        renderRiepilogoInTabella(andamento);
 
         alert("Giornata aggiornata correttamente!");
       } catch(err) {
@@ -225,9 +232,7 @@ async function main() {
     const giornalieroValues = andamento.map(r => r.giornaliero);
     createChart(labels, investitoValues, giornalieroValues);
 
-    const riepilogo = generaRiepilogoMensile(andamento);
-    console.table(riepilogo);
-    renderRiepilogoInTabella(riepilogo, andamento);
+    renderRiepilogoInTabella(andamento);
 
   } catch (err) {
     console.error("Errore in main andamento:", err);
