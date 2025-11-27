@@ -8,10 +8,11 @@
   <link rel="stylesheet" href="style.css?v=10" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
 <script>
-  // Sincronizza tema con index
+  // Sync tema con index
   document.addEventListener("DOMContentLoaded", () => {
     const savedTheme = localStorage.getItem("theme") || "light";
     document.body.dataset.theme = savedTheme;
@@ -19,62 +20,34 @@
   });
 </script>
 
-  <div class="container">
+<div class="container">
 
-    <header>
-      <div class="header-top" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div>
-          <h1 style="margin:0;">📈 Andamento</h1>
-          <p class="subtitle" style="margin:4px 0 0;">Performance del portafoglio</p>
-        </div>
+  <header>
+    <div class="header-top" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <h1 style="margin:0;">📈 Andamento</h1>
+        <p class="subtitle" style="margin:4px 0 0;">Performance del portafoglio</p>
       </div>
-    </header>
-
-    <!-- CONTROLLI NAVIGAZIONE -->
-    <div class="controls" style="margin-top:16px;">
-      <a class="dashboard-btn" href="index.html">🏠 Home</a>
-      <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>
-      <a class="dashboard-btn" href="dividendi.html">💵 Dividendi</a>
-      <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
     </div>
+  </header>
 
-    <!-- GRAFICO -->
-    <div class="chart-card" style="margin-top:20px; padding:20px; background:var(--card-default); border-radius:12px; height:420px;">
-      <canvas id="chartAndamento"></canvas>
-    </div>
-
+  <!-- NAV -->
+  <div class="controls" style="margin-top:16px;">
+    <a class="dashboard-btn" href="index.html">🏠 Home</a>
+    <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>
+    <a class="dashboard-btn" href="dividendi.html">💵 Dividendi</a>
+    <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
   </div>
 
-  <script>
-    // Dati di esempio (poi li colleghiamo a Firebase)
-    const exampleData = {
-      labels: ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"],
-      values: [1000, 1100, 1150, 1200, 1400, 1600, 1700, 1800, 1900, 2200, 2400, 2600]
-    };
+  <!-- GRAFICO -->
+  <div class="chart-card" style="margin-top:20px; padding:20px; background:var(--card-default); border-radius:12px; height:420px;">
+    <canvas id="chartAndamento"></canvas>
+  </div>
 
-    const ctx = document.getElementById("chartAndamento");
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: exampleData.labels,
-        datasets: [
-          {
-            label: "Valore Portafoglio (€)",
-            data: exampleData.values,
-            borderWidth: 3,
-            tension: 0.25,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true },
-        }
-      },
-    });
-  </script>
+</div>
+
+<!-- === FILE JS DELLA PAGINA === -->
+<script type="module" src="andamento.js?v=1"></script>
 
 </body>
 </html>
