@@ -1,9 +1,11 @@
-// andamento.js (completo)
+// andamento.js (completo con modifica dati giornalieri)
 // usa la stessa versione Firebase del tuo firebase-config.js
 import { db } from "./firebase-config.js";
 import {
   collection,
   getDocs,
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // ================================
@@ -15,11 +17,11 @@ async function loadAndamento() {
 
   const dati = [];
 
-  snap.forEach((doc) => {
-    const id = doc.id; // es: "2025-01-12"
-    const data = doc.data();
+  snap.forEach((docSnap) => {
+    const id = docSnap.id;
+    const data = docSnap.data();
 
-    let parsedDate = new Date(id);
+    const parsedDate = new Date(id);
     if (parsedDate.toString() === "Invalid Date") {
       console.warn("Data non valida:", id);
       return;
@@ -34,9 +36,7 @@ async function loadAndamento() {
     });
   });
 
-  // Ordina per data reale (crescente)
   dati.sort((a, b) => a.data - b.data);
-
   return dati;
 }
 
@@ -45,135 +45,64 @@ async function loadAndamento() {
 // ================================
 function createChart(labels, investitoValues, giornalieroValues) {
   const ctx = document.getElementById("chartAndamento");
-  if (!ctx) {
-    console.error("Elemento canvas #chartAndamento non trovato.");
-    return;
-  }
+  if (!ctx) return;
 
-  // Se esiste già un chart, lo rimuoviamo (semplice guard)
-  if (ctx._chartInstance) {
-    ctx._chartInstance.destroy();
-  }
+  if (ctx._chartInstance) ctx._chartInstance.destroy();
 
   const chart = new Chart(ctx, {
     type: "line",
     data: {
       labels,
       datasets: [
-        {
-          label: "Investito (€)",
-          data: investitoValues,
-          borderWidth: 3,
-          tension: 0.25,
-          fill: false,
-        },
-        {
-          label: "Giornaliero (€)",
-          data: giornalieroValues,
-          borderWidth: 3,
-          tension: 0.25,
-          fill: false,
-        },
-      ],
+        { label: "Investito (€)", data: investitoValues, borderWidth: 3, tension: 0.25, fill: false },
+        { label: "Giornaliero (€)", data: giornalieroValues, borderWidth: 3, tension: 0.25, fill: false }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-        }
-      },
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
-      scales: {
-        x: {
-          ticks: { maxRotation: 45, minRotation: 45 },
-        },
-        y: {
-          beginAtZero: false
-        }
-      },
-    },
+      plugins: { legend: { display: true }, tooltip: { mode: "index", intersect: false } },
+      interaction: { mode: "index", intersect: false },
+      scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } }, y: { beginAtZero: false } }
+    }
   });
 
-  // memorizzo istanza per eventuale distruzione successiva
   ctx._chartInstance = chart;
 }
 
 // =======================================
-//   GENERA RIEPILOGO MENSILE (ultimo giorno del mese)
+//   GENERA RIEPILOGO MENSILE
 // =======================================
 function generaRiepilogoMensile(dati) {
-  // dati deve essere ordinato per data crescente
   const mesiMap = new Map();
 
-  for (const r of dati) {
+  dati.forEach(r => {
     const y = r.data.getFullYear();
-    const m = r.data.getMonth(); // 0-11
+    const m = r.data.getMonth();
     const key = `${y}-${String(m + 1).padStart(2, "0")}`;
 
-    // Se non esiste, lo creiamo
     if (!mesiMap.has(key)) {
-      mesiMap.set(key, {
-        meseKey: key,
-        data: r.label,
-        investito: r.investito,
-        valore: r.giornaliero
-      });
+      mesiMap.set(key, { meseKey: key, data: r.label, investito: r.investito, valore: r.giornaliero });
     } else {
-      // Se già esiste, aggiorniamo solo se la data è più recente
       const existing = mesiMap.get(key);
-
       if (r.data > new Date(existing.data)) {
-        mesiMap.set(key, {
-          meseKey: key,
-          data: r.label,
-          investito: r.investito,
-          valore: r.giornaliero
-        });
+        mesiMap.set(key, { meseKey: key, data: r.label, investito: r.investito, valore: r.giornaliero });
       }
     }
-  }
-
-  // Ordina le chiavi (mesi)
-  const keys = Array.from(mesiMap.keys()).sort();
-
-  // Genera l'output finale
-  const output = keys.map((k, idx, arr) => {
-    const curr = mesiMap.get(k);
-    const prevKey = idx > 0 ? arr[idx - 1] : null;
-    const prev = prevKey ? mesiMap.get(prevKey) : null;
-
-    const incremento = prev ? (curr.investito - prev.investito) : 0;
-
-// Calcolo profitto = valore - investito
-const profitto = curr.valore - curr.investito;
-
-// Percentuale profitto
-const profitPerc = curr.investito !== 0 
-  ? (profitto / curr.investito) * 100 
-  : 0;
-
-return {
-  mese: curr.data,              
-  investito: curr.investito,    
-  valore: curr.valore,          
-  incremento: incremento,       
-  profitto: profitto,           
-  profitPerc: Number(profitPerc.toFixed(2))
-};
-
   });
 
-  return output;
+  const keys = Array.from(mesiMap.keys()).sort();
+
+  return keys.map((k, idx, arr) => {
+    const curr = mesiMap.get(k);
+    const prev = idx > 0 ? mesiMap.get(arr[idx - 1]) : null;
+    const incremento = prev ? curr.investito - prev.investito : 0;
+    const profitto = curr.valore - curr.investito;
+    const profitPerc = curr.investito !== 0 ? (profitto / curr.investito) * 100 : 0;
+
+    return { mese: curr.data, investito: curr.investito, valore: curr.valore, incremento, profitto, profitPerc: Number(profitPerc.toFixed(2)) };
+  });
 }
-
-
 
 // =======================================
 //   RENDER RIEPILOGO IN TABELLA HTML
@@ -184,8 +113,6 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
 
   riepilogo.forEach(r => {
     const tr = document.createElement("tr");
-
-    // Riga principale
     tr.innerHTML = `
       <td style="text-align:center;">${r.mese}</td>
       <td style="text-align:right;">${r.investito.toFixed(2)} €</td>
@@ -197,12 +124,10 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
     `;
     tbody.appendChild(tr);
 
-    // Riga dettagli nascosta
     const detailTr = document.createElement("tr");
     detailTr.style.display = "none";
     detailTr.classList.add("details");
 
-    // Filtra i valori giornalieri del mese corrente
     const giornoDelMese = andamento.filter(a => {
       const [y, m] = r.mese.split("-");
       return a.data.getFullYear() === Number(y) && (a.data.getMonth() + 1) === Number(m);
@@ -216,26 +141,65 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
             <th style="text-align:right;">Investito (€)</th>
             <th style="text-align:right;">Valore (€)</th>
             <th style="text-align:right;">Giornaliero (€)</th>
+            <th style="text-align:center;">Azioni</th>
           </tr>
           ${giornoDelMese.map(g => `
-            <tr>
+            <tr data-id="${g.label}">
               <td style="text-align:center;">${g.label}</td>
-              <td style="text-align:right;">${g.investito.toFixed(2)} €</td>
-              <td style="text-align:right;">${g.giornaliero.toFixed(2)} €</td>
-              <td style="text-align:right;">${g.azioni.toFixed(2)} €</td>
-            </tr>`).join('')}
+              <td style="text-align:right;">${g.investito.toFixed(2)}</td>
+              <td style="text-align:right;">${g.giornaliero.toFixed(2)}</td>
+              <td style="text-align:right;">${g.azioni.toFixed(2)}</td>
+              <td style="text-align:center;"><button class="edit-btn">✏️ Modifica</button></td>
+            </tr>
+          `).join('')}
         </table>
       </td>
     `;
     tbody.appendChild(detailTr);
 
-    // Evento click sul +
+    // Expand mensile
     tr.querySelector(".expand-btn").addEventListener("click", () => {
       detailTr.style.display = detailTr.style.display === "none" ? "table-row" : "none";
     });
+
+    // Edit giornaliero
+    detailTr.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const trGiorno = e.target.closest("tr");
+        const idGiorno = trGiorno.dataset.id;
+
+        const celle = trGiorno.querySelectorAll("td");
+        celle[1].innerHTML = `<input type="number" value="${celle[1].textContent.replace(' €','')}" style="width:80px">`;
+        celle[2].innerHTML = `<input type="number" value="${celle[2].textContent.replace(' €','')}" style="width:80px">`;
+        celle[3].innerHTML = `<input type="number" value="${celle[3].textContent.replace(' €','')}" style="width:80px">`;
+
+        e.target.textContent = "💾 Salva";
+        e.target.onclick = async () => {
+          const nuoviValori = {
+            INVESTITO: parseFloat(celle[1].querySelector("input").value),
+            GIORNALIERO: parseFloat(celle[2].querySelector("input").value),
+            AZIONI: parseFloat(celle[3].querySelector("input").value),
+          };
+
+          try {
+            const docRef = doc(db, "andamento", idGiorno);
+            await updateDoc(docRef, nuoviValori);
+
+            celle[1].textContent = nuoviValori.INVESTITO.toFixed(2) + " €";
+            celle[2].textContent = nuoviValori.GIORNALIERO.toFixed(2) + " €";
+            celle[3].textContent = nuoviValori.AZIONI.toFixed(2) + " €";
+            e.target.textContent = "✏️ Modifica";
+
+            alert("Giornata aggiornata correttamente!");
+          } catch(err) {
+            console.error("Errore aggiornamento Firestore:", err);
+            alert("Errore durante l'aggiornamento!");
+          }
+        };
+      });
+    });
   });
 }
-
 
 // ================================
 //   MAIN
@@ -243,7 +207,6 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
 async function main() {
   try {
     console.log("Caricamento dati andamento...");
-
     const andamento = await loadAndamento();
 
     if (!andamento || andamento.length === 0) {
@@ -251,23 +214,17 @@ async function main() {
       return;
     }
 
-    // --- GRAFICO ---
     const labels = andamento.map(r => r.label);
     const investitoValues = andamento.map(r => r.investito);
     const giornalieroValues = andamento.map(r => r.giornaliero);
     createChart(labels, investitoValues, giornalieroValues);
 
-    // --- RIEPILOGO MENSILE ---
     const riepilogo = generaRiepilogoMensile(andamento);
     console.table(riepilogo);
-
-    // Mostra la tabella HTML con pulsante +
     renderRiepilogoInTabella(riepilogo, andamento);
-
   } catch (err) {
     console.error("Errore in main andamento:", err);
   }
 }
 
 main();
-
