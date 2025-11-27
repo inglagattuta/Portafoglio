@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Andamento Portafoglio</title>
+  <link rel="stylesheet" href="style.css?v=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Andamento del Portafoglio</h1>
+
+    <div class="chart-card">
+      <canvas id="chartAndamento"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Dati di esempio — da collegare a Firebase
+    const exampleData = {
+      labels: ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"],
+      values: [1000, 1100, 1150, 1200, 1400, 1600, 1700, 1800, 1900, 2200, 2400, 2600]
+    };
+
+    const ctx = document.getElementById("chartAndamento");
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: exampleData.labels,
+        datasets: [
+          {
+            label: "Valore Portafoglio (€)",
+            data: exampleData.values,
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  </script>
+</body>
+</html>
