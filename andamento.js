@@ -112,29 +112,30 @@ function generaRiepilogoMensile(dati) {
 }
 
 // =======================================
-//   COLOR SCALE FUNCTION
+//   COLOR SCALE FUNCTION - SOFT COLORS
 // =======================================
 function getColor(val, type="percent") {
-  let color = "#fff";
+  let color = "transparent"; // default neutro
 
   if(type === "percent") {
-    if (val > 20) color = "#006400";
-    else if (val > 10) color = "#008000";
-    else if (val > 0) color = "#9ACD32";
-    else if (val === 0) color = "#FFA500";
-    else if (val > -10) color = "#FF4500";
-    else color = "#8B0000";
+    if (val > 20) color = "rgba(0,100,0,0.2)";      // verde scuro soft
+    else if (val > 10) color = "rgba(0,128,0,0.15)"; // verde soft
+    else if (val > 0) color = "rgba(154,205,50,0.15)"; // verde chiaro soft
+    else if (val === 0) color = "rgba(255,165,0,0.1)"; // arancio soft
+    else if (val > -10) color = "rgba(255,69,0,0.1)";  // arancio-rosso soft
+    else color = "rgba(139,0,0,0.15)";                 // rosso scuro soft
   } else {
-    // valore assoluto: più alto = verde
-    if(val >= 10000) color = "#006400";
-    else if(val >= 5000) color = "#008000";
-    else if(val >= 1000) color = "#9ACD32";
-    else if(val >= 0) color = "#FFA500";
-    else color = "#FF4500";
+    // valori assoluti
+    if(val >= 10000) color = "rgba(0,100,0,0.2)";
+    else if(val >= 5000) color = "rgba(0,128,0,0.15)";
+    else if(val >= 1000) color = "rgba(154,205,50,0.15)";
+    else if(val >= 0) color = "rgba(255,165,0,0.1)";
+    else color = "rgba(255,69,0,0.1)";
   }
 
   return color;
 }
+
 
 // =======================================
 //   RENDER TABELLA HTML
