@@ -1,6 +1,12 @@
-// andamento.js - completo con refresh automatico dopo modifica
+// andamento.js (completo, responsive e con colori dinamici)
+// usa la stessa versione Firebase del tuo firebase-config.js
 import { db } from "./firebase-config.js";
-import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // ================================
 //   CARICA DATI DA FIREBASE
@@ -8,13 +14,14 @@ import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/fir
 async function loadAndamento() {
   const ref = collection(db, "andamento");
   const snap = await getDocs(ref);
+
   const dati = [];
 
   snap.forEach((docSnap) => {
     const id = docSnap.id;
     const data = docSnap.data();
-    const parsedDate = new Date(id);
 
+    const parsedDate = new Date(id);
     if (parsedDate.toString() === "Invalid Date") {
       console.warn("Data non valida:", id);
       return;
@@ -105,10 +112,34 @@ function generaRiepilogoMensile(dati) {
 }
 
 // =======================================
-//   RENDER RIEPILOGO IN TABELLA HTML
+//   COLOR SCALE FUNCTION
 // =======================================
-async function renderRiepilogoInTabella(andamento) {
-  const riepilogo = generaRiepilogoMensile(andamento);
+function getColor(val, type="percent") {
+  let color = "#fff";
+
+  if(type === "percent") {
+    if (val > 20) color = "#006400";
+    else if (val > 10) color = "#008000";
+    else if (val > 0) color = "#9ACD32";
+    else if (val === 0) color = "#FFA500";
+    else if (val > -10) color = "#FF4500";
+    else color = "#8B0000";
+  } else {
+    // valore assoluto: più alto = verde
+    if(val >= 10000) color = "#006400";
+    else if(val >= 5000) color = "#008000";
+    else if(val >= 1000) color = "#9ACD32";
+    else if(val >= 0) color = "#FFA500";
+    else color = "#FF4500";
+  }
+
+  return color;
+}
+
+// =======================================
+//   RENDER TABELLA HTML
+// =======================================
+function renderRiepilogoInTabella(riepilogo, andamento) {
   const tbody = document.querySelector("#tabellaRiepilogo tbody");
   tbody.innerHTML = "";
 
@@ -116,11 +147,11 @@ async function renderRiepilogoInTabella(andamento) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td style="text-align:center;">${r.mese}</td>
-      <td style="text-align:right;">${r.investito.toFixed(2)} €</td>
-      <td style="text-align:right;">${r.valore.toFixed(2)} €</td>
-      <td style="text-align:right;">${r.incremento.toFixed(2)} €</td>
-      <td style="text-align:right;">${r.profitto.toFixed(2)} €</td>
-      <td style="text-align:right;">${r.profitPerc.toFixed(2)} %</td>
+      <td style="text-align:right; background-color:${getColor(r.investito,"value")};">${r.investito.toFixed(2)} €</td>
+      <td style="text-align:right; background-color:${getColor(r.valore,"value")};">${r.valore.toFixed(2)} €</td>
+      <td style="text-align:right; background-color:${getColor(r.incremento,"value")};">${r.incremento.toFixed(2)} €</td>
+      <td style="text-align:right; background-color:${getColor(r.profitto,"value")};">${r.profitto.toFixed(2)} €</td>
+      <td style="text-align:right; background-color:${getColor(r.profitPerc,"percent")};">${r.profitPerc.toFixed(2)} %</td>
       <td style="text-align:center;"><button class="expand-btn">+</button></td>
     `;
     tbody.appendChild(tr);
@@ -147,9 +178,9 @@ async function renderRiepilogoInTabella(andamento) {
           ${giornoDelMese.map(g => `
             <tr data-id="${g.label}">
               <td style="text-align:center;">${g.label}</td>
-              <td style="text-align:right;">${g.investito.toFixed(2)}</td>
-              <td style="text-align:right;">${g.giornaliero.toFixed(2)}</td>
-              <td style="text-align:right;">${g.azioni.toFixed(2)}</td>
+              <td style="text-align:right; background-color:${getColor(g.investito,"value")};">${g.investito.toFixed(2)}</td>
+              <td style="text-align:right; background-color:${getColor(g.giornaliero,"value")};">${g.giornaliero.toFixed(2)}</td>
+              <td style="text-align:right; background-color:${getColor(g.azioni,"value")};">${g.azioni.toFixed(2)}</td>
               <td style="text-align:center;"><button class="edit-btn">✏️ Modifica</button></td>
             </tr>`).join('')}
         </table>
@@ -163,7 +194,7 @@ async function renderRiepilogoInTabella(andamento) {
     });
   });
 
-  // Event delegation per Edit/Save giornaliero
+  // --- EDIT/UPDATE GIORNALIERO ---
   tbody.addEventListener("click", async (e) => {
     if (!e.target.classList.contains("edit-btn")) return;
 
@@ -173,9 +204,9 @@ async function renderRiepilogoInTabella(andamento) {
     const idGiorno = trGiorno.dataset.id;
 
     if (btn.textContent === "✏️ Modifica") {
-      celle[1].innerHTML = `<input type="number" value="${celle[1].textContent.replace(' €','')}" style="width:80px">`;
-      celle[2].innerHTML = `<input type="number" value="${celle[2].textContent.replace(' €','')}" style="width:80px">`;
-      celle[3].innerHTML = `<input type="number" value="${celle[3].textContent.replace(' €','')}" style="width:80px">`;
+      celle[1].innerHTML = `<input type="number" value="${celle[1].textContent}" style="width:80px">`;
+      celle[2].innerHTML = `<input type="number" value="${celle[2].textContent}" style="width:80px">`;
+      celle[3].innerHTML = `<input type="number" value="${celle[3].textContent}" style="width:80px">`;
       btn.textContent = "💾 Salva";
     } else if (btn.textContent === "💾 Salva") {
       const nuoviValori = {
@@ -188,22 +219,15 @@ async function renderRiepilogoInTabella(andamento) {
         const docRef = doc(db, "andamento", idGiorno);
         await updateDoc(docRef, nuoviValori);
 
-        // Aggiorna direttamente andamento in memoria
-        const idx = andamento.findIndex(a => a.label === idGiorno);
-        if (idx > -1) {
-          andamento[idx].investito = nuoviValori.INVESTITO;
-          andamento[idx].giornaliero = nuoviValori.GIORNALIERO;
-          andamento[idx].azioni = nuoviValori.AZIONI;
-        }
+        celle[1].textContent = nuoviValori.INVESTITO.toFixed(2);
+        celle[2].textContent = nuoviValori.GIORNALIERO.toFixed(2);
+        celle[3].textContent = nuoviValori.AZIONI.toFixed(2);
+        btn.textContent = "✏️ Modifica";
 
-        // Refresh grafico e tabella
-        const labels = andamento.map(r => r.label);
-        const investitoValues = andamento.map(r => r.investito);
-        const giornalieroValues = andamento.map(r => r.giornaliero);
-        createChart(labels, investitoValues, giornalieroValues);
-
-        // Rerender tabella
-        renderRiepilogoInTabella(andamento);
+        // Aggiorna colori immediatamente
+        celle[1].style.backgroundColor = getColor(nuoviValori.INVESTITO,"value");
+        celle[2].style.backgroundColor = getColor(nuoviValori.GIORNALIERO,"value");
+        celle[3].style.backgroundColor = getColor(nuoviValori.AZIONI,"value");
 
         alert("Giornata aggiornata correttamente!");
       } catch(err) {
@@ -232,8 +256,9 @@ async function main() {
     const giornalieroValues = andamento.map(r => r.giornaliero);
     createChart(labels, investitoValues, giornalieroValues);
 
-    renderRiepilogoInTabella(andamento);
-
+    const riepilogo = generaRiepilogoMensile(andamento);
+    console.table(riepilogo);
+    renderRiepilogoInTabella(riepilogo, andamento);
   } catch (err) {
     console.error("Errore in main andamento:", err);
   }
