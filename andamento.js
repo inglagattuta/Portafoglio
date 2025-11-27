@@ -106,7 +106,7 @@ function createChart(labels, investitoValues, giornalieroValues) {
 }
 
 // =======================================
-//   GENERA RIEPILOGO MENSILE (primo giorno)
+//   GENERA RIEPILOGO MENSILE (ultimo giorno del mese)
 // =======================================
 function generaRiepilogoMensile(dati) {
   // dati deve essere ordinato per data crescente
@@ -115,22 +115,35 @@ function generaRiepilogoMensile(dati) {
   for (const r of dati) {
     const y = r.data.getFullYear();
     const m = r.data.getMonth(); // 0-11
-    const key = `${y}-${String(m + 1).padStart(2, "0")}`; // e.g. 2025-01
+    const key = `${y}-${String(m + 1).padStart(2, "0")}`;
 
-    // se non esiste ancora il mese lo aggiungiamo con il primo giorno incontrato
+    // Se non esiste, lo creiamo
     if (!mesiMap.has(key)) {
       mesiMap.set(key, {
         meseKey: key,
-        data: r.label,           // id originale: es "2025-01-01"
+        data: r.label,
         investito: r.investito,
         valore: r.giornaliero
       });
+    } else {
+      // Se già esiste, aggiorniamo solo se la data è più recente
+      const existing = mesiMap.get(key);
+
+      if (r.data > new Date(existing.data)) {
+        mesiMap.set(key, {
+          meseKey: key,
+          data: r.label,
+          investito: r.investito,
+          valore: r.giornaliero
+        });
+      }
     }
   }
 
-  // Ordina i mesi (chiavi)
+  // Ordina le chiavi (mesi)
   const keys = Array.from(mesiMap.keys()).sort();
 
+  // Genera l'output finale
   const output = keys.map((k, idx, arr) => {
     const curr = mesiMap.get(k);
     const prevKey = idx > 0 ? arr[idx - 1] : null;
@@ -138,20 +151,8 @@ function generaRiepilogoMensile(dati) {
 
     const incremento = prev ? (curr.investito - prev.investito) : 0;
     const profitto = curr.valore - curr.investito;
-    const profitPerc = curr.investito !== 0 ? (profitto / curr.investito) * 100 : 0;
+    const
 
-    return {
-      mese: curr.data,                     // es. "2025-01-01"
-      investito: curr.investito,
-      valore: curr.valore,
-      incremento: Number(incremento),
-      profitto: Number(profitto),
-      profitPerc: Number(profitPerc.toFixed(2))
-    };
-  });
-
-  return output;
-}
 
 // =======================================
 //   RENDER RIEPILOGO IN TABELLA HTML
