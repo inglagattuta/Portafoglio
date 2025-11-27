@@ -1,86 +1,102 @@
-// -------------------------------------------------------------
-// FIREBASE INIT
-// -------------------------------------------------------------
-import { db } from "./firebase-config.js";
+import app from "./firebase-config.js";
 import {
+  getFirestore,
   collection,
   getDocs,
-  doc
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// -------------------------------------------------------------
-// DOM ELEMENTS
-// -------------------------------------------------------------
-const tableBody = document.getElementById("andamentoBody");
+const db = getFirestore(app);
 
-// Box riepilogo
-const bxInv = document.getElementById("boxInvestito");
-const bxGio = document.getElementById("boxGiornaliero");
-const bxAzi = document.getElementById("boxAzioni");
-
-// -------------------------------------------------------------
-// FORMATTERS
-// -------------------------------------------------------------
-const fmtEuro = n => Number(n || 0).toFixed(2) + " €";
-
-// -------------------------------------------------------------
-// CARICAMENTO DATI
-// -------------------------------------------------------------
+// ================================
+//   CARICA DATI DA FIREBASE
+// ================================
 async function loadAndamento() {
-  tableBody.innerHTML = "";
-
-  console.log("Carico dati da Firebase -> andamento...");
-
   const snap = await getDocs(collection(db, "andamento"));
-  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  if (rows.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nessun dato trovato</td></tr>`;
+  const dati = [];
+
+  snap.forEach((doc) => {
+    const id = doc.id; // es: "2025-01-12"
+    const data = doc.data();
+
+    // Convertiamo l'ID in vera data per ordinamento
+    let parsedDate = new Date(id);
+
+    if (parsedDate.toString() === "Invalid Date") {
+      console.warn("Data non valida:", id);
+      return;
+    }
+
+    dati.push({
+      data: parsedDate,
+      label: id,
+      investito: data.INVESTITO || 0,
+      giornaliero: data.GIORNALIERO || 0,
+      azioni: data.AZIONI || 0,
+    });
+  });
+
+  // Ordina per data reale
+  dati.sort((a, b) => a.data - b.data);
+
+  return dati;
+}
+
+// ================================
+//   CREA IL GRAFICO
+// ================================
+function createChart(labels, values) {
+  const ctx = document.getElementById("chartAndamento");
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Investito (€)",
+          data: values,
+          borderWidth: 3,
+          tension: 0.25,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true },
+      },
+      scales: {
+        x: {
+          ticks: { maxRotation: 45, minRotation: 45 },
+        },
+      },
+    },
+  });
+}
+
+// ================================
+//   MAIN
+// ================================
+async function main() {
+  console.log("Caricamento dati andamento...");
+
+  const andamento = await loadAndamento();
+
+  if (andamento.length === 0) {
+    console.error("Nessun dato trovato in Firestore!");
     return;
   }
 
-  // Ordina per data crescente
-  rows.sort((a, b) => a.id.localeCompare(b.id));
+  // Etichette = date formattate tipo 2025-01-12
+  const labels = andamento.map((r) => r.label);
 
-  let totInv = 0;
-  let totGio = 0;
-  let totAzi = 0;
+  // Valori = colonna INVESTITO
+  const values = andamento.map((r) => r.investito);
 
-  rows.forEach(row => {
-    const tr = document.createElement("tr");
-
-    const tdData = document.createElement("td");
-    tdData.textContent = row.id;
-    tr.appendChild(tdData);
-
-    const tdInv = document.createElement("td");
-    tdInv.textContent = fmtEuro(row.INVESTITO);
-    tr.appendChild(tdInv);
-
-    const tdGio = document.createElement("td");
-    tdGio.textContent = fmtEuro(row.GIORNALIERO);
-    tr.appendChild(tdGio);
-
-    const tdAzi = document.createElement("td");
-    tdAzi.textContent = fmtEuro(row.AZIONI);
-    tr.appendChild(tdAzi);
-
-    tableBody.appendChild(tr);
-
-    totInv += Number(row.INVESTITO || 0);
-    totGio += Number(row.GIORNALIERO || 0);
-    totAzi += Number(row.AZIONI || 0);
-  });
-
-  // Aggiorna i box
-  bxInv.textContent = fmtEuro(totInv);
-  bxGio.textContent = fmtEuro(totGio);
-  bxAzi.textContent = fmtEuro(totAzi);
-
-  console.log("Caricamento completato (andamento).");
+  // Crea grafico
+  createChart(labels, values);
 }
 
-// -------------------------------------------------------------
-// AVVIO
-// -------------------------------------------------------------
-loadAndamento();
+main();
