@@ -161,6 +161,51 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
     tr.querySelector(".expand-btn").addEventListener("click", () => {
       detailTr.style.display = detailTr.style.display === "none" ? "table-row" : "none";
     });
+  });
+
+  // --- EVENT DELEGATION per Edit/Save ---
+  tbody.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("edit-btn")) return;
+
+    const btn = e.target;
+    const trGiorno = btn.closest("tr");
+    const celle = trGiorno.querySelectorAll("td");
+    const idGiorno = trGiorno.dataset.id;
+
+    if (btn.textContent === "✏️ Modifica") {
+      celle[1].innerHTML = `<input type="number" value="${celle[1].textContent.replace(' €','')}" style="width:80px">`;
+      celle[2].innerHTML = `<input type="number" value="${celle[2].textContent.replace(' €','')}" style="width:80px">`;
+      celle[3].innerHTML = `<input type="number" value="${celle[3].textContent.replace(' €','')}" style="width:80px">`;
+      btn.textContent = "💾 Salva";
+    } else if (btn.textContent === "💾 Salva") {
+      const nuoviValori = {
+        INVESTITO: parseFloat(celle[1].querySelector("input").value),
+        GIORNALIERO: parseFloat(celle[2].querySelector("input").value),
+        AZIONI: parseFloat(celle[3].querySelector("input").value)
+      };
+
+      try {
+        const docRef = doc(db, "andamento", idGiorno);
+        await updateDoc(docRef, nuoviValori);
+
+        celle[1].textContent = nuoviValori.INVESTITO.toFixed(2) + " €";
+        celle[2].textContent = nuoviValori.GIORNALIERO.toFixed(2) + " €";
+        celle[3].textContent = nuoviValori.AZIONI.toFixed(2) + " €";
+        btn.textContent = "✏️ Modifica";
+
+        alert("Giornata aggiornata correttamente!");
+      } catch(err) {
+        console.error("Errore aggiornamento Firestore:", err);
+        alert("Errore durante l'aggiornamento!");
+      }
+    }
+  });
+}
+
+    // Expand mensile
+    tr.querySelector(".expand-btn").addEventListener("click", () => {
+      detailTr.style.display = detailTr.style.display === "none" ? "table-row" : "none";
+    });
 
     // Edit giornaliero
     detailTr.querySelectorAll(".edit-btn").forEach(btn => {
