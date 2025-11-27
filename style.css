@@ -1021,3 +1021,89 @@ body.dark .nice-table th {
 body.dark .nice-table td {
   border-color: rgba(255,255,255,0.15);
 }
+
+/* style.css - Sezione Andamento responsive */
+#tabellaRiepilogo {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+#tabellaRiepilogo th,
+#tabellaRiepilogo td {
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+}
+
+#tabellaRiepilogo th {
+  background-color: #f2f2f2;
+  text-align: center;
+}
+
+#tabellaRiepilogo td {
+  text-align: right;
+}
+
+#tabellaRiepilogo .expand-btn,
+#tabellaRiepilogo .edit-btn {
+  padding: 4px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-table th,
+.detail-table td {
+  border: 1px solid #ddd;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.detail-table th {
+  background-color: #eee;
+  text-align: center;
+}
+
+.details {
+  background-color: #fafafa;
+}
+
+/* ======================== */
+/* RESPONSIVE PER MOBILE    */
+/* ======================== */
+@media (max-width: 768px) {
+  #tabellaRiepilogo th,
+  #tabellaRiepilogo td {
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  .detail-table th,
+  .detail-table td {
+    font-size: 11px;
+    padding: 2px 4px;
+  }
+
+  /* Scroll orizzontale per tabelle */
+  #tabellaRiepilogo,
+  .detail-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Nascondi colonne meno importanti */
+  #tabellaRiepilogo td:nth-child(4),
+  #tabellaRiepilogo th:nth-child(4),
+  #tabellaRiepilogo td:nth-child(5),
+  #tabellaRiepilogo th:nth-child(5),
+  #tabellaRiepilogo td:nth-child(6),
+  #tabellaRiepilogo th:nth-child(6) {
+    display: none;
+  }
+}
