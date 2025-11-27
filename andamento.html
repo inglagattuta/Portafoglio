@@ -1,7 +1,79 @@
-// ===================================
-//   FUNZIONI COLORI
-// ===================================
-export function getColor(val, type = "percent", darkMode = true) {
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Riepilogo Andamento</title>
+
+<style>
+  body {
+    font-family: Arial;
+    background: #f7f7f7;
+    color: #222;
+    padding: 20px;
+  }
+
+  body.dark {
+    background: #121212;
+    color: #eee;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  th, td {
+    border: 1px solid #444;
+    padding: 8px;
+    text-align: center;
+  }
+
+  th {
+    background: #ddd;
+  }
+
+  body.dark th {
+    background: #333;
+    color: #fff;
+  }
+
+  .toggle-btn {
+    padding: 10px 18px;
+    background: #444;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+</style>
+
+</head>
+<body>
+
+<div class="toggle-btn" onclick="toggleDarkMode()">Toggle Dark Mode</div>
+
+<table id="tabellaRiepilogo">
+  <thead>
+    <tr>
+      <th>Mese</th>
+      <th>Investito</th>
+      <th>Valore</th>
+      <th>Incremento</th>
+      <th>Profitto</th>
+      <th>% Profitto</th>
+      <th>Azioni</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+// =============================
+// COLOR FUNCTIONS
+// =============================
+function getColor(val, type = "percent", darkMode = true) {
   let color = "transparent";
 
   if(type === "percent") {
@@ -22,14 +94,14 @@ export function getColor(val, type = "percent", darkMode = true) {
   return color;
 }
 
-export function getTextColor(bg) {
-  return "#fff"; // testo bianco in dark mode
+function getTextColor(bg) {
+  return "#fff"; // sempre bianco in dark mode
 }
 
-// ===================================
-//   RENDER TABELLARE
-// ===================================
-export function renderRiepilogoInTabella(dati) {
+// =============================
+// RENDER TABLE
+// =============================
+function renderRiepilogoInTabella(dati) {
   const tbody = document.querySelector("#tabellaRiepilogo tbody");
   tbody.innerHTML = "";
   const darkMode = document.body.classList.contains("dark");
@@ -37,47 +109,40 @@ export function renderRiepilogoInTabella(dati) {
   dati.forEach(r => {
     const tr = document.createElement("tr");
 
-    // Data
     let td = document.createElement("td");
     td.textContent = r.data;
     tr.appendChild(td);
 
-    // Investito
     td = document.createElement("td");
-    td.textContent = r.investito.toLocaleString("it-IT", {style:"currency", currency:"EUR"});
+    td.textContent = r.investito.toLocaleString("it-IT", { style:"currency", currency:"EUR" });
     td.style.backgroundColor = getColor(r.investito, "value", darkMode);
-    td.style.color = getTextColor(td.style.backgroundColor);
+    td.style.color = getTextColor();
     tr.appendChild(td);
 
-    // Valore
     td = document.createElement("td");
-    td.textContent = r.valore.toLocaleString("it-IT", {style:"currency", currency:"EUR"});
+    td.textContent = r.valore.toLocaleString("it-IT", { style:"currency", currency:"EUR" });
     td.style.backgroundColor = getColor(r.valore, "value", darkMode);
-    td.style.color = getTextColor(td.style.backgroundColor);
+    td.style.color = getTextColor();
     tr.appendChild(td);
 
-    // Incremento
     td = document.createElement("td");
-    td.textContent = r.incremento.toLocaleString("it-IT", {style:"currency", currency:"EUR"});
+    td.textContent = r.incremento.toLocaleString("it-IT", { style:"currency", currency:"EUR" });
     td.style.backgroundColor = getColor(r.incremento, "value", darkMode);
-    td.style.color = getTextColor(td.style.backgroundColor);
+    td.style.color = getTextColor();
     tr.appendChild(td);
 
-    // Profitto
     td = document.createElement("td");
-    td.textContent = r.profitto.toLocaleString("it-IT", {style:"currency", currency:"EUR"});
+    td.textContent = r.profitto.toLocaleString("it-IT", { style:"currency", currency:"EUR" });
     td.style.backgroundColor = getColor(r.profitto, "value", darkMode);
-    td.style.color = getTextColor(td.style.backgroundColor);
+    td.style.color = getTextColor();
     tr.appendChild(td);
 
-    // % Profitto
     td = document.createElement("td");
     td.textContent = r.percentuale.toFixed(2) + "%";
     td.style.backgroundColor = getColor(r.percentuale, "percent", darkMode);
-    td.style.color = getTextColor(td.style.backgroundColor);
+    td.style.color = getTextColor();
     tr.appendChild(td);
 
-    // Azioni
     td = document.createElement("td");
     td.textContent = r.azioni;
     tr.appendChild(td);
@@ -86,14 +151,28 @@ export function renderRiepilogoInTabella(dati) {
   });
 }
 
-// === ESEMPIO DATI ===
+// =============================
+// EXAMPLE DATA
+// =============================
 const datiRiepilogo = [
   {data: "2025-01", investito: 1000, valore: 1100, incremento: 100, profitto: 100, percentuale: 10, azioni: 5},
   {data: "2025-02", investito: 1200, valore: 1250, incremento: 50, profitto: 50, percentuale: 4.16, azioni: 4},
   {data: "2025-03", investito: 1500, valore: 1600, incremento: 100, profitto: 100, percentuale: 6.66, azioni: 6},
 ];
 
-// === INIT RENDER ===
+// =============================
+// INIT
+// =============================
 document.addEventListener("DOMContentLoaded", () => {
   renderRiepilogoInTabella(datiRiepilogo);
 });
+
+// Dark mode toggle
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+  renderRiepilogoInTabella(datiRiepilogo);
+}
+</script>
+
+</body>
+</html>
