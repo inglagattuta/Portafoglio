@@ -178,17 +178,14 @@ return {
 // =======================================
 //   RENDER RIEPILOGO IN TABELLA HTML
 // =======================================
-function renderRiepilogoInTabella(riepilogo) {
+function renderRiepilogoInTabella(riepilogo, andamento) {
   const tbody = document.querySelector("#tabellaRiepilogo tbody");
-  if (!tbody) {
-    console.warn("Tabella riepilogo non trovata: #tabellaRiepilogo tbody");
-    return;
-  }
   tbody.innerHTML = "";
 
   riepilogo.forEach(r => {
     const tr = document.createElement("tr");
 
+    // Riga principale
     tr.innerHTML = `
       <td style="text-align:center;">${r.mese}</td>
       <td style="text-align:right;">${r.investito.toFixed(2)} €</td>
@@ -196,11 +193,49 @@ function renderRiepilogoInTabella(riepilogo) {
       <td style="text-align:right;">${r.incremento.toFixed(2)} €</td>
       <td style="text-align:right;">${r.profitto.toFixed(2)} €</td>
       <td style="text-align:right;">${r.profitPerc.toFixed(2)} %</td>
+      <td style="text-align:center;"><button class="expand-btn">+</button></td>
     `;
-
     tbody.appendChild(tr);
+
+    // Riga dettagli nascosta
+    const detailTr = document.createElement("tr");
+    detailTr.style.display = "none";
+    detailTr.classList.add("details");
+
+    // Filtra i valori giornalieri del mese corrente
+    const giornoDelMese = andamento.filter(a => {
+      const [y, m] = r.mese.split("-");
+      return a.data.getFullYear() === Number(y) && (a.data.getMonth() + 1) === Number(m);
+    });
+
+    detailTr.innerHTML = `
+      <td colspan="7">
+        <table class="detail-table" style="width:100%; border-collapse:collapse;">
+          <tr>
+            <th style="text-align:center;">Giorno</th>
+            <th style="text-align:right;">Investito (€)</th>
+            <th style="text-align:right;">Valore (€)</th>
+            <th style="text-align:right;">Giornaliero (€)</th>
+          </tr>
+          ${giornoDelMese.map(g => `
+            <tr>
+              <td style="text-align:center;">${g.label}</td>
+              <td style="text-align:right;">${g.investito.toFixed(2)} €</td>
+              <td style="text-align:right;">${g.giornaliero.toFixed(2)} €</td>
+              <td style="text-align:right;">${g.azioni.toFixed(2)} €</td>
+            </tr>`).join('')}
+        </table>
+      </td>
+    `;
+    tbody.appendChild(detailTr);
+
+    // Evento click sul +
+    tr.querySelector(".expand-btn").addEventListener("click", () => {
+      detailTr.style.display = detailTr.style.display === "none" ? "table-row" : "none";
+    });
   });
 }
+
 
 // ================================
 //   MAIN
@@ -223,15 +258,12 @@ async function main() {
     createChart(labels, investitoValues, giornalieroValues);
 
     // --- RIEPILOGO MENSILE ---
-    const riepilogo = generaRiepilogoMensile(andamento);
-    console.table(riepilogo);
+const riepilogo = generaRiepilogoMensile(andamento);
+console.table(riepilogo);
 
-    // Mostra la tabella HTML
-    renderRiepilogoInTabella(riepilogo);
+// Mostra la tabella HTML con pulsante +
+renderRiepilogoInTabella(riepilogo, andamento);
 
-  } catch (err) {
-    console.error("Errore in main andamento:", err);
-  }
 }
 
 main();
