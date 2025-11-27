@@ -20,10 +20,9 @@
 
     let labels = [];
     let valoriGiornaliero = [];
-    let valoriAzioni = [];
     let valoriInvestito = [];
 
-    // 🔥 ORDINA PER ID DOCUMENTO (ordina anche storicamente)
+    // ORDINA PER ID (storico)
     let records = [];
     snap.forEach(doc => records.push({ id: doc.id, ...doc.data() }));
     records.sort((a, b) => a.id.localeCompare(b.id));
@@ -33,28 +32,30 @@
     tabellaBody.innerHTML = "";
 
     records.forEach((d, i) => {
-      if (!d.GIORNALIERO || !d.AZIONI || !d.INVESTITO) return;
+      if (!d.GIORNALIERO || !d.INVESTITO) return;
 
-      labels.push("Punto " + (i + 1));
+      const nome = "Punto " + (i + 1);
+      const variazione = ((d.GIORNALIERO - d.INVESTITO) / d.INVESTITO * 100).toFixed(2);
+
+      labels.push(nome);
       valoriGiornaliero.push(d.GIORNALIERO);
-      valoriAzioni.push(d.AZIONI);
       valoriInvestito.push(d.INVESTITO);
 
       tabellaBody.innerHTML += `
         <tr>
-          <td>${"Punto " + (i + 1)}</td>
+          <td>${nome}</td>
           <td>${d.GIORNALIERO} €</td>
-          <td class="positivo">
-            ${((d.GIORNALIERO - d.INVESTITO) / d.INVESTITO * 100).toFixed(2)}%
+          <td class="${variazione >= 0 ? "positivo" : "negativo"}">
+            ${variazione}%
           </td>
         </tr>
       `;
     });
 
-    renderGrafico(labels, valoriGiornaliero, valoriAzioni, valoriInvestito);
+    renderGrafico(labels, valoriGiornaliero, valoriInvestito);
   }
 
-  function renderGrafico(labels, giornaliero, azioni, investito) {
+  function renderGrafico(labels, giornaliero, investito) {
     if (grafico) grafico.destroy();
 
     grafico = new Chart(ctx, {
@@ -69,15 +70,6 @@
             tension: 0.35,
             borderColor: "rgba(0, 180, 255, 0.9)",
             backgroundColor: "rgba(0, 180, 255, 0.15)",
-            fill: true
-          },
-          {
-            label: "Azioni",
-            data: azioni,
-            borderWidth: 2,
-            tension: 0.35,
-            borderColor: "rgba(0, 255, 120, 0.8)",
-            backgroundColor: "rgba(0, 255, 120, 0.10)",
             fill: true
           },
           {
