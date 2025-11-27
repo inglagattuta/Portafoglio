@@ -78,6 +78,26 @@ function createChart(labels, investitoValues, giornalieroValues) {
   });
 }
 
+function renderRiepilogoInTabella(riepilogo) {
+  const tbody = document.querySelector("#tabellaRiepilogo tbody");
+  tbody.innerHTML = "";
+
+  riepilogo.forEach(r => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${r.mese}</td>
+      <td>${r.investito.toFixed(2)}</td>
+      <td>${r.valore.toFixed(2)}</td>
+      <td>${r.incremento.toFixed(2)}</td>
+      <td>${r.profitto.toFixed(2)}</td>
+      <td>${r.profitPerc}%</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
 // ================================
 //   MAIN
 // ================================
@@ -91,11 +111,18 @@ async function main() {
     return;
   }
 
-  const labels = andamento.map((r) => r.label);
-  const investitoValues = andamento.map((r) => r.investito);
-  const giornalieroValues = andamento.map((r) => r.giornaliero);
-
+  // --- GRAFICO ---
+  const labels = andamento.map(r => r.label);
+  const investitoValues = andamento.map(r => r.investito);
+  const giornalieroValues = andamento.map(r => r.giornaliero);
   createChart(labels, investitoValues, giornalieroValues);
+
+  // --- RIEPILOGO MENSILE ---
+  const riepilogo = generaRiepilogoMensile(andamento);
+
+  // Mostra la tabella HTML
+  renderRiepilogoInTabella(riepilogo);
 }
+
 
 main();
