@@ -7,9 +7,7 @@
     getDocs
   } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  const tabellaBody = document.querySelector("#tabella-andamento tbody");
   const ctx = document.getElementById("grafico");
-
   let grafico = null;
 
   async function loadAndamento() {
@@ -29,27 +27,12 @@
 
     console.log("RECORD ORDINATI:", records);
 
-    tabellaBody.innerHTML = "";
-
     records.forEach((d, i) => {
       if (!d.GIORNALIERO || !d.INVESTITO) return;
 
-      const nome = "Punto " + (i + 1);
-      const variazione = ((d.GIORNALIERO - d.INVESTITO) / d.INVESTITO * 100).toFixed(2);
-
-      labels.push(nome);
+      labels.push("Punto " + (i + 1));
       valoriGiornaliero.push(d.GIORNALIERO);
       valoriInvestito.push(d.INVESTITO);
-
-      tabellaBody.innerHTML += `
-        <tr>
-          <td>${nome}</td>
-          <td>${d.GIORNALIERO} €</td>
-          <td class="${variazione >= 0 ? "positivo" : "negativo"}">
-            ${variazione}%
-          </td>
-        </tr>
-      `;
     });
 
     renderGrafico(labels, valoriGiornaliero, valoriInvestito);
