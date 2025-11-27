@@ -7,14 +7,17 @@
 
   <link rel="stylesheet" href="style.css?v=10" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // Sincronizza tema con quello salvato in index
-  const savedTheme = localStorage.getItem("theme") || "light";
-  document.body.dataset.theme = savedTheme;
-  if (savedTheme === "dark") document.body.classList.add("dark");
-</script>
 </head>
-<body data-theme="light">
+<body>
+
+<script>
+  // Sincronizza tema con index
+  document.addEventListener("DOMContentLoaded", () => {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.body.dataset.theme = savedTheme;
+    if (savedTheme === "dark") document.body.classList.add("dark");
+  });
+</script>
 
   <div class="container">
 
@@ -24,9 +27,6 @@
           <h1 style="margin:0;">📈 Andamento</h1>
           <p class="subtitle" style="margin:4px 0 0;">Performance del portafoglio</p>
         </div>
-
-        <!-- Toggle Dark Mode -->
-        
       </div>
     </header>
 
@@ -74,5 +74,7 @@
         }
       },
     });
+  </script>
 
-    
+</body>
+</html>
