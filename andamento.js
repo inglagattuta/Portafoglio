@@ -258,12 +258,16 @@ async function main() {
     createChart(labels, investitoValues, giornalieroValues);
 
     // --- RIEPILOGO MENSILE ---
-const riepilogo = generaRiepilogoMensile(andamento);
-console.table(riepilogo);
+    const riepilogo = generaRiepilogoMensile(andamento);
+    console.table(riepilogo);
 
-// Mostra la tabella HTML con pulsante +
-renderRiepilogoInTabella(riepilogo, andamento);
+    // Mostra la tabella HTML con pulsante +
+    renderRiepilogoInTabella(riepilogo, andamento);
 
+  } catch (err) {
+    console.error("Errore in main andamento:", err);
+  }
 }
 
 main();
+
