@@ -91,83 +91,30 @@
     </table>
   </div>
 
- <script type="module">
+<script type="module">
+  console.log("DEBUG 1: Script caricato.");
+
   import { db } from "./firebase-config.js";
+  console.log("DEBUG 2: Firebase importato.", db);
+
   import {
     collection,
     getDocs
   } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  const tabellaBody = document.querySelector("#tabella-andamento tbody");
-  const ctx = document.getElementById("grafico");
-
-  let grafico = null;
+  console.log("DEBUG 3: Firestore importato.");
 
   async function loadAndamento() {
+    console.log("DEBUG 4: loadAndamento chiamato.");
+
     const ref = collection(db, "andamento");
+    console.log("DEBUG 5: collection ok.");
+
     const snap = await getDocs(ref);
-
-    let labels = [];
-    let valori = [];
-
-    tabellaBody.innerHTML = "";
+    console.log("DEBUG 6: dati letti:", snap.size);
 
     snap.forEach(doc => {
-      const d = doc.data();
-
-      // controlli di sicurezza
-      if (!d.data) return;
-
-      const investito = Number(d.INVESTITO ?? 0);
-      const giornaliero = Number(d.GIORNALIERO ?? 0);
-      const azioni = Number(d.AZIONI ?? 0);
-
-      // label grafico → la data
-      labels.push(d.data);
-
-      // valore grafico → INVESTITO
-      valori.push(investito);
-
-      // variazione finta in attesa che me la dai stabilita
-      const variazione = giornaliero - investito;
-      const classe = variazione >= 0 ? "positivo" : "negativo";
-
-      tabellaBody.innerHTML += `
-        <tr>
-          <td>${d.data}</td>
-          <td>${investito} €</td>
-          <td class="${classe}">${variazione}</td>
-        </tr>
-      `;
-    });
-
-    renderGrafico(labels, valori);
-  }
-
-  function renderGrafico(labels, valori) {
-    if (grafico) grafico.destroy();
-
-    grafico = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Investito",
-          data: valori,
-          fill: true,
-          tension: 0.3,
-          backgroundColor: "rgba(0, 150, 255, 0.20)",
-          borderColor: "rgba(0, 150, 255, 0.8)",
-          borderWidth: 2
-        }]
-      },
-      options: {
-        plugins: { legend: { labels: { color: "#fff" } } },
-        scales: {
-          x: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.05)" } },
-          y: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.05)" } }
-        }
-      }
+      console.log("DEBUG 7: record:", doc.data());
     });
   }
 
