@@ -1,11 +1,11 @@
-// Importa app e db già inizializzati
-import { app, db } from "./firebase-config.js";
-
-// Import Firestore versione 11 (compatibile)
+import app from "./firebase-config.js";
 import {
+  getFirestore,
   collection,
   getDocs,
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const db = getFirestore(app);
 
 // ================================
 //   CARICA DATI DA FIREBASE
@@ -19,9 +19,7 @@ async function loadAndamento() {
     const id = doc.id; // es: "2025-01-12"
     const data = doc.data();
 
-    // Convertiamo l'ID in vera data per ordinamento
     let parsedDate = new Date(id);
-
     if (parsedDate.toString() === "Invalid Date") {
       console.warn("Data non valida:", id);
       return;
@@ -32,20 +30,18 @@ async function loadAndamento() {
       label: id,
       investito: data.INVESTITO || 0,
       giornaliero: data.GIORNALIERO || 0,
-      azioni: data.AZIONI || 0,
     });
   });
 
-  // Ordina per data reale
   dati.sort((a, b) => a.data - b.data);
 
   return dati;
 }
 
 // ================================
-//   CREA IL GRAFICO
+//   CREA IL GRAFICO CON 2 LINEE
 // ================================
-function createChart(labels, values) {
+function createChart(labels, investitoValues, giornalieroValues) {
   const ctx = document.getElementById("chartAndamento");
 
   new Chart(ctx, {
@@ -55,7 +51,13 @@ function createChart(labels, values) {
       datasets: [
         {
           label: "Investito (€)",
-          data: values,
+          data: investitoValues,
+          borderWidth: 3,
+          tension: 0.25,
+        },
+        {
+          label: "Giornaliero (€)",
+          data: giornalieroValues,
           borderWidth: 3,
           tension: 0.25,
         },
@@ -89,14 +91,12 @@ async function main() {
     return;
   }
 
-  // Etichette = date formattate tipo 2025-01-12
   const labels = andamento.map((r) => r.label);
 
-  // Valori = colonna INVESTITO
-  const values = andamento.map((r) => r.investito);
+  const investitoValues = andamento.map((r) => r.investito);
+  const giornalieroValues = andamento.map((r) => r.giornaliero);
 
-  // Crea grafico
-  createChart(labels, values);
+  createChart(labels, investitoValues, giornalieroValues);
 }
 
 main();
