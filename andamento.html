@@ -95,26 +95,60 @@
   console.log("DEBUG 1: Script caricato.");
 
   import { db } from "./firebase-config.js";
-  console.log("DEBUG 2: Firebase importato.", db);
-
   import {
     collection,
     getDocs
   } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  console.log("DEBUG 3: Firestore importato.");
-
   async function loadAndamento() {
-    console.log("DEBUG 4: loadAndamento chiamato.");
-
     const ref = collection(db, "andamento");
-    console.log("DEBUG 5: collection ok.");
-
     const snap = await getDocs(ref);
+
+    const labels = [];
+    const valori = [];
+
     console.log("DEBUG 6: dati letti:", snap.size);
 
     snap.forEach(doc => {
-      console.log("DEBUG 7: record:", doc.data());
+      const data = doc.data();
+      console.log("DEBUG 7: record:", data);
+
+      // Usa una label generica (oppure la data se esiste)
+      labels.push("");  
+      valori.push(data.GIORNALIERO);  
+    });
+
+    creaGrafico(labels, valori);
+  }
+
+  function creaGrafico(labels, valori) {
+    console.log("DEBUG 8: Disegno grafico.");
+
+    const ctx = document.getElementById("grafico");
+
+    if (!ctx) {
+      console.error("ERRORE: Canvas 'grafico' non trovato!");
+      return;
+    }
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Valore GIORNALIERO",
+          data: valori,
+          borderWidth: 2,
+          tension: 0.3
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: "#fff" } } },
+        scales: {
+          x: { ticks: { color: "#ccc" } },
+          y: { ticks: { color: "#ccc" } }
+        }
+      }
     });
   }
 
