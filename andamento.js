@@ -1,11 +1,11 @@
-import app from "./firebase-config.js";
+// Importa app e db già inizializzati
+import { app, db } from "./firebase-config.js";
+
+// Import Firestore versione 11 (compatibile)
 import {
-  getFirestore,
   collection,
   getDocs,
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-const db = getFirestore(app);
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // ================================
 //   CARICA DATI DA FIREBASE
