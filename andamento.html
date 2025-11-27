@@ -91,79 +91,88 @@
     </table>
   </div>
 
-  <script type="module">
-    import { db } from "./firebase-config.js";
-    import {
-      collection,
-      getDocs
-    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+ <script type="module">
+  import { db } from "./firebase-config.js";
+  import {
+    collection,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    const tabellaBody = document.querySelector("#tabella-andamento tbody");
-    const ctx = document.getElementById("grafico");
+  const tabellaBody = document.querySelector("#tabella-andamento tbody");
+  const ctx = document.getElementById("grafico");
 
-    let grafico = null;
+  let grafico = null;
 
-    async function loadAndamento() {
-      const ref = collection(db, "andamento");
-      const snap = await getDocs(ref);
+  async function loadAndamento() {
+    const ref = collection(db, "andamento");
+    const snap = await getDocs(ref);
 
-      let labels = [];
-      let valori = [];
+    let labels = [];
+    let valori = [];
 
-      tabellaBody.innerHTML = "";
+    tabellaBody.innerHTML = "";
 
-      snap.forEach(doc => {
-        const d = doc.data();
+    snap.forEach(doc => {
+      const d = doc.data();
 
-        // evita record monchi o formati male
-        if (!d.nome || d.valore == null) return;
+      // controlli di sicurezza
+      if (!d.data) return;
 
-        labels.push(d.nome);
-        valori.push(d.valore);
+      const investito = Number(d.INVESTITO ?? 0);
+      const giornaliero = Number(d.GIORNALIERO ?? 0);
+      const azioni = Number(d.AZIONI ?? 0);
 
-        const variazione = d.variazione ?? 0;
-        const classe = variazione >= 0 ? "positivo" : "negativo";
+      // label grafico → la data
+      labels.push(d.data);
 
-        tabellaBody.innerHTML += `
-          <tr>
-            <td>${d.nome}</td>
-            <td>${d.valore} €</td>
-            <td class="${classe}">${variazione}%</td>
-          </tr>
-        `;
-      });
+      // valore grafico → INVESTITO
+      valori.push(investito);
 
-      renderGrafico(labels, valori);
-    }
+      // variazione finta in attesa che me la dai stabilita
+      const variazione = giornaliero - investito;
+      const classe = variazione >= 0 ? "positivo" : "negativo";
 
-    function renderGrafico(labels, valori) {
-      if (grafico) grafico.destroy();
+      tabellaBody.innerHTML += `
+        <tr>
+          <td>${d.data}</td>
+          <td>${investito} €</td>
+          <td class="${classe}">${variazione}</td>
+        </tr>
+      `;
+    });
 
-      grafico = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels,
-          datasets: [{
-            label: "Andamento Valori",
-            data: valori,
-            fill: true,
-            tension: 0.3,
-            backgroundColor: "rgba(0, 150, 255, 0.20)",
-            borderColor: "rgba(0, 150, 255, 0.8)",
-            borderWidth: 2
-          }]
-        },
-        options: {
-          plugins: { legend: { labels: { color: "#fff" } } },
-          scales: {
-            x: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.05)" } },
-            y: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.05)" } }
-          }
+    renderGrafico(labels, valori);
+  }
+
+  function renderGrafico(labels, valori) {
+    if (grafico) grafico.destroy();
+
+    grafico = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Investito",
+          data: valori,
+          fill: true,
+          tension: 0.3,
+          backgroundColor: "rgba(0, 150, 255, 0.20)",
+          borderColor: "rgba(0, 150, 255, 0.8)",
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: "#fff" } } },
+        scales: {
+          x: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.05)" } },
+          y: { ticks: { color: "#ccc" }, grid: { color: "rgba(255,255,255,0.05)" } }
         }
-      });
-    }
+      }
+    });
+  }
 
-    loadAndamento();
-  </script>
+  loadAndamento();
+</script>
+
 </body>
 </html>
