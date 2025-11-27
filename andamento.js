@@ -150,8 +150,22 @@ function generaRiepilogoMensile(dati) {
     const prev = prevKey ? mesiMap.get(prevKey) : null;
 
     const incremento = prev ? (curr.investito - prev.investito) : 0;
-    const profitto = curr.valore - curr.investito;
-    const
+     // Calcoli
+  const profitPerc = curr.investito !== 0 ? (profitto / curr.investito) * 100 : 0;
+
+    return {
+      mese: curr.data,              // es: "2025-03-31"
+      investito: curr.investito,    // Investito a fine mese
+      valore: curr.valore,          // Valore giornaliero a fine mese
+      incremento: incremento,       // Differenza con mese precedente
+      profitto: profitto,           // Valore - Investito
+      profitPerc: Number(profitPerc.toFixed(2))
+    };
+  });
+
+  return output;
+}
+
 
 
 // =======================================
