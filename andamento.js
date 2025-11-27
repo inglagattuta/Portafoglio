@@ -1,4 +1,4 @@
-// andamento.js (rifatto, funzionante)
+// andamento.js (versione A - pulita e funzionante)
 // usa la stessa versione Firebase del tuo firebase-config.js
 import { db } from "./firebase-config.js";
 import {
@@ -21,21 +21,31 @@ async function loadAndamento() {
     const id = docSnap.id;
     const data = docSnap.data();
 
-    // prova a parsare l'id come data; se non è una data valida, usa epoch 1970-01-01
+    // proviamo a parsare l'id come data; se non valido lo manteniamo come stringa
     const parsedDate = new Date(id);
-    const dateObj = parsedDate.toString() === "Invalid Date" ? new Date(0) : parsedDate;
+    const isValidDate = parsedDate.toString() !== "Invalid Date";
 
     dati.push({
-      data: dateObj,               // Date object (usato per ordinamento)
-      label: id,                   // id originale (es. "2025-03-15" o "2025-03")
-      investito: Number(data.INVESTITO || 0),
-      giornaliero: Number(data.GIORNALIERO || 0),
-      azioni: Number(data.AZIONI || 0),
+      // se id è una data valida, teniamo l'oggetto Date per ordinare correttamente;
+      // altrimenti useremo new Date(0) come fallback e manterremo label per visualizzare
+      data: isValidDate ? parsedDate : new Date(0),
+      label: id,
+      investito: Number(data.INVESTITO ?? 0),
+      giornaliero: Number(data.GIORNALIERO ?? 0),
+      azioni: Number(data.AZIONI ?? 0),
     });
   });
 
-  // ordina per data reale (Date object)
-  dati.sort((a, b) => a.data - b.data);
+  // ordina: prima i valid date, poi gli altri in ordine di label
+  dati.sort((a, b) => {
+    // se entrambi hanno data > epoch, ordina per data
+    if (a.data.getTime() !== 0 && b.data.getTime() !== 0) return a.data - b.data;
+    if (a.data.getTime() === 0 && b.data.getTime() !== 0) return 1; // sposta gli "invalid date" in fondo
+    if (a.data.getTime() !== 0 && b.data.getTime() === 0) return -1;
+    // entrambi invalid: ordina per label stringa
+    return a.label.localeCompare(b.label);
+  });
+
   return dati;
 }
 
@@ -46,9 +56,9 @@ function createChart(labels, investitoValues, giornalieroValues) {
   const canvas = document.getElementById("chartAndamento");
   if (!canvas) return;
 
-  // Chart.js può usare direttamente l'elemento canvas
   const ctx = canvas.getContext ? canvas.getContext("2d") : canvas;
 
+  // distruggi se già esiste
   if (canvas._chartInstance) canvas._chartInstance.destroy();
 
   const chart = new Chart(ctx, {
@@ -80,8 +90,8 @@ function createChart(labels, investitoValues, giornalieroValues) {
       plugins: { legend: { display: true }, tooltip: { mode: "index", intersect: false } },
       interaction: { mode: "index", intersect: false },
       scales: {
-        x: { ticks: { maxRotation: 45, minRotation: 45 }, grid: { color: "rgba(255,255,255,0.03)" } },
-        y: { beginAtZero: false, grid: { color: "rgba(255,255,255,0.03)" } }
+        x: { ticks: { maxRotation: 45, minRotation: 45 } },
+        y: { beginAtZero: false }
       }
     }
   });
@@ -96,17 +106,39 @@ function generaRiepilogoMensile(dati) {
   const mesiMap = new Map();
 
   dati.forEach(r => {
-    const y = r.data.getFullYear();
-    const m = r.data.getMonth(); // 0-based
-    const key = `${y}-${String(m + 1).padStart(2, "0")}`;
+    // se data è fallback (epoch), proviamo a derivare mese dall'etichetta (label) se possibile
+    let year, monthNum;
+    if (r.data.getTime() !== 0) {
+      year = r.data.getFullYear();
+      monthNum = r.data.getMonth(); // 0-based
+    } else {
+      // proviamo a estrarre YYYY-MM da label (es. "2025-03-15" o "2025-03")
+      const match = r.label.match(/(\d{4})[-\/]?(\d{2})/);
+      if (match) {
+        year = Number(match[1]);
+        monthNum = Number(match[2]) - 1;
+      } else {
+        // non abbiamo modo di capire mese -> mettiamo in "0000-00" per non fermare il codice
+        year = 0; monthNum = 0;
+      }
+    }
 
-    // memorizzo l'ultimo record del mese (per data più recente)
+    const key = `${year}-${String(monthNum + 1).padStart(2, "0")}`;
+
     if (!mesiMap.has(key)) {
       mesiMap.set(key, { meseKey: key, lastLabel: r.label, lastDate: r.data, investito: r.investito, valore: r.giornaliero });
     } else {
       const existing = mesiMap.get(key);
-      if (r.data > existing.lastDate) {
-        mesiMap.set(key, { meseKey: key, lastLabel: r.label, lastDate: r.data, investito: r.investito, valore: r.giornaliero });
+      // scegli l'ultima data per il mese
+      if (r.data.getTime() !== 0 && existing.lastDate.getTime() !== 0) {
+        if (r.data > existing.lastDate) {
+          mesiMap.set(key, { meseKey: key, lastLabel: r.label, lastDate: r.data, investito: r.investito, valore: r.giornaliero });
+        }
+      } else {
+        // se uno dei due è fallback, preferiamo il record con data reale o l'ultimo inserito
+        if (existing.lastDate.getTime() === 0 && r.data.getTime() !== 0) {
+          mesiMap.set(key, { meseKey: key, lastLabel: r.label, lastDate: r.data, investito: r.investito, valore: r.giornaliero });
+        }
       }
     }
   });
@@ -121,13 +153,13 @@ function generaRiepilogoMensile(dati) {
     const profitPerc = curr.investito !== 0 ? (profitto / curr.investito) * 100 : 0;
 
     return {
-      mese: k, // stringa "YYYY-MM"
+      mese: k,
       investito: curr.investito,
       valore: curr.valore,
       incremento,
       profitto,
       profitPerc: Number(profitPerc.toFixed(2)),
-      lastLabel: curr.lastLabel // utile per mapping dettagli
+      lastLabel: curr.lastLabel
     };
   });
 }
@@ -150,11 +182,11 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
 
     tr.innerHTML = `
       <td style="text-align:center;">${r.mese}</td>
-      <td style="text-align:right;">${r.investito.toFixed(2)} €</td>
-      <td style="text-align:right;">${r.valore.toFixed(2)} €</td>
-      <td style="text-align:right;">${r.incremento.toFixed(2)} €</td>
-      <td style="text-align:right;">${r.profitto.toFixed(2)} €</td>
-      <td style="text-align:right;">${r.profitPerc.toFixed(2)} %</td>
+      <td style="text-align:right;">${(r.investito||0).toFixed(2)} €</td>
+      <td style="text-align:right;">${(r.valore||0).toFixed(2)} €</td>
+      <td style="text-align:right;">${(r.incremento||0).toFixed(2)} €</td>
+      <td style="text-align:right;">${(r.profitto||0).toFixed(2)} €</td>
+      <td style="text-align:right;">${(r.profitPerc||0).toFixed(2)} %</td>
       <td style="text-align:center;"><button class="expand-btn">+</button></td>
     `;
     tbody.appendChild(tr);
@@ -167,21 +199,21 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
     // filtro andamento per quel mese (comparando anno e mese)
     const [yy, mm] = r.mese.split("-");
     const giornoDelMese = andamento.filter(a => {
-      return a.data.getFullYear() === Number(yy) && (a.data.getMonth() + 1) === Number(mm);
+      return (a.data.getTime() !== 0 ? (a.data.getFullYear() === Number(yy) && (a.data.getMonth() + 1) === Number(mm)) : a.label.startsWith(r.mese));
     });
 
     // costruisco innerHTML per la riga dei dettagli
-    const rowsGiorni = giornoDelMese.map(g => {
+    const rowsGiorni = giornoDelMese.length ? giornoDelMese.map(g => {
       return `
         <tr data-id="${g.label}">
           <td style="text-align:center;">${g.label}</td>
-          <td style="text-align:right;">${g.investito.toFixed(2)} €</td>
-          <td style="text-align:right;">${g.giornaliero.toFixed(2)} €</td>
-          <td style="text-align:right;">${g.azioni.toFixed(2)}</td>
+          <td style="text-align:right;">${(g.investito||0).toFixed(2)} €</td>
+          <td style="text-align:right;">${(g.giornaliero||0).toFixed(2)} €</td>
+          <td style="text-align:right;">${(g.azioni||0).toFixed(2)}</td>
           <td style="text-align:center;"><button class="edit-btn">✏️ Modifica</button></td>
         </tr>
       `;
-    }).join("");
+    }).join("") : `<tr><td colspan="5" style="text-align:center;">Nessun dato giornaliero</td></tr>`;
 
     detailTr.innerHTML = `
       <td colspan="7">
@@ -196,14 +228,14 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
             </tr>
           </thead>
           <tbody>
-            ${rowsGiorni || '<tr><td colspan="5" style="text-align:center;">Nessun dato giornaliero</td></tr>'}
+            ${rowsGiorni}
           </tbody>
         </table>
       </td>
     `;
     tbody.appendChild(detailTr);
 
-    // attacco l'evento expand al pulsante (dopo che tr è stato inserito)
+    // attacco l'evento expand al pulsante
     const btn = tr.querySelector(".expand-btn");
     btn.addEventListener("click", () => {
       detailTr.style.display = detailTr.style.display === "none" ? "table-row" : "none";
@@ -248,15 +280,12 @@ function renderRiepilogoInTabella(riepilogo, andamento) {
         const docRef = doc(db, "andamento", idGiorno);
         await updateDoc(docRef, nuoviValori);
 
-        // aggiorna UI: testo semplice
+        // aggiorna UI
         celle[1].textContent = nuoviValori.INVESTITO.toFixed(2) + " €";
         celle[2].textContent = nuoviValori.GIORNALIERO.toFixed(2) + " €";
         celle[3].textContent = nuoviValori.AZIONI.toFixed(2);
 
         target.textContent = "✏️ Modifica";
-
-        // (opzionale) potresti voler ricaricare l'intera vista per aggiornare il riepilogo/grafico
-        // loadAndamento().then(data => { /* già gestito in main se vuoi */ });
 
         alert("Giornata aggiornata correttamente!");
       } catch (err) {
@@ -289,6 +318,7 @@ async function main() {
     const riepilogo = generaRiepilogoMensile(andamento);
     console.table(riepilogo);
     renderRiepilogoInTabella(riepilogo, andamento);
+
   } catch (err) {
     console.error("Errore in main andamento:", err);
   }
