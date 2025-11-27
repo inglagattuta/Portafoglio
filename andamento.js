@@ -3,7 +3,7 @@ import {
   getFirestore,
   collection,
   getDocs,
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const db = getFirestore(app);
 
@@ -11,12 +11,13 @@ const db = getFirestore(app);
 //   CARICA DATI DA FIREBASE
 // ================================
 async function loadAndamento() {
-  const snap = await getDocs(collection(db, "andamento"));
+  const ref = collection(db, "andamento");
+  const snap = await getDocs(ref);
 
   const dati = [];
 
   snap.forEach((doc) => {
-    const id = doc.id; // es: "2025-01-12"
+    const id = doc.id;
     const data = doc.data();
 
     let parsedDate = new Date(id);
@@ -34,7 +35,6 @@ async function loadAndamento() {
   });
 
   dati.sort((a, b) => a.data - b.data);
-
   return dati;
 }
 
@@ -92,7 +92,6 @@ async function main() {
   }
 
   const labels = andamento.map((r) => r.label);
-
   const investitoValues = andamento.map((r) => r.investito);
   const giornalieroValues = andamento.map((r) => r.giornaliero);
 
