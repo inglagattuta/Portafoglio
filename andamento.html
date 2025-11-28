@@ -16,10 +16,57 @@
 
     /* ===== Mensile table ===== */
     .mensile-wrap { margin-top:18px; background: rgba(255,255,255,0.02); padding:14px; border-radius:10px; }
-    table { width:100%; border-collapse:collapse; font-size:14px; }
-    thead th { background: rgba(255,255,255,0.05); padding:10px; text-align:left; color:#fff; }
-    tbody td { padding:10px; border-bottom:1px solid rgba(255,255,255,0.03); color:#ddd; vertical-align:middle; }
-    tbody tr:hover td { background: rgba(255,255,255,0.01); }
+
+    /* TABLE: FORZA L'ALLINEAMENTO TRAMITE COLGROUP E TABLE-LAYOUT FIXED */
+    #tabella-mensile {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;          /* fondamentale */
+      font-size:14px;
+      background: rgba(255,255,255,0.02);
+      color: #fff;
+    }
+
+    /* definisci larghezze coerenti: (totale 100%) */
+    #tabella-mensile col:nth-child(1) { width: 18%; } /* Data */
+    #tabella-mensile col:nth-child(2) { width: 14%; } /* Investito */
+    #tabella-mensile col:nth-child(3) { width: 14%; } /* Valore */
+    #tabella-mensile col:nth-child(4) { width: 14%; } /* Incremento */
+    #tabella-mensile col:nth-child(5) { width: 14%; } /* Profitto */
+    #tabella-mensile col:nth-child(6) { width: 12%; } /* % Profitto */
+    #tabella-mensile col:nth-child(7) { width: 14%; } /* Dettagli */
+
+    /* HEADERS */
+    #tabella-mensile thead th {
+      background: rgba(255,255,255,0.05);
+      padding: 10px;
+      color: #fff;
+      font-weight: 700;
+      text-align: left;            /* header left look */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* CELLE */
+    #tabella-mensile tbody td {
+      padding: 10px;
+      border-top: 1px solid rgba(255,255,255,0.03);
+      color: #ddd;
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Allineamenti coerenti per colonna (stesso ordine di colgroup) */
+    #tabella-mensile td:nth-child(1), #tabella-mensile th:nth-child(1) { text-align: left; }
+    #tabella-mensile td:nth-child(2), #tabella-mensile th:nth-child(2) { text-align: right; }
+    #tabella-mensile td:nth-child(3), #tabella-mensile th:nth-child(3) { text-align: right; }
+    #tabella-mensile td:nth-child(4), #tabella-mensile th:nth-child(4) { text-align: right; }
+    #tabella-mensile td:nth-child(5), #tabella-mensile th:nth-child(5) { text-align: right; }
+    #tabella-mensile td:nth-child(6), #tabella-mensile th:nth-child(6) { text-align: right; }
+    #tabella-mensile td:nth-child(7), #tabella-mensile th:nth-child(7) { text-align: center; }
 
     .btn-toggle, .btn-edit, .btn-save, .btn-cancel {
       background:transparent; border:1px solid rgba(255,255,255,0.06); color:#fff; padding:6px 8px; border-radius:8px; cursor:pointer;
@@ -29,24 +76,24 @@
     .positivo { color:#4caf50; font-weight:600; }
     .negativo { color:#ff5252; font-weight:600; }
 
-    /* details row */
+    /* details row: la inner table deve rispettare le stesse colonne (usa colgroup anche lì) */
     .details-row td { background: rgba(255,255,255,0.01); padding:0; }
     .details-inner { padding:10px 12px; }
 
-    .detail-table { width:100%; border-collapse:collapse; font-size:13px; }
-    .detail-table thead th { background: rgba(255,255,255,0.03); padding:8px; color:#fff; text-align:left; }
-    .detail-table td { padding:8px; border-bottom:1px solid rgba(255,255,255,0.03); color:#ddd; }
+    .detail-table { width:100%; border-collapse:collapse; font-size:13px; table-layout: fixed; }
+    .detail-table thead th { background: rgba(255,255,255,0.03); padding:8px; color:#fff; text-align:left; white-space:nowrap; }
+    .detail-table td { padding:8px; border-top:1px solid rgba(255,255,255,0.03); color:#ddd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
     .editing { background: rgba(255,255,255,0.01); }
 
-    /* small helpers */
     .right { text-align:right; }
     .center { text-align:center; }
 
-    /* responsive */
-    @media (max-width:700px) {
-      thead th, tbody td { font-size:13px; padding:8px; }
-      .btn-toggle, .btn-edit { padding:5px 7px; font-size:12px; }
+    @media (max-width:800px) {
+      /* su mobile rendiamo la tabella scrollabile orizzontalmente */
+      .mensile-wrap { overflow-x:auto; }
+      #tabella-mensile thead th { font-size:13px; }
+      #tabella-mensile tbody td { font-size:13px; }
     }
   </style>
 </head>
@@ -60,7 +107,17 @@
   <div class="mensile-wrap" aria-live="polite">
     <h2 style="margin:10px 0 12px;">📊 Riepilogo Mensile</h2>
 
+    <!-- COLGROUP per forzare le larghezze e garantire allineamento perfetto -->
     <table id="tabella-mensile" aria-describedby="riepilogo-mensile">
+      <colgroup>
+        <col> <!-- Data -->
+        <col> <!-- Investito -->
+        <col> <!-- Valore -->
+        <col> <!-- Incremento -->
+        <col> <!-- Profitto -->
+        <col> <!-- % Profitto -->
+        <col> <!-- Dettagli -->
+      </colgroup>
       <thead>
         <tr>
           <th>Data (ultimo mese)</th>
@@ -80,11 +137,9 @@
   import { db } from "./firebase-config.js";
   import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  // canvas context
   const ctx = document.getElementById("grafico").getContext("2d");
   let grafico = null;
 
-  // formato date
   function formatFullDate(id) {
     const parts = String(id).split("-");
     if (parts.length >= 3) return `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[0]}`;
@@ -96,22 +151,17 @@
     return id;
   }
 
-  // Carica dati e costruisce grafico + tabella
   async function loadAndamento() {
     try {
       const snapshot = await getDocs(collection(db, "andamento"));
       const raw = [];
       snapshot.forEach(d => raw.push({ id: d.id, ...d.data() }));
 
-      if (!raw.length) {
-        console.log("Nessun dato disponibile");
-        return;
-      }
+      if (!raw.length) { console.log("Nessun dato disponibile"); return; }
 
-      // ordina per data asc
       raw.sort((a,b) => new Date(a.id) - new Date(b.id));
 
-      // prepara dataset grafico
+      // grafico
       const labels = [];
       const valoriGiornaliero = [];
       const valoriInvestito = [];
@@ -125,12 +175,12 @@
 
       renderGrafico(labels, valoriGiornaliero, valoriInvestito);
 
-      // costruisci perMese: ultimo record per mese (key YYYY-MM)
+      // perMese: ultimo record per mese
       const perMese = {};
       raw.forEach(r => {
         const [yy, mm] = String(r.id).split("-");
         const key = `${yy}-${mm}`;
-        perMese[key] = r; // sovrascrive: rimane l'ultimo giorno del mese
+        perMese[key] = r; // sovrascrive -> rimane ultimo giorno del mese
       });
 
       const mesiOrdinati = Object.keys(perMese).sort();
@@ -170,7 +220,6 @@
     });
   }
 
-  // Rende la tabella mensile e aggiunge logica per toggle e edit inline
   function renderTabellaMensile(mesiOrdinati, perMese, rawRecords) {
     const tbody = document.querySelector("#tabella-mensile tbody");
     tbody.innerHTML = "";
@@ -187,7 +236,7 @@
       const profitto = val - inv;
       const perc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : "0.00";
 
-      // riga principale
+      // riga principale coerente con colgroup
       const tr = document.createElement("tr");
       tr.dataset.mese = meseKey;
       tr.innerHTML = `
@@ -201,7 +250,7 @@
       `;
       tbody.appendChild(tr);
 
-      // riga dettagli (nascosta)
+      // riga dettagli (nascosta) che conterrà una inner table con stesso numero di colonne
       const detRow = document.createElement("tr");
       detRow.classList.add("details-row");
       detRow.style.display = "none";
@@ -214,7 +263,7 @@
       tbody.appendChild(detRow);
     });
 
-    // Event delegation: toggles e bottoni edit/save/cancel
+    // Event delegation: toggle, edit, save, cancel
     tbody.addEventListener("click", async (e) => {
       const btnToggle = e.target.closest(".btn-toggle");
       if (btnToggle) {
@@ -227,9 +276,7 @@
           return;
         }
 
-        // Build details table
         const container = detRow.querySelector(".details-inner");
-        // filter rawRecords for that month
         const giornate = rawRecords
           .filter(rr => {
             const [yy, mm] = rr.id.split("-");
@@ -237,10 +284,18 @@
           })
           .sort((a,b) => new Date(a.id) - new Date(b.id));
 
-        // build inner table HTML
+        // create inner table with same number of columns and colgroup
         const innerTable = document.createElement("table");
         innerTable.className = "detail-table";
         innerTable.innerHTML = `
+          <colgroup>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+          </colgroup>
           <thead>
             <tr>
               <th>Data</th>
@@ -277,18 +332,14 @@
         return;
       }
 
-      // Edit button clicked (delegation)
       const btnEdit = e.target.closest(".btn-edit");
       if (btnEdit) {
         const docId = btnEdit.dataset.docid;
         const tr = btnEdit.closest("tr");
-        // read current values
         const tds = tr.querySelectorAll("td");
-        const curDate = tr.dataset.docid || tr.querySelector("td:first-child").textContent; // not used for update
         const curInvest = tds[1].textContent.replace(' €','').trim();
         const curVal = tds[2].textContent.replace(' €','').trim();
 
-        // replace cells with inputs
         tr.classList.add("editing");
         tds[1].innerHTML = `<input type="number" step="0.01" value="${Number(curInvest)}" style="width:100px">`;
         tds[2].innerHTML = `<input type="number" step="0.01" value="${Number(curVal)}" style="width:100px">`;
@@ -301,24 +352,12 @@
         return;
       }
 
-      // Cancel edit
       const btnCancel = e.target.closest(".btn-cancel");
       if (btnCancel) {
-        const docId = btnCancel.dataset.docid;
-        // restore by reloading the details for that month (simple approach)
-        // find parent month key by walking up to details-row
-        const tr = btnCancel.closest("tr");
-        const detailsRow = tr.closest("tr.details-row");
-        if (detailsRow) {
-          // force re-open the details by triggering the parent toggle: get mese
-          const mese = detailsRow.dataset.mese;
-          // reload all (simple) to restore original state
-          await loadAndamento();
-        }
+        await loadAndamento();
         return;
       }
 
-      // Save edit
       const btnSave = e.target.closest(".btn-save");
       if (btnSave) {
         const docId = btnSave.dataset.docid;
@@ -326,18 +365,13 @@
         const inputs = tr.querySelectorAll("input");
         const newInvest = Number(inputs[0].value || 0);
         const newGior = Number(inputs[1].value || 0);
-
-        // disable buttons while saving
         btnSave.disabled = true;
         const cancelBtn = tr.querySelector(".btn-cancel");
         if (cancelBtn) cancelBtn.disabled = true;
-
         try {
           const docRef = doc(db, "andamento", docId);
           await updateDoc(docRef, { INVESTITO: newInvest, GIORNALIERO: newGior });
-          // dopo salvataggio: ricarica dati e UI
           await loadAndamento();
-          // optionally: scroll to updated row or flash
         } catch (err) {
           console.error("Errore updateDoc:", err);
           alert("Errore durante il salvataggio. Controlla console.");
