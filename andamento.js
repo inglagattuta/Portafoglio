@@ -10,27 +10,31 @@ async function loadAndamento() {
   const ref = collection(db, "andamento");
   const snapshot = await getDocs(ref);
 
-  const records = snapshot.docs.map(doc => doc.data());
+  let records = snapshot.docs.map(doc => ({
+    DATA: doc.data().DATA,
+    INVESTITO: Number(doc.data().INVESTITO || 0),
+    GIORNALIERO: Number(doc.data().GIORNALIERO || 0)
+  }));
 
   console.log("DEBUG record count:", records.length);
+  if (records.length === 0) return;
 
-  if (records.length === 0) {
-    console.log("Nessun dato trovato!");
-    return;
-  }
-
-  // ORDINA PER DATA (importantissimo)
+  // -------------------------------
+  // ORDINA PER DATA
+  // -------------------------------
   records.sort((a, b) => new Date(a.DATA) - new Date(b.DATA));
 
-  // PREPARA I DATI
+  // -------------------------------
+  // DATI PER IL GRAFICO
+  // -------------------------------
   const labels = records.map(r => r.DATA);
-  const investito = records.map(r => Number(r.INVESTITO || 0));
-  const giornaliero = records.map(r => Number(r.GIORNALIERO || 0));
+  const investito = records.map(r => r.INVESTITO);
+  const giornaliero = records.map(r => r.GIORNALIERO);
 
-  console.log("DEBUG labels:", labels);
-
-  // CREA IL GRAFICO
-  const ctx = document.getElementById("chart-andamento").getContext("2d");
+  // -------------------------------
+  // GRAFICO
+  // -------------------------------
+  const ctx = document.getElementById("grafico").getContext("2d");
 
   new Chart(ctx, {
     type: "line",
@@ -43,7 +47,8 @@ async function loadAndamento() {
           borderWidth: 2,
           borderColor: "rgba(0, 200, 255, 0.9)",
           backgroundColor: "rgba(0, 200, 255, 0.2)",
-          tension: 0.3
+          tension: 0.35,
+          fill: true
         },
         {
           label: "GIORNALIERO",
@@ -51,7 +56,8 @@ async function loadAndamento() {
           borderWidth: 2,
           borderColor: "rgba(0, 255, 100, 0.9)",
           backgroundColor: "rgba(0, 255, 100, 0.2)",
-          tension: 0.3
+          tension: 0.35,
+          fill: true
         }
       ]
     },
@@ -59,22 +65,76 @@ async function loadAndamento() {
       responsive: true,
       scales: {
         x: {
-          title: { display: true, text: "Data" },
           ticks: { color: "#fff" }
         },
         y: {
-          title: { display: true, text: "Valore (€)" },
           ticks: { color: "#fff" }
         }
       },
       plugins: {
         legend: {
-          labels: {
-            color: "#fff"
-          }
+          labels: { color: "#fff" }
         }
       }
     }
+  });
+
+  // --------------------------------------------------------
+  //   📌 CALCOLO RIEPILOGO MENSILE (ultimo giorno per ogni mese)
+  // --------------------------------------------------------
+  const perMese = {};
+
+  records.forEach(r => {
+    const [yy, mm] = r.DATA.split("-");
+    const key = `${yy}-${mm}`;
+
+    // Mantiene SEMPRE l'ultimo record del mese
+    perMese[key] = r;
+  });
+
+  // Ordina le chiavi mese
+  const mesi = Object.keys(perMese).sort();
+
+  // --------------------------------------------------------
+  //   📌 COSTRUZIONE DELLA TABELLA MENSILE
+  // --------------------------------------------------------
+  const tbody = document.querySelector("#tabella-mensile tbody");
+  tbody.innerHTML = "";
+
+  let lastInvestito = null;
+
+  mesi.forEach(mese => {
+    const r = perMese[mese];
+
+    const data = r.DATA;
+    const invest = r.INVESTITO;
+    const val = r.GIORNALIERO;
+
+    // Calcolo incremento
+    let incremento = "-";
+    if (lastInvestito !== null) {
+      incremento = invest - lastInvestito;
+    }
+    lastInvestito = invest;
+
+    // profitto
+    const profitto = val - invest;
+
+    // % profitto
+    const profitPerc = invest > 0 ? ((profitto / invest) * 100).toFixed(2) : "0";
+
+    // Riga HTML
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${data}</td>
+      <td>${invest} €</td>
+      <td>${val} €</td>
+      <td class="${incremento >= 0 ? "positivo" : "negativo"}">${incremento === "-" ? "-" : incremento + " €"}</td>
+      <td class="${profitto >= 0 ? "positivo" : "negativo"}">${profitto} €</td>
+      <td class="${profitto >= 0 ? "positivo" : "negativo"}">${profitPerc}%</td>
+    `;
+
+    tbody.appendChild(tr);
   });
 }
 
