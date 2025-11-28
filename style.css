@@ -291,9 +291,11 @@ input:checked + .slider:before {
 /* ----------- TABLE ----------- */
 .table-container {
   overflow-x: auto;
-  overflow-y: auto; /* <-- questa è la cura */
-  max-height: 70vh; /* <-- opzionale ma consigliato: evita tagli */
+  /* RIMUOVI overflow-y che rompe l’allineamento */
+  /* overflow-y: auto; */
+  max-height: 70vh;
 }
+
 
 table {
   width: 100%;
