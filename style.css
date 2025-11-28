@@ -1184,3 +1184,43 @@ body.dark .nice-table td {
   font-weight: bold;
 }
 
+/* Assicura che tutte le tabelle abbiano colonne identiche */
+table, .detail-table {
+  table-layout: fixed;
+}
+
+/* 7 colonne: assegniamo larghezze coerenti */
+table thead th:nth-child(1),
+.detail-table thead th:nth-child(1) {
+  width: 18%;
+}
+
+table thead th:nth-child(2),
+.detail-table thead th:nth-child(2) {
+  width: 13%;
+}
+
+table thead th:nth-child(3),
+.detail-table thead th:nth-child(3) {
+  width: 13%;
+}
+
+table thead th:nth-child(4),
+.detail-table thead th:nth-child(4) {
+  width: 13%;
+}
+
+table thead th:nth-child(5),
+.detail-table thead th:nth-child(5) {
+  width: 13%;
+}
+
+table thead th:nth-child(6),
+.detail-table thead th:nth-child(6) {
+  width: 13%;
+}
+
+table thead th:nth-child(7),
+.detail-table thead th:nth-child(6) {
+  width: 17%;
+}
