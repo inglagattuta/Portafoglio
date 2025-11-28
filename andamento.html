@@ -3,54 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Andamento</title>
+  <title>Andamento Portafoglio</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="style.css">
 
   <style>
     body {
-      background: #0f0f0f;
-      color: #e6e6e6;
+      background: #0e0e0e;
+      color: #f0f0f0;
       font-family: Arial, sans-serif;
       margin: 20px;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 30px;
       color: #fff;
-    }
-
-    .card {
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(6px);
+      margin-bottom: 30px;
     }
 
     #grafico-container {
-      background: rgba(255,255,255,0.05);
-      padding: 20px;
-      border-radius: 16px;
-      backdrop-filter: blur(5px);
-      margin-bottom: 25px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
     }
   </style>
 </head>
 
 <body>
 
-  <h1>Andamento Portafoglio</h1>
+  <h1>📈 Andamento Portafoglio</h1>
 
-  <div id="grafico-container" class="card">
+  <div id="grafico-container">
     <canvas id="grafico"></canvas>
   </div>
 
 <script type="module">
-
   import { db } from "./firebase-config.js";
   import {
     collection,
@@ -58,30 +47,34 @@
   } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
   const ctx = document.getElementById("grafico");
-
   let grafico = null;
 
   async function loadAndamento() {
-    const ref = collection(db, "andamento");
-    const snap = await getDocs(ref);
+    const snap = await getDocs(collection(db, "andamento"));
 
     let labels = [];
-    let valoriGiornaliero = [];
-    let valoriInvestito = [];
+    let giornaliero = [];
+    let investito = [];
 
+    // Preleva i dati ordinati per DATA (data reale)
     let records = [];
     snap.forEach(doc => records.push({ id: doc.id, ...doc.data() }));
-    records.sort((a, b) => a.id.localeCompare(b.id));
 
-    records.forEach((d, i) => {
-      if (d.GIORNALIERO == null || d.INVESTITO == null) return;
+    records.sort((a, b) => new Date(a.DATA) - new Date(b.DATA));
 
-      labels.push("Punto " + (i + 1));
-      valoriGiornaliero.push(d.GIORNALIERO);
-      valoriInvestito.push(d.INVESTITO);
+    records.forEach(d => {
+      if (d.GIORNALIERO == null || d.INVESTITO == null || !d.DATA) return;
+
+      // Formatto data → gg/mm
+      const dataObj = new Date(d.DATA);
+      const dataFormattata = `${dataObj.getDate().toString().padStart(2, "0")}/${(dataObj.getMonth() + 1).toString().padStart(2, "0")}`;
+
+      labels.push(dataFormattata);
+      giornaliero.push(d.GIORNALIERO);
+      investito.push(d.INVESTITO);
     });
 
-    renderGrafico(labels, valoriGiornaliero, valoriInvestito);
+    renderGrafico(labels, giornaliero, investito);
   }
 
   function renderGrafico(labels, giornaliero, investito) {
@@ -95,37 +88,64 @@
           {
             label: "Giornaliero",
             data: giornaliero,
-            borderWidth: 2,
+            borderColor: "rgba(0, 180, 255, 0.85)",
+            backgroundColor: "rgba(0, 180, 255, 0.20)",
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            borderWidth: 3,
             tension: 0.35,
-            borderColor: "rgba(0, 180, 255, 0.9)",
-            backgroundColor: "rgba(0, 180, 255, 0.15)",
-            fill: true
+            fill: true,
           },
           {
             label: "Investito",
             data: investito,
-            borderWidth: 2,
+            borderColor: "rgba(255, 220, 0, 0.85)",
+            backgroundColor: "rgba(255, 220, 0, 0.18)",
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            borderWidth: 3,
             tension: 0.35,
-            borderColor: "rgba(255, 255, 0, 0.8)",
-            backgroundColor: "rgba(255, 255, 0, 0.10)",
-            fill: true
+            fill: true,
           }
         ]
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: {
-            labels: { color: "#ffffff", font: { size: 14 } }
+            labels: {
+              color: "#ffffff",
+              font: { size: 15 }
+            }
+          },
+          tooltip: {
+            backgroundColor: "rgba(0,0,0,0.7)",
+            titleColor: "#fff",
+            bodyColor: "#fff",
+            padding: 12,
+            borderWidth: 0,
+            displayColors: false
           }
         },
         scales: {
           x: {
-            ticks: { color: "#cccccc" },
-            grid: { color: "rgba(255,255,255,0.05)" }
+            ticks: {
+              color: "#cccccc",
+              maxRotation: 45,
+              minRotation: 45
+            },
+            grid: {
+              color: "rgba(255,255,255,0.04)"
+            }
           },
           y: {
-            ticks: { color: "#cccccc" },
-            grid: { color: "rgba(255,255,255,0.05)" }
+            ticks: {
+              color: "#cccccc"
+            },
+            grid: {
+              color: "rgba(255,255,255,0.06)"
+            }
           }
         }
       }
