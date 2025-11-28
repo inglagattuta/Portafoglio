@@ -8,81 +8,46 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    body {
-      background: #0e0e0e;
-      color: #f0f0f0;
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    h1 { text-align:center; color:#fff; margin-bottom:18px; }
-    #grafico-container {
-      background: rgba(255,255,255,0.05);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 18px rgba(0,0,0,0.35);
-      margin-bottom: 18px;
-    }
+    /* ===== Page & Chart ===== */
+    body { background:#0e0e0e; color:#f0f0f0; font-family: Arial, sans-serif; margin:20px; }
+    h1 { text-align:center; color:#fff; margin-bottom:12px; }
+    #grafico-container { background: rgba(255,255,255,0.04); padding:18px; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,0.5); }
     #grafico { width:100% !important; height:360px !important; display:block; }
 
-    /* Tabella riepilogo */
-    .mensile-wrap {
-      background: rgba(255,255,255,0.03);
-      padding: 18px;
-      border-radius: 12px;
-      margin-top: 12px;
-    }
+    /* ===== Mensile table ===== */
+    .mensile-wrap { margin-top:18px; background: rgba(255,255,255,0.02); padding:14px; border-radius:10px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    thead th { background: rgba(255,255,255,0.05); padding:10px; text-align:left; color:#fff; }
+    tbody td { padding:10px; border-bottom:1px solid rgba(255,255,255,0.03); color:#ddd; vertical-align:middle; }
+    tbody tr:hover td { background: rgba(255,255,255,0.01); }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      color: #fff;
+    .btn-toggle, .btn-edit, .btn-save, .btn-cancel {
+      background:transparent; border:1px solid rgba(255,255,255,0.06); color:#fff; padding:6px 8px; border-radius:8px; cursor:pointer;
     }
-    thead th {
-      background: rgba(255,255,255,0.06);
-      padding: 10px;
-      text-align: left;
-    }
-    tbody td {
-      padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      vertical-align: middle;
-    }
+    .btn-toggle:hover, .btn-edit:hover, .btn-save:hover, .btn-cancel:hover { background: rgba(255,255,255,0.02); }
 
-    .btn-toggle {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.08);
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .btn-toggle:hover { background: rgba(255,255,255,0.03); }
+    .positivo { color:#4caf50; font-weight:600; }
+    .negativo { color:#ff5252; font-weight:600; }
 
-    .positivo { color: #4caf50; font-weight:600; }
-    .negativo { color: #ff5252; font-weight:600; }
+    /* details row */
+    .details-row td { background: rgba(255,255,255,0.01); padding:0; }
+    .details-inner { padding:10px 12px; }
 
-    /* dettagli (hidden row) */
-    .details-row td {
-      background: rgba(255,255,255,0.02);
-      padding: 0;
+    .detail-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .detail-table thead th { background: rgba(255,255,255,0.03); padding:8px; color:#fff; text-align:left; }
+    .detail-table td { padding:8px; border-bottom:1px solid rgba(255,255,255,0.03); color:#ddd; }
+
+    .editing { background: rgba(255,255,255,0.01); }
+
+    /* small helpers */
+    .right { text-align:right; }
+    .center { text-align:center; }
+
+    /* responsive */
+    @media (max-width:700px) {
+      thead th, tbody td { font-size:13px; padding:8px; }
+      .btn-toggle, .btn-edit { padding:5px 7px; font-size:12px; }
     }
-    .details-inner {
-      padding: 10px;
-    }
-    .detail-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size:13px;
-    }
-    .detail-table th, .detail-table td {
-      padding: 6px 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      text-align: left;
-      color: #ddd;
-    }
-    .detail-table thead th { background: rgba(255,255,255,0.03); color:#fff; }
   </style>
 </head>
 <body>
@@ -92,10 +57,10 @@
     <canvas id="grafico"></canvas>
   </div>
 
-  <div class="mensile-wrap">
-    <h2 style="margin:8px 0 14px;">📊 Riepilogo Mensile</h2>
+  <div class="mensile-wrap" aria-live="polite">
+    <h2 style="margin:10px 0 12px;">📊 Riepilogo Mensile</h2>
 
-    <table id="tabella-mensile" aria-live="polite">
+    <table id="tabella-mensile" aria-describedby="riepilogo-mensile">
       <thead>
         <tr>
           <th>Data (ultimo mese)</th>
@@ -104,7 +69,7 @@
           <th>Incremento</th>
           <th>Profitto</th>
           <th>% Profitto</th>
-          <th></th>
+          <th class="center">Dettagli</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -113,40 +78,40 @@
 
 <script type="module">
   import { db } from "./firebase-config.js";
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+  import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
+  // canvas context
   const ctx = document.getElementById("grafico").getContext("2d");
   let grafico = null;
 
-  // Utility: formatta id "YYYY-MM-DD" -> "DD/MM/YYYY" o "YYYY-MM-DD" se non match
+  // formato date
   function formatFullDate(id) {
-    if (!id) return "";
     const parts = String(id).split("-");
-    if (parts.length >= 3) return `${parts[2].padStart(2,"0")}/${parts[1].padStart(2,"0")}/${parts[0]}`;
+    if (parts.length >= 3) return `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[0]}`;
     return id;
   }
   function formatShortDate(id) {
-    if (!id) return "";
     const parts = String(id).split("-");
-    if (parts.length >= 3) return `${parts[2].padStart(2,"0")}/${parts[1].padStart(2,"0")}`;
+    if (parts.length >= 3) return `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}`;
     return id;
   }
 
+  // Carica dati e costruisce grafico + tabella
   async function loadAndamento() {
     try {
-      const snap = await getDocs(collection(db, "andamento"));
+      const snapshot = await getDocs(collection(db, "andamento"));
       const raw = [];
-      snap.forEach(d => raw.push({ id: d.id, ...d.data() }));
+      snapshot.forEach(d => raw.push({ id: d.id, ...d.data() }));
 
       if (!raw.length) {
-        console.log("Nessun dato in andamento");
+        console.log("Nessun dato disponibile");
         return;
       }
 
-      // ordina per id (data) ascendente
+      // ordina per data asc
       raw.sort((a,b) => new Date(a.id) - new Date(b.id));
 
-      // Grafico: estrai etichette e dataset (usa tutti i record)
+      // prepara dataset grafico
       const labels = [];
       const valoriGiornaliero = [];
       const valoriInvestito = [];
@@ -160,18 +125,19 @@
 
       renderGrafico(labels, valoriGiornaliero, valoriInvestito);
 
-      // Crea riepilogo mensile: ultimo record per mese
-      const perMese = {}; // key: YYYY-MM
+      // costruisci perMese: ultimo record per mese (key YYYY-MM)
+      const perMese = {};
       raw.forEach(r => {
         const [yy, mm] = String(r.id).split("-");
         const key = `${yy}-${mm}`;
-        perMese[key] = r; // sovrascrive -> ultimo del mese rimane
+        perMese[key] = r; // sovrascrive: rimane l'ultimo giorno del mese
       });
 
       const mesiOrdinati = Object.keys(perMese).sort();
       renderTabellaMensile(mesiOrdinati, perMese, raw);
     } catch (err) {
       console.error("Errore loadAndamento:", err);
+      alert("Errore caricamento dati (vedi console).");
     }
   }
 
@@ -182,14 +148,14 @@
       data: {
         labels,
         datasets: [
-          { label: "Giornaliero", data: giornaliero, borderColor: "rgba(0,180,255,1)", backgroundColor: "rgba(0,180,255,0.18)", tension:0.35, borderWidth:3, pointRadius:2, fill:true },
-          { label: "Investito", data: investito, borderColor: "rgba(255,220,0,1)", backgroundColor: "rgba(255,220,0,0.14)", tension:0.35, borderWidth:3, pointRadius:2, fill:true }
+          { label:"Giornaliero", data: giornaliero, borderColor:"rgba(0,180,255,1)", backgroundColor:"rgba(0,180,255,0.18)", tension:0.35, borderWidth:3, fill:true },
+          { label:"Investito", data: investito, borderColor:"rgba(255,220,0,1)", backgroundColor:"rgba(255,220,0,0.14)", tension:0.35, borderWidth:3, fill:true }
         ]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive:true, maintainAspectRatio:false,
         plugins: {
-          legend: { labels: { color: "#fff" } },
+          legend: { labels:{ color:"#fff" } },
           tooltip: {
             backgroundColor: "rgba(0,0,0,0.75)",
             titleColor:"#fff", bodyColor:"#fff",
@@ -197,129 +163,195 @@
           }
         },
         scales: {
-          x: { ticks: { color:"#ddd", maxRotation:45, minRotation:45 }, grid:{ color:"rgba(255,255,255,0.03)" }, title:{ display:true, text:"Data (gg/mm)", color:"#ccc" } },
-          y: { ticks: { color:"#ddd" }, grid:{ color:"rgba(255,255,255,0.05)" }, title:{ display:true, text:"Valore (€)", color:"#ccc" } }
+          x: { ticks:{ color:"#ddd", maxRotation:45, minRotation:45 }, grid:{ color:"rgba(255,255,255,0.03)" }, title:{ display:true, text:"Data (gg/mm)", color:"#ccc" } },
+          y: { ticks:{ color:"#ddd" }, grid:{ color:"rgba(255,255,255,0.05)" }, title:{ display:true, text:"Valore (€)", color:"#ccc" } }
         }
       }
     });
   }
 
-  // Render tabella mensile + pulsante toggle per dettagli
+  // Rende la tabella mensile e aggiunge logica per toggle e edit inline
   function renderTabellaMensile(mesiOrdinati, perMese, rawRecords) {
     const tbody = document.querySelector("#tabella-mensile tbody");
     tbody.innerHTML = "";
 
     let lastInvestito = null;
 
-    mesiOrdinati.forEach((meseKey, idx) => {
+    mesiOrdinati.forEach((meseKey) => {
       const r = perMese[meseKey];
-      const dataUltimo = r.id; // 'YYYY-MM-DD'
-
+      const dataUltimo = r.id;
       const inv = Number(r.INVESTITO || 0);
       const val = Number(r.GIORNALIERO || 0);
-
       const incremento = lastInvestito !== null ? inv - lastInvestito : 0;
       lastInvestito = inv;
-
       const profitto = val - inv;
       const perc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : "0.00";
 
-      // Riga principale
+      // riga principale
       const tr = document.createElement("tr");
       tr.dataset.mese = meseKey;
       tr.innerHTML = `
         <td>${formatFullDate(dataUltimo)}</td>
-        <td>${inv} €</td>
-        <td>${val} €</td>
-        <td class="${incremento >= 0 ? 'positivo' : 'negativo'}">${incremento} €</td>
-        <td class="${profitto >= 0 ? 'positivo' : 'negativo'}">${profitto} €</td>
-        <td class="${profitto >= 0 ? 'positivo' : 'negativo'}">${perc}%</td>
-        <td style="text-align:center;"><button class="btn-toggle" data-mese="${meseKey}">Dettagli ▸</button></td>
+        <td class="right">${inv} €</td>
+        <td class="right">${val} €</td>
+        <td class="right ${incremento >= 0 ? 'positivo' : 'negativo'}">${incremento} €</td>
+        <td class="right ${profitto >= 0 ? 'positivo' : 'negativo'}">${profitto} €</td>
+        <td class="right ${profitto >= 0 ? 'positivo' : 'negativo'}">${perc}%</td>
+        <td class="center"><button class="btn-toggle" data-mese="${meseKey}">Dettagli ▸</button></td>
       `;
       tbody.appendChild(tr);
 
-      // Row dei dettagli (inizialmente nascosta)
+      // riga dettagli (nascosta)
       const detRow = document.createElement("tr");
       detRow.classList.add("details-row");
       detRow.style.display = "none";
       detRow.dataset.mese = meseKey;
-
       const td = document.createElement("td");
       td.colSpan = 7;
       td.className = "details-inner";
-
-      // crea inner table placeholder (verrà popolata on toggle)
       td.innerHTML = `<div class="details-inner"><em>Carica dettagli...</em></div>`;
-
       detRow.appendChild(td);
       tbody.appendChild(detRow);
     });
 
-    // Event delegation: toggle dettagli
-    tbody.addEventListener("click", (ev) => {
-      const btn = ev.target.closest(".btn-toggle");
-      if (!btn) return;
-      const mese = btn.dataset.mese;
-      const detailsRow = tbody.querySelector(`tr.details-row[data-mese="${mese}"]`);
-      if (!detailsRow) return;
+    // Event delegation: toggles e bottoni edit/save/cancel
+    tbody.addEventListener("click", async (e) => {
+      const btnToggle = e.target.closest(".btn-toggle");
+      if (btnToggle) {
+        const mese = btnToggle.dataset.mese;
+        const detRow = tbody.querySelector(`tr.details-row[data-mese="${mese}"]`);
+        const isHidden = detRow.style.display === "none" || !detRow.style.display;
+        if (!isHidden) {
+          detRow.style.display = "none";
+          btnToggle.textContent = "Dettagli ▸";
+          return;
+        }
 
-      const isHidden = detailsRow.style.display === "none" || !detailsRow.style.display;
-      if (!isHidden) {
-        // chiudi
-        detailsRow.style.display = "none";
-        btn.textContent = "Dettagli ▸";
+        // Build details table
+        const container = detRow.querySelector(".details-inner");
+        // filter rawRecords for that month
+        const giornate = rawRecords
+          .filter(rr => {
+            const [yy, mm] = rr.id.split("-");
+            return `${yy}-${mm}` === mese;
+          })
+          .sort((a,b) => new Date(a.id) - new Date(b.id));
+
+        // build inner table HTML
+        const innerTable = document.createElement("table");
+        innerTable.className = "detail-table";
+        innerTable.innerHTML = `
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Investito</th>
+              <th>Valore</th>
+              <th>Profitto</th>
+              <th>% Profitto</th>
+              <th class="center">Azioni</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${giornate.map(g => {
+              const inv = Number(g.INVESTITO || 0);
+              const val = Number(g.GIORNALIERO || 0);
+              const pf = val - inv;
+              const pct = inv > 0 ? ((pf / inv) * 100).toFixed(2) : "0.00";
+              return `<tr data-docid="${g.id}">
+                <td>${formatFullDate(g.id)}</td>
+                <td class="right">${inv} €</td>
+                <td class="right">${val} €</td>
+                <td class="right ${pf >= 0 ? 'positivo' : 'negativo'}">${pf} €</td>
+                <td class="right ${pf >= 0 ? 'positivo' : 'negativo'}">${pct}%</td>
+                <td class="center">
+                  <button class="btn-edit" data-docid="${g.id}">✏️ Modifica</button>
+                </td>
+              </tr>`}).join("")}
+          </tbody>
+        `;
+
+        container.innerHTML = "";
+        container.appendChild(innerTable);
+        detRow.style.display = "table-row";
+        btnToggle.textContent = "Chiudi ▾";
         return;
       }
 
-      // apri: popola se necessario
-      const container = detailsRow.querySelector(".details-inner");
-      // genera la tabella giornaliera per il mese dal rawRecords
-      const giornate = rawRecords.filter(rr => {
-        const [yy, mm] = rr.id.split("-");
-        return `${yy}-${mm}` === mese;
-      }).sort((a,b) => new Date(a.id) - new Date(b.id));
+      // Edit button clicked (delegation)
+      const btnEdit = e.target.closest(".btn-edit");
+      if (btnEdit) {
+        const docId = btnEdit.dataset.docid;
+        const tr = btnEdit.closest("tr");
+        // read current values
+        const tds = tr.querySelectorAll("td");
+        const curDate = tr.dataset.docid || tr.querySelector("td:first-child").textContent; // not used for update
+        const curInvest = tds[1].textContent.replace(' €','').trim();
+        const curVal = tds[2].textContent.replace(' €','').trim();
 
-      // Costruisci html tabellina interna (Opzione B)
-      const innerTable = document.createElement("table");
-      innerTable.className = "detail-table";
-      innerTable.innerHTML = `
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Investito</th>
-            <th>Valore</th>
-            <th>Profitto</th>
-            <th>% Profitto</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${giornate.map(g => {
-            const inv = Number(g.INVESTITO || 0);
-            const val = Number(g.GIORNALIERO || 0);
-            const pf = val - inv;
-            const pct = inv > 0 ? ((pf / inv) * 100).toFixed(2) : "0.00";
-            return `<tr>
-              <td>${formatFullDate(g.id)}</td>
-              <td>${inv} €</td>
-              <td>${val} €</td>
-              <td class="${pf >= 0 ? 'positivo' : 'negativo'}">${pf} €</td>
-              <td class="${pf >= 0 ? 'positivo' : 'negativo'}">${pct}%</td>
-            </tr>`;
-          }).join("")}
-        </tbody>
-      `;
+        // replace cells with inputs
+        tr.classList.add("editing");
+        tds[1].innerHTML = `<input type="number" step="0.01" value="${Number(curInvest)}" style="width:100px">`;
+        tds[2].innerHTML = `<input type="number" step="0.01" value="${Number(curVal)}" style="width:100px">`;
+        tds[3].innerHTML = `<span class="placeholder">-</span>`;
+        tds[4].innerHTML = `<span class="placeholder">-</span>`;
+        tds[5].innerHTML = `
+          <button class="btn-save" data-docid="${docId}">💾 Salva</button>
+          <button class="btn-cancel" data-docid="${docId}">❌ Annulla</button>
+        `;
+        return;
+      }
 
-      // sostituisci placeholder e mostra
-      container.innerHTML = "";
-      container.appendChild(innerTable);
-      detailsRow.style.display = "table-row";
-      btn.textContent = "Chiudi ▾";
-    });
+      // Cancel edit
+      const btnCancel = e.target.closest(".btn-cancel");
+      if (btnCancel) {
+        const docId = btnCancel.dataset.docid;
+        // restore by reloading the details for that month (simple approach)
+        // find parent month key by walking up to details-row
+        const tr = btnCancel.closest("tr");
+        const detailsRow = tr.closest("tr.details-row");
+        if (detailsRow) {
+          // force re-open the details by triggering the parent toggle: get mese
+          const mese = detailsRow.dataset.mese;
+          // reload all (simple) to restore original state
+          await loadAndamento();
+        }
+        return;
+      }
+
+      // Save edit
+      const btnSave = e.target.closest(".btn-save");
+      if (btnSave) {
+        const docId = btnSave.dataset.docid;
+        const tr = btnSave.closest("tr");
+        const inputs = tr.querySelectorAll("input");
+        const newInvest = Number(inputs[0].value || 0);
+        const newGior = Number(inputs[1].value || 0);
+
+        // disable buttons while saving
+        btnSave.disabled = true;
+        const cancelBtn = tr.querySelector(".btn-cancel");
+        if (cancelBtn) cancelBtn.disabled = true;
+
+        try {
+          const docRef = doc(db, "andamento", docId);
+          await updateDoc(docRef, { INVESTITO: newInvest, GIORNALIERO: newGior });
+          // dopo salvataggio: ricarica dati e UI
+          await loadAndamento();
+          // optionally: scroll to updated row or flash
+        } catch (err) {
+          console.error("Errore updateDoc:", err);
+          alert("Errore durante il salvataggio. Controlla console.");
+        } finally {
+          btnSave.disabled = false;
+          if (cancelBtn) cancelBtn.disabled = false;
+        }
+        return;
+      }
+    }); // end delegation
   }
 
-  // Avvia
+  // avvia
   loadAndamento();
 </script>
-
 </body>
 </html>
