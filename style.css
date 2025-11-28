@@ -1278,3 +1278,16 @@ td.negativo {
   font-weight: bold;
 }
 
+#tabella-mensile {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#tabella-mensile th,
+#tabella-mensile td {
+  width: 16.6%;     /* 6 colonne = 100/6 */
+  padding: 10px;
+  text-align: center;
+  color: #fff;
+}
