@@ -1,90 +1,81 @@
-<script type="module">
-  console.log("SCRIPT AVVIATO");
+import { db } from "./firebase-config.js";
+import {
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  import { db } from "./firebase-config.js";
-  import {
-    collection,
-    getDocs
-  } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+async function loadAndamento() {
+  console.log("DEBUG: caricamento andamento...");
 
-  const ctx = document.getElementById("grafico");
-  let grafico = null;
+  const ref = collection(db, "andamento");
+  const snapshot = await getDocs(ref);
 
-  async function loadAndamento() {
-    console.log("CARICO DATI...");
+  const records = snapshot.docs.map(doc => doc.data());
 
-    const ref = collection(db, "andamento");
-    const snap = await getDocs(ref);
+  console.log("DEBUG record count:", records.length);
 
-    let labels = [];
-    let valoriGiornaliero = [];
-    let valoriInvestito = [];
-
-    // ORDINA PER ID (storico)
-    let records = [];
-    snap.forEach(doc => records.push({ id: doc.id, ...doc.data() }));
-    records.sort((a, b) => a.id.localeCompare(b.id));
-
-    console.log("RECORD ORDINATI:", records);
-
-    records.forEach((d, i) => {
-      if (!d.GIORNALIERO || !d.INVESTITO) return;
-
-      labels.push("Punto " + (i + 1));
-      valoriGiornaliero.push(d.GIORNALIERO);
-      valoriInvestito.push(d.INVESTITO);
-    });
-
-    renderGrafico(labels, valoriGiornaliero, valoriInvestito);
+  if (records.length === 0) {
+    console.log("Nessun dato trovato!");
+    return;
   }
 
-  function renderGrafico(labels, giornaliero, investito) {
-    if (grafico) grafico.destroy();
+  // ORDINA PER DATA (importantissimo)
+  records.sort((a, b) => new Date(a.DATA) - new Date(b.DATA));
 
-    grafico = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Giornaliero",
-            data: giornaliero,
-            borderWidth: 2,
-            tension: 0.35,
-            borderColor: "rgba(0, 180, 255, 0.9)",
-            backgroundColor: "rgba(0, 180, 255, 0.15)",
-            fill: true
-          },
-          {
-            label: "Investito",
-            data: investito,
-            borderWidth: 2,
-            tension: 0.35,
-            borderColor: "rgba(255, 255, 0, 0.8)",
-            backgroundColor: "rgba(255, 255, 0, 0.10)",
-            fill: true
-          }
-        ]
-      },
-      options: {
-        plugins: {
-          legend: {
-            labels: { color: "#ffffff", font: { size: 14 } }
-          }
+  // PREPARA I DATI
+  const labels = records.map(r => r.DATA);
+  const investito = records.map(r => Number(r.INVESTITO || 0));
+  const giornaliero = records.map(r => Number(r.GIORNALIERO || 0));
+
+  console.log("DEBUG labels:", labels);
+
+  // CREA IL GRAFICO
+  const ctx = document.getElementById("chart-andamento").getContext("2d");
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "INVESTITO",
+          data: investito,
+          borderWidth: 2,
+          borderColor: "rgba(0, 200, 255, 0.9)",
+          backgroundColor: "rgba(0, 200, 255, 0.2)",
+          tension: 0.3
         },
-        scales: {
-          x: {
-            ticks: { color: "#cccccc" },
-            grid: { color: "rgba(255,255,255,0.05)" }
-          },
-          y: {
-            ticks: { color: "#cccccc" },
-            grid: { color: "rgba(255,255,255,0.05)" }
+        {
+          label: "GIORNALIERO",
+          data: giornaliero,
+          borderWidth: 2,
+          borderColor: "rgba(0, 255, 100, 0.9)",
+          backgroundColor: "rgba(0, 255, 100, 0.2)",
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          title: { display: true, text: "Data" },
+          ticks: { color: "#fff" }
+        },
+        y: {
+          title: { display: true, text: "Valore (€)" },
+          ticks: { color: "#fff" }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: "#fff"
           }
         }
       }
-    });
-  }
+    }
+  });
+}
 
-  loadAndamento();
-</script>
+loadAndamento();
