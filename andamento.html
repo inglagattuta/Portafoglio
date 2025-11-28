@@ -28,6 +28,13 @@
       box-shadow: 0 0 25px rgba(0,0,0,0.35);
       backdrop-filter: blur(6px);
     }
+
+    /* assicuriamoci che il canvas abbia altezza */
+    #grafico {
+      width: 100% !important;
+      height: 420px !important;
+      display: block;
+    }
   </style>
 </head>
 
@@ -36,50 +43,82 @@
   <h1>📈 Andamento Portafoglio</h1>
 
   <div id="grafico-container">
-   <canvas id="grafico" style="height: 400px; width: 100%;"></canvas>
-
+   <canvas id="grafico"></canvas>
   </div>
 
 <script type="module">
   import { db } from "./firebase-config.js";
-  import {
-    collection,
-    getDocs
-  } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
+  // prende il context 2d
   const ctx = document.getElementById("grafico").getContext("2d");
-
   let grafico = null;
 
   async function loadAndamento() {
-    const snap = await getDocs(collection(db, "andamento"));
+    try {
+      const snap = await getDocs(collection(db, "andamento"));
 
-    let labels = [];
-    let giornaliero = [];
-    let investito = [];
+      // costruisco array di record usando doc.id come DATA
+      const records = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        records.push({ id: doc.id, ...d });
+      });
 
-    // Preleva i dati ordinati per DATA (data reale)
-    let records = [];
-    snap.forEach(doc => records.push({ id: doc.id, ...doc.data() }));
+      console.log("DEBUG: records raw", records);
+      if (!records.length) {
+        console.log("DEBUG: nessun record trovato in Firestore");
+        return;
+      }
 
-    records.sort((a, b) => new Date(a.DATA) - new Date(b.DATA));
+      // ordina per id (es. "2025-01-03")
+      records.sort((a, b) => {
+        // converti id in Date per confrontare
+        const da = new Date(a.id);
+        const db_ = new Date(b.id);
+        return da - db_;
+      });
 
-  records.forEach(d => {
-  if (d.GIORNALIERO == null || d.INVESTITO == null || !d.DATA) return;
+      // prepara dati per il grafico
+      const labels = [];
+      const valoriGiornaliero = [];
+      const valoriInvestito = [];
 
-  // DATA: "2025-01-03"
-  const parts = d.DATA.split("-");
-  const giorno = parts[2];
-  const mese = parts[1];
-  const dataFormattata = `${giorno}/${mese}`;
+      records.forEach((r) => {
+        // usa r.id come data, i campi numerici da document
+        if (r.id == null) return;
+        // accetta 0 come valore (usa == null per controllare null/undefined)
+        if (r.GIORNALIERO == null || r.INVESTITO == null) return;
 
-  labels.push(dataFormattata);
-  giornaliero.push(Number(d.GIORNALIERO));
-  investito.push(Number(d.INVESTITO));
-});
+        // r.id è tipo "2025-01-03" -> estraggo gg/mm per asse X
+        const parts = String(r.id).split("-");
+        let label;
+        if (parts.length >= 3) {
+          label = `${parts[2].padStart(2,"0")}/${parts[1].padStart(2,"0")}`; // gg/mm
+        } else {
+          label = r.id;
+        }
 
+        labels.push(label);
+        valoriGiornaliero.push(Number(r.GIORNALIERO));
+        valoriInvestito.push(Number(r.INVESTITO));
+      });
 
-    renderGrafico(labels, giornaliero, investito);
+      console.log("DEBUG labels:", labels);
+      console.log("DEBUG giornaliero:", valoriGiornaliero);
+      console.log("DEBUG investito:", valoriInvestito);
+
+      // se non ci sono dati validi, esci
+      if (!labels.length || !valoriGiornaliero.length || !valoriInvestito.length) {
+        console.log("DEBUG: Nessun dato valido per il grafico");
+        return;
+      }
+
+      renderGrafico(labels, valoriGiornaliero, valoriInvestito);
+
+    } catch (err) {
+      console.error("Errore loadAndamento:", err);
+    }
   }
 
   function renderGrafico(labels, giornaliero, investito) {
@@ -93,10 +132,10 @@
           {
             label: "Giornaliero",
             data: giornaliero,
-            borderColor: "rgba(0, 180, 255, 0.85)",
-            backgroundColor: "rgba(0, 180, 255, 0.20)",
+            borderColor: "rgba(0, 180, 255, 0.95)",
+            backgroundColor: "rgba(0, 180, 255, 0.18)",
             pointRadius: 3,
-            pointHoverRadius: 5,
+            pointHoverRadius: 6,
             borderWidth: 3,
             tension: 0.35,
             fill: true,
@@ -104,10 +143,10 @@
           {
             label: "Investito",
             data: investito,
-            borderColor: "rgba(255, 220, 0, 0.85)",
-            backgroundColor: "rgba(255, 220, 0, 0.18)",
+            borderColor: "rgba(255, 220, 0, 0.95)",
+            backgroundColor: "rgba(255, 220, 0, 0.14)",
             pointRadius: 3,
-            pointHoverRadius: 5,
+            pointHoverRadius: 6,
             borderWidth: 3,
             tension: 0.35,
             fill: true,
@@ -119,44 +158,37 @@
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            labels: {
-              color: "#ffffff",
-              font: { size: 15 }
-            }
+            labels: { color: "#ffffff", font: { size: 13 } }
           },
           tooltip: {
-            backgroundColor: "rgba(0,0,0,0.7)",
+            backgroundColor: "rgba(0,0,0,0.75)",
             titleColor: "#fff",
             bodyColor: "#fff",
-            padding: 12,
-            borderWidth: 0,
-            displayColors: false
+            padding: 10,
+            displayColors: false,
+            callbacks: {
+              // mostra label con valore e dataset name
+              label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} €`
+            }
           }
         },
         scales: {
           x: {
-            ticks: {
-              color: "#cccccc",
-              maxRotation: 45,
-              minRotation: 45
-            },
-            grid: {
-              color: "rgba(255,255,255,0.04)"
-            }
+            ticks: { color: "#ddd", maxRotation: 45, minRotation: 45 },
+            grid: { color: "rgba(255,255,255,0.03)" },
+            title: { display: true, text: "Data (gg/mm)", color: "#ccc" }
           },
           y: {
-            ticks: {
-              color: "#cccccc"
-            },
-            grid: {
-              color: "rgba(255,255,255,0.06)"
-            }
+            ticks: { color: "#ddd" },
+            grid: { color: "rgba(255,255,255,0.05)" },
+            title: { display: true, text: "Valore (€)", color: "#ccc" }
           }
         }
       }
     });
   }
 
+  // avvia
   loadAndamento();
 </script>
 
