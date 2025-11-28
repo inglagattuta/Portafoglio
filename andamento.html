@@ -64,17 +64,20 @@
 
     records.sort((a, b) => new Date(a.DATA) - new Date(b.DATA));
 
-    records.forEach(d => {
-      if (d.GIORNALIERO == null || d.INVESTITO == null || !d.DATA) return;
+  records.forEach(d => {
+  if (d.GIORNALIERO == null || d.INVESTITO == null || !d.DATA) return;
 
-      // Formatto data → gg/mm
-      const dataObj = new Date(d.DATA);
-      const dataFormattata = `${dataObj.getDate().toString().padStart(2, "0")}/${(dataObj.getMonth() + 1).toString().padStart(2, "0")}`;
+  // DATA: "2025-01-03"
+  const parts = d.DATA.split("-");
+  const giorno = parts[2];
+  const mese = parts[1];
+  const dataFormattata = `${giorno}/${mese}`;
 
-      labels.push(dataFormattata);
-      giornaliero.push(d.GIORNALIERO);
-      investito.push(d.INVESTITO);
-    });
+  labels.push(dataFormattata);
+  giornaliero.push(Number(d.GIORNALIERO));
+  investito.push(Number(d.INVESTITO));
+});
+
 
     renderGrafico(labels, giornaliero, investito);
   }
