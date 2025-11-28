@@ -36,7 +36,8 @@
   <h1>📈 Andamento Portafoglio</h1>
 
   <div id="grafico-container">
-    <canvas id="grafico"></canvas>
+   <canvas id="grafico" style="height: 400px; width: 100%;"></canvas>
+
   </div>
 
 <script type="module">
@@ -46,7 +47,8 @@
     getDocs
   } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  const ctx = document.getElementById("grafico");
+  const ctx = document.getElementById("grafico").getContext("2d");
+
   let grafico = null;
 
   async function loadAndamento() {
