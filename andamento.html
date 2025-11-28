@@ -5,51 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Andamento Portafoglio</title>
 
-  <!-- usa lo stesso CSS della dashboard -->
+  <!-- tema generale -->
   <link rel="stylesheet" href="style.css?v=5">
+  <!-- stile specifico per andamento -->
+  <link rel="stylesheet" href="andamento.css?v=1">
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    /* piccole integrazioni locali che non sovrascrivono il tema */
-    #grafico-container { padding:12px; border-radius:10px; margin-bottom:12px; }
-    #grafico { width:100% !important; height:360px !important; display:block; }
-
-    /* assicurati che la tabella mensile sia leggibile con il tema */
-    .mensile-wrap { padding:12px; border-radius:10px; }
-    #tabella-mensile { width:100%; border-collapse:collapse; table-layout:fixed; font-size:14px; }
-    #tabella-mensile col:nth-child(1){width:18%}
-    #tabella-mensile col:nth-child(2){width:14%}
-    #tabella-mensile col:nth-child(3){width:14%}
-    #tabella-mensile col:nth-child(4){width:14%}
-    #tabella-mensile col:nth-child(5){width:14%}
-    #tabella-mensile col:nth-child(6){width:12%}
-    #tabella-mensile col:nth-child(7){width:14%}
-
-    thead th { padding:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    tbody td { padding:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-top: 1px solid rgba(0,0,0,0.06); }
-
-    td:nth-child(1), th:nth-child(1) { text-align:left; }
-    td:nth-child(2), th:nth-child(2),
-    td:nth-child(3), th:nth-child(3),
-    td:nth-child(4), th:nth-child(4),
-    td:nth-child(5), th:nth-child(5),
-    td:nth-child(6), th:nth-child(6) { text-align:right; }
-    td:nth-child(7), th:nth-child(7) { text-align:center; }
-
-    .positivo { color:#4caf50 !important; font-weight:700; }
-    .negativo { color:#ff5252 !important; font-weight:700; }
-
-    .btn-toggle, .btn-edit, .btn-save, .btn-cancel {
-      background:transparent; border:1px solid rgba(0,0,0,0.08); padding:6px 8px; border-radius:8px; cursor:pointer;
-    }
-
-    /* controls (nav) */
-    .controls { display:flex; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
-    .controls button, .controls a { padding:10px 16px; border-radius:10px; border:none; cursor:pointer; text-decoration:none; color:inherit; }
-  </style>
 </head>
 <body>
-  <!-- applica il tema prima di renderizzare il resto (come nel dashboard) -->
+  <!-- applica il tema prima di renderizzare il resto -->
   <script>
     const savedTheme = localStorage.getItem("theme") || "light";
     document.body.dataset.theme = savedTheme;
@@ -76,7 +40,6 @@
     <div class="mensile-wrap" aria-live="polite">
       <h2 style="margin:6px 0 10px;">📊 Riepilogo Mensile</h2>
 
-      <!-- colgroup per forzare larghezze e garantire allineamento -->
       <table id="tabella-mensile" aria-describedby="riepilogo-mensile">
         <colgroup>
           <col> <!-- Data -->
@@ -133,7 +96,6 @@
 
       raw.sort((a,b) => new Date(a.id) - new Date(b.id));
 
-      // grafico
       const labels = raw.map(r => formatShort(r.id));
       const giornaliero = raw.map(r => Number(r.GIORNALIERO || 0));
       const investito = raw.map(r => Number(r.INVESTITO || 0));
@@ -152,13 +114,8 @@
         }
       });
 
-      // perMese: ultimo record per mese (YYYY-MM)
       const perMese = {};
-      raw.forEach(r => {
-        const key = r.id.slice(0,7);
-        perMese[key] = r;
-      });
-
+      raw.forEach(r => { perMese[r.id.slice(0,7)] = r; });
       renderTabella(perMese, raw);
     } catch (err) {
       console.error("Errore loadAndamento:", err);
@@ -167,7 +124,6 @@
   }
 
   function renderTabella(perMese, rawRecords) {
-    // rimuovo eventuali listener clonando il tbody
     const old = document.querySelector("#tabella-mensile tbody");
     const tbody = old.cloneNode(false);
     old.parentNode.replaceChild(tbody, old);
@@ -195,7 +151,6 @@
       `;
       tbody.appendChild(tr);
 
-      // riga dei dettagli (nascosta)
       const detRow = document.createElement("tr");
       detRow.className = "details-row";
       detRow.style.display = "none";
@@ -208,7 +163,6 @@
       tbody.appendChild(detRow);
     });
 
-    // delegazione eventi sul tbody nuovo
     tbody.addEventListener("click", async (e) => {
       const toggle = e.target.closest(".btn-toggle");
       if (toggle) {
@@ -220,7 +174,6 @@
           toggle.textContent = "Dettagli ▸";
           return;
         }
-        // filtra giornate del mese
         const records = rawRecords.filter(rr => rr.id.startsWith(mese)).sort((a,b) => new Date(a.id)-new Date(b.id));
         container.innerHTML = `
           <table class="detail-table">
@@ -249,7 +202,6 @@
         return;
       }
 
-      // Edit -> trasforma in input
       const editBtn = e.target.closest(".btn-edit");
       if (editBtn) {
         const tr = editBtn.closest("tr");
@@ -265,14 +217,12 @@
         return;
       }
 
-      // Cancel -> ricarica per ripristinare stato
       const cancel = e.target.closest(".btn-cancel");
       if (cancel) {
         await loadAndamento();
         return;
       }
 
-      // Save -> aggiorna Firestore
       const save = e.target.closest(".btn-save");
       if (save) {
         const docid = save.dataset.docid;
@@ -298,7 +248,6 @@
     });
   }
 
-  // inizio
   loadAndamento();
 </script>
 </body>
