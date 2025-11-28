@@ -125,6 +125,26 @@
 
       raw.sort((a,b) => new Date(a.id) - new Date(b.id));
 
+
+      // =============================
+//   AGGIORNA I BOXPANEL
+// =============================
+(function updateSummaryBoxes() {
+  const last = raw[raw.length - 1]; // ultimo giorno disponibile
+  if (!last) return;
+
+  const inv = Number(last.INVESTITO || 0);
+  const val = Number(last.GIORNALIERO || 0);
+  const profit = val - inv;
+  const perc = inv > 0 ? (profit / inv * 100).toFixed(2) : "0.00";
+
+  document.querySelector("#box-investito .value").textContent = inv.toFixed(2) + " €";
+  document.querySelector("#box-valore .value").textContent = val.toFixed(2) + " €";
+  document.querySelector("#box-profitto .value").textContent =
+    profit.toFixed(2) + " €";
+  document.querySelector("#box-percentuale .value").textContent = perc + "%";
+})();
+
       const labels = raw.map(r => formatShort(r.id));
       const giornaliero = raw.map(r => Number(r.GIORNALIERO || 0));
       const investito = raw.map(r => Number(r.INVESTITO || 0));
