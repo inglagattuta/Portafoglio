@@ -8,384 +8,303 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* ===== Page & Chart ===== */
-    body { background:#0e0e0e; color:#f0f0f0; font-family: Arial, sans-serif; margin:20px; }
-    h1 { text-align:center; color:#fff; margin-bottom:12px; }
-    #grafico-container { background: rgba(255,255,255,0.04); padding:18px; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,0.5); }
+    /* =========================================================
+       COLORI AUTOMATICI PER LIGHT E DARK THEME
+       ========================================================= */
+    :root {
+      --bg: #ffffff;
+      --text: #222;
+      --card-bg: rgba(0,0,0,0.05);
+      --table-bg: rgba(0,0,0,0.04);
+      --border: rgba(0,0,0,0.15);
+      --th-bg: rgba(0,0,0,0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e0e0e;
+        --text: #f0f0f0;
+        --card-bg: rgba(255,255,255,0.04);
+        --table-bg: rgba(255,255,255,0.03);
+        --border: rgba(255,255,255,0.05);
+        --th-bg: rgba(255,255,255,0.07);
+      }
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1 { text-align:center; margin-bottom:12px; }
+
+    #grafico-container {
+      background: var(--card-bg);
+      padding:18px;
+      border-radius:12px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.4);
+    }
     #grafico { width:100% !important; height:360px !important; display:block; }
 
-    /* ===== Mensile table ===== */
-    .mensile-wrap { margin-top:18px; background: rgba(255,255,255,0.02); padding:14px; border-radius:10px; }
+    /* ----- TABELLA MENSILE ---- */
+    .mensile-wrap {
+      margin-top:18px;
+      background: var(--card-bg);
+      padding:14px;
+      border-radius:10px;
+    }
 
-    /* TABLE: FORZA L'ALLINEAMENTO TRAMITE COLGROUP E TABLE-LAYOUT FIXED */
     #tabella-mensile {
       width: 100%;
       border-collapse: collapse;
-      table-layout: fixed;          /* fondamentale */
+      table-layout: fixed;
       font-size:14px;
-      background: rgba(255,255,255,0.02);
-      color: #fff;
+      background: var(--table-bg);
+      color: var(--text);
     }
 
-    /* definisci larghezze coerenti: (totale 100%) */
-    #tabella-mensile col:nth-child(1) { width: 18%; } /* Data */
-    #tabella-mensile col:nth-child(2) { width: 14%; } /* Investito */
-    #tabella-mensile col:nth-child(3) { width: 14%; } /* Valore */
-    #tabella-mensile col:nth-child(4) { width: 14%; } /* Incremento */
-    #tabella-mensile col:nth-child(5) { width: 14%; } /* Profitto */
-    #tabella-mensile col:nth-child(6) { width: 12%; } /* % Profitto */
-    #tabella-mensile col:nth-child(7) { width: 14%; } /* Dettagli */
+    #tabella-mensile col:nth-child(1){width:18%}
+    #tabella-mensile col:nth-child(2){width:14%}
+    #tabella-mensile col:nth-child(3){width:14%}
+    #tabella-mensile col:nth-child(4){width:14%}
+    #tabella-mensile col:nth-child(5){width:14%}
+    #tabella-mensile col:nth-child(6){width:12%}
+    #tabella-mensile col:nth-child(7){width:14%}
 
-    /* HEADERS */
-    #tabella-mensile thead th {
-      background: rgba(255,255,255,0.05);
-      padding: 10px;
-      color: #fff;
-      font-weight: 700;
-      text-align: left;            /* header left look */
+    thead th {
+      padding:10px;
+      background: var(--th-bg);
+      font-weight:700;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    /* CELLE */
-    #tabella-mensile tbody td {
-      padding: 10px;
-      border-top: 1px solid rgba(255,255,255,0.03);
-      color: #ddd;
-      vertical-align: middle;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    tbody td {
+      padding:10px;
+      border-top:1px solid var(--border);
       white-space: nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    /* Allineamenti coerenti per colonna (stesso ordine di colgroup) */
-    #tabella-mensile td:nth-child(1), #tabella-mensile th:nth-child(1) { text-align: left; }
-    #tabella-mensile td:nth-child(2), #tabella-mensile th:nth-child(2) { text-align: right; }
-    #tabella-mensile td:nth-child(3), #tabella-mensile th:nth-child(3) { text-align: right; }
-    #tabella-mensile td:nth-child(4), #tabella-mensile th:nth-child(4) { text-align: right; }
-    #tabella-mensile td:nth-child(5), #tabella-mensile th:nth-child(5) { text-align: right; }
-    #tabella-mensile td:nth-child(6), #tabella-mensile th:nth-child(6) { text-align: right; }
-    #tabella-mensile td:nth-child(7), #tabella-mensile th:nth-child(7) { text-align: center; }
+    /* allineamento */
+    td:nth-child(1), th:nth-child(1){text-align:left}
+    td:nth-child(2), th:nth-child(2){text-align:right}
+    td:nth-child(3), th:nth-child(3){text-align:right}
+    td:nth-child(4), th:nth-child(4){text-align:right}
+    td:nth-child(5), th:nth-child(5){text-align:right}
+    td:nth-child(6), th:nth-child(6){text-align:right}
+    td:nth-child(7), th:nth-child(7){text-align:center}
+
+    /* verde / rosso */
+    .positivo { color:#4caf50 !important; font-weight:bold; }
+    .negativo { color:#ff5252 !important; font-weight:bold; }
+
+    /* dettagli */
+    .details-row td { background: var(--table-bg); padding:0; }
+    .details-inner { padding:10px 12px; }
+    .detail-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:13px; }
+
+    .detail-table th {
+      background: var(--th-bg);
+      padding:8px;
+      text-align:left;
+    }
+
+    .detail-table td {
+      padding:8px;
+      border-top:1px solid var(--border);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
 
     .btn-toggle, .btn-edit, .btn-save, .btn-cancel {
-      background:transparent; border:1px solid rgba(255,255,255,0.06); color:#fff; padding:6px 8px; border-radius:8px; cursor:pointer;
-    }
-    .btn-toggle:hover, .btn-edit:hover, .btn-save:hover, .btn-cancel:hover { background: rgba(255,255,255,0.02); }
-
-    .positivo { color:#4caf50; font-weight:600; }
-    .negativo { color:#ff5252; font-weight:600; }
-
-    /* details row: la inner table deve rispettare le stesse colonne (usa colgroup anche lì) */
-    .details-row td { background: rgba(255,255,255,0.01); padding:0; }
-    .details-inner { padding:10px 12px; }
-
-    .detail-table { width:100%; border-collapse:collapse; font-size:13px; table-layout: fixed; }
-    .detail-table thead th { background: rgba(255,255,255,0.03); padding:8px; color:#fff; text-align:left; white-space:nowrap; }
-    .detail-table td { padding:8px; border-top:1px solid rgba(255,255,255,0.03); color:#ddd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-    .editing { background: rgba(255,255,255,0.01); }
-
-    .right { text-align:right; }
-    .center { text-align:center; }
-
-    @media (max-width:800px) {
-      /* su mobile rendiamo la tabella scrollabile orizzontalmente */
-      .mensile-wrap { overflow-x:auto; }
-      #tabella-mensile thead th { font-size:13px; }
-      #tabella-mensile tbody td { font-size:13px; }
+      background:transparent;
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:6px 8px;
+      border-radius:8px;
+      cursor:pointer;
     }
   </style>
 </head>
 <body>
-  <h1>📈 Andamento Portafoglio</h1>
 
-  <div id="grafico-container">
-    <canvas id="grafico"></canvas>
-  </div>
+<h1>📈 Andamento Portafoglio</h1>
 
-  <div class="mensile-wrap" aria-live="polite">
-    <h2 style="margin:10px 0 12px;">📊 Riepilogo Mensile</h2>
+<div id="grafico-container">
+  <canvas id="grafico"></canvas>
+</div>
 
-    <!-- COLGROUP per forzare le larghezze e garantire allineamento perfetto -->
-    <table id="tabella-mensile" aria-describedby="riepilogo-mensile">
-      <colgroup>
-        <col> <!-- Data -->
-        <col> <!-- Investito -->
-        <col> <!-- Valore -->
-        <col> <!-- Incremento -->
-        <col> <!-- Profitto -->
-        <col> <!-- % Profitto -->
-        <col> <!-- Dettagli -->
-      </colgroup>
-      <thead>
-        <tr>
-          <th>Data (ultimo mese)</th>
-          <th>Investito</th>
-          <th>Valore</th>
-          <th>Incremento</th>
-          <th>Profitto</th>
-          <th>% Profitto</th>
-          <th class="center">Dettagli</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<div class="mensile-wrap">
+  <h2>📊 Riepilogo Mensile</h2>
 
+  <table id="tabella-mensile">
+    <colgroup>
+      <col><col><col><col><col><col><col>
+    </colgroup>
+
+    <thead>
+      <tr>
+        <th>Data (ultimo mese)</th>
+        <th>Investito</th>
+        <th>Valore</th>
+        <th>Incremento</th>
+        <th>Profitto</th>
+        <th>% Profitto</th>
+        <th>Dettagli</th>
+      </tr>
+    </thead>
+
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- ===========================
+       JAVASCRIPT PRINCIPALE
+     =========================== -->
 <script type="module">
   import { db } from "./firebase-config.js";
-  import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+  import { collection, getDocs, doc, updateDoc }
+    from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
   const ctx = document.getElementById("grafico").getContext("2d");
   let grafico = null;
 
-  function formatFullDate(id) {
-    const parts = String(id).split("-");
-    if (parts.length >= 3) return `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[0]}`;
-    return id;
-  }
-  function formatShortDate(id) {
-    const parts = String(id).split("-");
-    if (parts.length >= 3) return `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}`;
-    return id;
-  }
+  const formatDate = id => {
+    const [y,m,d] = id.split("-");
+    return `${d}/${m}/${y}`;
+  };
 
   async function loadAndamento() {
-    try {
-      const snapshot = await getDocs(collection(db, "andamento"));
-      const raw = [];
-      snapshot.forEach(d => raw.push({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, "andamento"));
+    const raw = [];
+    snap.forEach(x => raw.push({ id:x.id, ...x.data() }));
+    raw.sort((a,b) => new Date(a.id) - new Date(b.id));
 
-      if (!raw.length) { console.log("Nessun dato disponibile"); return; }
+    const labels = raw.map(r => formatDate(r.id).slice(0,5));
+    const gior = raw.map(r => Number(r.GIORNALIERO || 0));
+    const inv  = raw.map(r => Number(r.INVESTITO || 0));
 
-      raw.sort((a,b) => new Date(a.id) - new Date(b.id));
-
-      // grafico
-      const labels = [];
-      const valoriGiornaliero = [];
-      const valoriInvestito = [];
-
-      raw.forEach(r => {
-        if (r.GIORNALIERO == null || r.INVESTITO == null) return;
-        labels.push(formatShortDate(r.id));
-        valoriGiornaliero.push(Number(r.GIORNALIERO));
-        valoriInvestito.push(Number(r.INVESTITO));
-      });
-
-      renderGrafico(labels, valoriGiornaliero, valoriInvestito);
-
-      // perMese: ultimo record per mese
-      const perMese = {};
-      raw.forEach(r => {
-        const [yy, mm] = String(r.id).split("-");
-        const key = `${yy}-${mm}`;
-        perMese[key] = r; // sovrascrive -> rimane ultimo giorno del mese
-      });
-
-      const mesiOrdinati = Object.keys(perMese).sort();
-      renderTabellaMensile(mesiOrdinati, perMese, raw);
-    } catch (err) {
-      console.error("Errore loadAndamento:", err);
-      alert("Errore caricamento dati (vedi console).");
-    }
-  }
-
-  function renderGrafico(labels, giornaliero, investito) {
     if (grafico) grafico.destroy();
     grafico = new Chart(ctx, {
       type: "line",
       data: {
         labels,
         datasets: [
-          { label:"Giornaliero", data: giornaliero, borderColor:"rgba(0,180,255,1)", backgroundColor:"rgba(0,180,255,0.18)", tension:0.35, borderWidth:3, fill:true },
-          { label:"Investito", data: investito, borderColor:"rgba(255,220,0,1)", backgroundColor:"rgba(255,220,0,0.14)", tension:0.35, borderWidth:3, fill:true }
+          { label:"Giornaliero", data:gior, borderColor:"cyan", tension:0.3 },
+          { label:"Investito", data:inv, borderColor:"yellow", tension:0.3 }
         ]
       },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins: {
-          legend: { labels:{ color:"#fff" } },
-          tooltip: {
-            backgroundColor: "rgba(0,0,0,0.75)",
-            titleColor:"#fff", bodyColor:"#fff",
-            callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} €` }
-          }
-        },
-        scales: {
-          x: { ticks:{ color:"#ddd", maxRotation:45, minRotation:45 }, grid:{ color:"rgba(255,255,255,0.03)" }, title:{ display:true, text:"Data (gg/mm)", color:"#ccc" } },
-          y: { ticks:{ color:"#ddd" }, grid:{ color:"rgba(255,255,255,0.05)" }, title:{ display:true, text:"Valore (€)", color:"#ccc" } }
-        }
-      }
+      options: { responsive:true }
     });
+
+    const perMese = {};
+    raw.forEach(r => {
+      const k = r.id.slice(0,7);
+      perMese[k] = r;
+    });
+
+    renderTabella(perMese, raw);
   }
 
-  function renderTabellaMensile(mesiOrdinati, perMese, rawRecords) {
+  function renderTabella(perMese, raw) {
     const tbody = document.querySelector("#tabella-mensile tbody");
     tbody.innerHTML = "";
 
-    let lastInvestito = null;
+    let lastInv = null;
 
-    mesiOrdinati.forEach((meseKey) => {
-      const r = perMese[meseKey];
-      const dataUltimo = r.id;
-      const inv = Number(r.INVESTITO || 0);
-      const val = Number(r.GIORNALIERO || 0);
-      const incremento = lastInvestito !== null ? inv - lastInvestito : 0;
-      lastInvestito = inv;
+    Object.keys(perMese).sort().forEach(mese => {
+      const r = perMese[mese];
+      const inv = Number(r.INVESTITO);
+      const val = Number(r.GIORNALIERO);
+      const incremento = lastInv != null ? inv - lastInv : 0;
       const profitto = val - inv;
-      const perc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : "0.00";
+      const perc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : 0;
+      lastInv = inv;
 
-      // riga principale coerente con colgroup
       const tr = document.createElement("tr");
-      tr.dataset.mese = meseKey;
       tr.innerHTML = `
-        <td>${formatFullDate(dataUltimo)}</td>
+        <td>${formatDate(r.id)}</td>
         <td class="right">${inv} €</td>
         <td class="right">${val} €</td>
-        <td class="right ${incremento >= 0 ? 'positivo' : 'negativo'}">${incremento} €</td>
-        <td class="right ${profitto >= 0 ? 'positivo' : 'negativo'}">${profitto} €</td>
-        <td class="right ${profitto >= 0 ? 'positivo' : 'negativo'}">${perc}%</td>
-        <td class="center"><button class="btn-toggle" data-mese="${meseKey}">Dettagli ▸</button></td>
+        <td class="right ${incremento>=0?'positivo':'negativo'}">${incremento} €</td>
+        <td class="right ${profitto>=0?'positivo':'negativo'}">${profitto} €</td>
+        <td class="right ${profitto>=0?'positivo':'negativo'}">${perc}%</td>
+        <td class="center"><button class="btn-toggle" data-mese="${mese}">Dettagli ▸</button></td>
       `;
       tbody.appendChild(tr);
 
-      // riga dettagli (nascosta) che conterrà una inner table con stesso numero di colonne
       const detRow = document.createElement("tr");
-      detRow.classList.add("details-row");
+      detRow.className = "details-row";
       detRow.style.display = "none";
-      detRow.dataset.mese = meseKey;
-      const td = document.createElement("td");
-      td.colSpan = 7;
-      td.className = "details-inner";
-      td.innerHTML = `<div class="details-inner"><em>Carica dettagli...</em></div>`;
-      detRow.appendChild(td);
+      detRow.dataset.mese = mese;
+      detRow.innerHTML = `<td colspan="7" class="details-inner"></td>`;
       tbody.appendChild(detRow);
     });
 
-    // Event delegation: toggle, edit, save, cancel
-    tbody.addEventListener("click", async (e) => {
-      const btnToggle = e.target.closest(".btn-toggle");
-      if (btnToggle) {
-        const mese = btnToggle.dataset.mese;
-        const detRow = tbody.querySelector(`tr.details-row[data-mese="${mese}"]`);
-        const isHidden = detRow.style.display === "none" || !detRow.style.display;
-        if (!isHidden) {
-          detRow.style.display = "none";
-          btnToggle.textContent = "Dettagli ▸";
-          return;
-        }
+    tbody.addEventListener("click", async e => {
+      const btn = e.target.closest(".btn-toggle");
+      if (!btn) return;
+      const mese = btn.dataset.mese;
 
-        const container = detRow.querySelector(".details-inner");
-        const giornate = rawRecords
-          .filter(rr => {
-            const [yy, mm] = rr.id.split("-");
-            return `${yy}-${mm}` === mese;
-          })
-          .sort((a,b) => new Date(a.id) - new Date(b.id));
+      const detRow = tbody.querySelector(`tr.details-row[data-mese="${mese}"]`);
+      const box = detRow.querySelector(".details-inner");
 
-        // create inner table with same number of columns and colgroup
-        const innerTable = document.createElement("table");
-        innerTable.className = "detail-table";
-        innerTable.innerHTML = `
-          <colgroup>
-            <col>
-            <col>
-            <col>
-            <col>
-            <col>
-            <col>
-          </colgroup>
+      if (detRow.style.display === "table-row") {
+        detRow.style.display = "none";
+        btn.textContent = "Dettagli ▸";
+        return;
+      }
+
+      const records = raw.filter(r => r.id.startsWith(mese));
+      records.sort((a,b) => new Date(a.id) - new Date(b.id));
+
+      box.innerHTML = `
+        <table class="detail-table">
+          <colgroup><col><col><col><col><col><col></colgroup>
           <thead>
             <tr>
               <th>Data</th>
               <th>Investito</th>
               <th>Valore</th>
               <th>Profitto</th>
-              <th>% Profitto</th>
-              <th class="center">Azioni</th>
+              <th>%</th>
+              <th>Azioni</th>
             </tr>
           </thead>
           <tbody>
-            ${giornate.map(g => {
-              const inv = Number(g.INVESTITO || 0);
-              const val = Number(g.GIORNALIERO || 0);
+            ${records.map(r => {
+              const inv = Number(r.INVESTITO);
+              const val = Number(r.GIORNALIERO);
               const pf = val - inv;
-              const pct = inv > 0 ? ((pf / inv) * 100).toFixed(2) : "0.00";
-              return `<tr data-docid="${g.id}">
-                <td>${formatFullDate(g.id)}</td>
+              const pc = inv>0 ? ((pf/inv)*100).toFixed(2) : 0;
+
+              return `
+              <tr>
+                <td>${formatDate(r.id)}</td>
                 <td class="right">${inv} €</td>
                 <td class="right">${val} €</td>
-                <td class="right ${pf >= 0 ? 'positivo' : 'negativo'}">${pf} €</td>
-                <td class="right ${pf >= 0 ? 'positivo' : 'negativo'}">${pct}%</td>
-                <td class="center">
-                  <button class="btn-edit" data-docid="${g.id}">✏️ Modifica</button>
-                </td>
-              </tr>`}).join("")}
+                <td class="right ${pf>=0?'positivo':'negativo'}">${pf} €</td>
+                <td class="right ${pf>=0?'positivo':'negativo'}">${pc}%</td>
+                <td class="center"><button class="btn-edit" data-id="${r.id}">✏️</button></td>
+              </tr>`;
+            }).join("")}
           </tbody>
-        `;
+        </table>
+      `;
 
-        container.innerHTML = "";
-        container.appendChild(innerTable);
-        detRow.style.display = "table-row";
-        btnToggle.textContent = "Chiudi ▾";
-        return;
-      }
-
-      const btnEdit = e.target.closest(".btn-edit");
-      if (btnEdit) {
-        const docId = btnEdit.dataset.docid;
-        const tr = btnEdit.closest("tr");
-        const tds = tr.querySelectorAll("td");
-        const curInvest = tds[1].textContent.replace(' €','').trim();
-        const curVal = tds[2].textContent.replace(' €','').trim();
-
-        tr.classList.add("editing");
-        tds[1].innerHTML = `<input type="number" step="0.01" value="${Number(curInvest)}" style="width:100px">`;
-        tds[2].innerHTML = `<input type="number" step="0.01" value="${Number(curVal)}" style="width:100px">`;
-        tds[3].innerHTML = `<span class="placeholder">-</span>`;
-        tds[4].innerHTML = `<span class="placeholder">-</span>`;
-        tds[5].innerHTML = `
-          <button class="btn-save" data-docid="${docId}">💾 Salva</button>
-          <button class="btn-cancel" data-docid="${docId}">❌ Annulla</button>
-        `;
-        return;
-      }
-
-      const btnCancel = e.target.closest(".btn-cancel");
-      if (btnCancel) {
-        await loadAndamento();
-        return;
-      }
-
-      const btnSave = e.target.closest(".btn-save");
-      if (btnSave) {
-        const docId = btnSave.dataset.docid;
-        const tr = btnSave.closest("tr");
-        const inputs = tr.querySelectorAll("input");
-        const newInvest = Number(inputs[0].value || 0);
-        const newGior = Number(inputs[1].value || 0);
-        btnSave.disabled = true;
-        const cancelBtn = tr.querySelector(".btn-cancel");
-        if (cancelBtn) cancelBtn.disabled = true;
-        try {
-          const docRef = doc(db, "andamento", docId);
-          await updateDoc(docRef, { INVESTITO: newInvest, GIORNALIERO: newGior });
-          await loadAndamento();
-        } catch (err) {
-          console.error("Errore updateDoc:", err);
-          alert("Errore durante il salvataggio. Controlla console.");
-        } finally {
-          btnSave.disabled = false;
-          if (cancelBtn) cancelBtn.disabled = false;
-        }
-        return;
-      }
-    }); // end delegation
+      detRow.style.display = "table-row";
+      btn.textContent = "Chiudi ▾";
+    });
   }
 
-  // avvia
   loadAndamento();
 </script>
+
 </body>
 </html>
