@@ -105,6 +105,31 @@ async function loadAndamento() {
   // ===============================
   const perMese = {};
 
+  // --- BOX ---------------------------------------------------------------------
+const ultimo = raw[raw.length - 1];
+
+const inv = Number(ultimo.INVESTITO || 0);
+const val = Number(ultimo.GIORNALIERO || 0);
+const prof = val - inv;
+const perc = inv > 0 ? (prof / inv * 100) : 0;
+
+// aggiorna i box
+document.querySelector("#box-investito .value").textContent = inv.toFixed(2) + " €";
+document.querySelector("#box-valore .value").textContent = val.toFixed(2) + " €";
+document.querySelector("#box-profitto .value").textContent = prof.toFixed(2) + " €";
+document.querySelector("#box-percentuale .value").textContent = perc.toFixed(2) + "%";
+
+// colore automatico verde/rosso
+const boxProfitto = document.querySelector("#box-profitto .value");
+const boxPerc = document.querySelector("#box-percentuale .value");
+
+if (prof >= 0) boxProfitto.style.color = "#2ecc71";
+else boxProfitto.style.color = "#e74c3c";
+
+if (perc >= 0) boxPerc.style.color = "#2ecc71";
+else boxPerc.style.color = "#e74c3c";
+
+  
   records.forEach(r => {
     const [yy, mm] = r.DATA.split("-");
     const key = `${yy}-${mm}`;
