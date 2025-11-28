@@ -15,7 +15,7 @@ async function loadAndamento() {
     INVESTITO: Number(doc.data().INVESTITO || 0),
     GIORNALIERO: Number(doc.data().GIORNALIERO || 0)
   }));
-console.log("ANDAMENTO_DATA DA FIREBASE:", ANDAMENTO_DATA);
+
 
   if (records.length === 0) return;
 
