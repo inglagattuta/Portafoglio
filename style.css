@@ -1235,3 +1235,46 @@ table th:nth-child(4), table td:nth-child(4) { text-align: right; }
 table th:nth-child(5), table td:nth-child(5) { text-align: right; }
 table th:nth-child(6), table td:nth-child(6) { text-align: right; }
 table th:nth-child(7), table td:nth-child(7) { text-align: center; }
+
+/* ================================
+   FIX ALLINEAMENTO TABELLA MENSILE
+   ================================ */
+
+/* Mantiene la stessa larghezza tra thead e tbody */
+#tabella-mensile {
+  width: 100%;
+  table-layout: fixed;   /* 🔥 il fix principale */
+  border-collapse: collapse;
+}
+
+/* Tutte le colonne hanno la stessa base */
+#tabella-mensile th,
+#tabella-mensile td {
+  width: 14.28%; /* 100 / 7 colonne */
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap; /* Evita che i valori vadano a capo */
+}
+
+/* La colonna DETTAGLI non deve allargare la tabella */
+#tabella-mensile th:last-child,
+#tabella-mensile td:last-child {
+  width: 90px !important;
+  text-align: center;
+}
+
+/* Allineamento numeri più elegante */
+#tabella-mensile .right {
+  text-align: right;
+}
+
+/* Colori incremento/profitto */
+td.positivo {
+  color: #6aff6a;
+  font-weight: bold;
+}
+td.negativo {
+  color: #ff6a6a;
+  font-weight: bold;
+}
+
