@@ -1,125 +1,461 @@
 /* =========================================================
-   ANDAMENTO.CSS - STILE SPECIFICO PER LA PAGINA ANDAMENTO
+   ANDAMENTO.CSS - STILE MIGLIORATO PER LA PAGINA ANDAMENTO
    ========================================================= */
 
 /* ====================================
-   TABELLE E TESTI (LIGHT/DARK THEME)
+   GRAFICO CONTAINER
    ==================================== */
-
-/* Testo leggibile su entrambe le modalità */
-body[data-theme="light"] #tabellaRiepilogo,
-body[data-theme="light"] #tabellaRiepilogo th,
-body[data-theme="light"] #tabellaRiepilogo td {
-    color: #000;
-}
-
-body.dark #tabellaRiepilogo,
-body.dark #tabellaRiepilogo th,
-body.dark #tabellaRiepilogo td {
-    color: #fff;
-}
-
-/* Sfondo e bordi */
-body[data-theme="light"] #tabellaRiepilogo th { background-color: #f2f2f2; border-color: #ccc; }
-body[data-theme="light"] #tabellaRiepilogo td { background-color: #fff; border-color: #ddd; }
-
-body.dark #tabellaRiepilogo th { background-color: #222; border-color: #444; }
-body.dark #tabellaRiepilogo td { background-color: #1a1f2e; border-color: #444; }
-
-/* Allineamento colonne e gestione overflow */
-#tabellaRiepilogo th, #tabellaRiepilogo td {
-    text-align: center;
-    padding: 8px;
-    white-space: nowrap;
+#grafico-container {
+    background: linear-gradient(135deg, rgba(0, 180, 255, 0.05) 0%, rgba(255, 220, 0, 0.05) 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 24px 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
     overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* Contenitore scroll orizzontale */
-.table-container {
-    overflow-x: auto;
+body.dark #grafico-container {
+    background: linear-gradient(135deg, rgba(0, 180, 255, 0.08) 0%, rgba(255, 220, 0, 0.08) 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* ============================
-   PULSANTE DETTAGLI
-   ============================ */
-.btn-dettagli {
-    padding: 4px 6px;
+#grafico-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+#grafico {
+    position: relative;
+    z-index: 1;
+    max-height: 400px;
+}
+
+/* ====================================
+   RIEPILOGO MENSILE
+   ==================================== */
+.mensile-wrap {
+    margin: 32px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+body.dark .mensile-wrap {
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.mensile-wrap h2 {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+body.dark .mensile-wrap h2 {
+    color: #ecf0f1;
+}
+
+/* ====================================
+   TABELLA MENSILE
+   ==================================== */
+#tabella-mensile {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+}
+
+body.dark #tabella-mensile {
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+#tabella-mensile thead {
+    background: linear-gradient(135deg, #00b4ff 0%, #0099e6 100%);
+}
+
+body.dark #tabella-mensile thead {
+    background: linear-gradient(135deg, #0d7aa8 0%, #0a5f84 100%);
+}
+
+#tabella-mensile th {
+    color: #fff;
+    font-weight: 600;
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#tabella-mensile tbody tr {
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+body.dark #tabella-mensile tbody tr {
+    background: #1a1f2e;
+}
+
+#tabella-mensile tbody tr:nth-child(4n+1),
+#tabella-mensile tbody tr:nth-child(4n+2) {
+    background: rgba(0, 180, 255, 0.02);
+}
+
+body.dark #tabella-mensile tbody tr:nth-child(4n+1),
+body.dark #tabella-mensile tbody tr:nth-child(4n+2) {
+    background: rgba(0, 180, 255, 0.05);
+}
+
+#tabella-mensile tbody tr:not(.details-row):hover {
+    background: rgba(0, 180, 255, 0.08);
+    transform: translateX(2px);
+}
+
+body.dark #tabella-mensile tbody tr:not(.details-row):hover {
+    background: rgba(0, 180, 255, 0.12);
+}
+
+#tabella-mensile td {
+    padding: 14px 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 14px;
+}
+
+body.dark #tabella-mensile td {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#tabella-mensile td.right {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+}
+
+#tabella-mensile td.center {
+    text-align: center;
+}
+
+/* ====================================
+   COLORI PROFITTO
+   ==================================== */
+.positivo {
+    color: #27ae60 !important;
+    font-weight: 600;
+}
+
+.negativo {
+    color: #e74c3c !important;
+    font-weight: 600;
+}
+
+body.dark .positivo {
+    color: #2ecc71 !important;
+}
+
+body.dark .negativo {
+    color: #ff6b6b !important;
+}
+
+/* ====================================
+   PULSANTI
+   ==================================== */
+.btn-toggle {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #00b4ff 0%, #0099e6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 180, 255, 0.3);
+}
+
+.btn-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 180, 255, 0.4);
+}
+
+.btn-toggle:active {
+    transform: translateY(0);
+}
+
+body.dark .btn-toggle {
+    background: linear-gradient(135deg, #0d7aa8 0%, #0a5f84 100%);
+    box-shadow: 0 2px 8px rgba(0, 180, 255, 0.2);
+}
+
+body.dark .btn-toggle:hover {
+    box-shadow: 0 4px 12px rgba(0, 180, 255, 0.3);
+}
+
+.btn-edit {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
-    border-radius: 6px;
-    border: 1px solid;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-/* Tema Light */
-body[data-theme="light"] .btn-dettagli {
-    color: #000;
-    border-color: #000;
-    background-color: #f0f0f0;
+.btn-edit:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.4);
 }
 
-body[data-theme="light"] .btn-dettagli:hover {
-    background-color: #ddd;
-}
-
-/* Tema Dark */
-body.dark .btn-dettagli {
+.btn-save {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
     color: #fff;
-    border-color: #fff;
-    background-color: #333;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 4px;
 }
 
-body.dark .btn-dettagli:hover {
-    background-color: #555;
+.btn-save:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.4);
 }
 
-/* ============================
-   DETTAGLI TABELLA INTERNA
-   ============================ */
-.detail-table th, .detail-table td {
-    padding: 4px 6px;
+.btn-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(149, 165, 166, 0.4);
+}
+
+.btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ====================================
+   DETTAGLI ROW
+   ==================================== */
+.details-row {
+    background: rgba(0, 180, 255, 0.03) !important;
+}
+
+body.dark .details-row {
+    background: rgba(0, 180, 255, 0.08) !important;
+}
+
+.details-inner {
+    padding: 20px;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+body.dark .detail-table {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.detail-table thead {
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+}
+
+body.dark .detail-table thead {
+    background: linear-gradient(135deg, #1a252f 0%, #111820 100%);
+}
+
+.detail-table th {
+    color: #fff;
+    padding: 12px 10px;
     font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
-.detail-table th { background-color: rgba(0,0,0,0.05); }
+.detail-table td {
+    padding: 10px;
+    font-size: 13px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
 
-body.dark .detail-table th { background-color: rgba(255,255,255,0.1); }
-body.dark .detail-table td { border-color: rgba(255,255,255,0.15); }
+body.dark .detail-table td {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
 
-/* ============================
-   COLORI PROFITTO
-   ============================ */
-td.positivo { color: #4caf50; font-weight: bold; }
-td.negativo { color: #ff5252; font-weight: bold; }
+.detail-table tbody tr {
+    background: #fff;
+    transition: background 0.2s ease;
+}
 
-/* ============================
+body.dark .detail-table tbody tr {
+    background: #1a1f2e;
+}
+
+.detail-table tbody tr:hover {
+    background: rgba(0, 180, 255, 0.05);
+}
+
+body.dark .detail-table tbody tr:hover {
+    background: rgba(0, 180, 255, 0.1);
+}
+
+.detail-table tbody tr.editing {
+    background: rgba(255, 220, 0, 0.1);
+}
+
+body.dark .detail-table tbody tr.editing {
+    background: rgba(255, 220, 0, 0.15);
+}
+
+.detail-table input {
+    padding: 6px 8px;
+    border: 2px solid #00b4ff;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    color: #2c3e50;
+    font-family: 'Courier New', monospace;
+}
+
+body.dark .detail-table input {
+    background: #2c3e50;
+    color: #ecf0f1;
+    border-color: #0d7aa8;
+}
+
+/* ====================================
    RESPONSIVE
-   ============================ */
+   ==================================== */
 @media (max-width: 768px) {
-    #tabellaRiepilogo th,
-    #tabellaRiepilogo td,
+    #grafico-container {
+        padding: 16px;
+        margin: 16px 0;
+    }
+
+    #grafico {
+        max-height: 300px;
+    }
+
+    .mensile-wrap {
+        padding: 12px;
+        margin: 20px 0;
+    }
+
+    .mensile-wrap h2 {
+        font-size: 20px;
+    }
+
+    #tabella-mensile {
+        font-size: 12px;
+    }
+
+    #tabella-mensile th,
+    #tabella-mensile td {
+        padding: 10px 6px;
+        font-size: 12px;
+    }
+
+    .btn-toggle {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+
     .detail-table th,
     .detail-table td {
-        font-size: 12px;
-        padding: 4px 6px;
+        padding: 8px 6px;
+        font-size: 11px;
     }
 
-    #tabellaRiepilogo,
-    .detail-table {
-        display: block;
-        width: 100%;
-        overflow-x: auto;
+    .btn-edit,
+    .btn-save,
+    .btn-cancel {
+        padding: 5px 8px;
+        font-size: 11px;
     }
 
-    /* Nascondi colonne secondarie per mobile */
-    #tabellaRiepilogo td:nth-child(4),
-    #tabellaRiepilogo th:nth-child(4),
-    #tabellaRiepilogo td:nth-child(5),
-    #tabellaRiepilogo th:nth-child(5),
-    #tabellaRiepilogo td:nth-child(6),
-    #tabellaRiepilogo th:nth-child(6) {
-        display: none;
+    .details-inner {
+        padding: 12px;
     }
+}
+
+/* ====================================
+   ANIMAZIONI
+   ==================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.details-row[style*="table-row"] {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ====================================
+   SCROLLBAR PERSONALIZZATA
+   ==================================== */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+body.dark .table-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 180, 255, 0.5);
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 180, 255, 0.7);
 }
