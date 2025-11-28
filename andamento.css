@@ -1,0 +1,125 @@
+/* =========================================================
+   ANDAMENTO.CSS - STILE SPECIFICO PER LA PAGINA ANDAMENTO
+   ========================================================= */
+
+/* ====================================
+   TABELLE E TESTI (LIGHT/DARK THEME)
+   ==================================== */
+
+/* Testo leggibile su entrambe le modalità */
+body[data-theme="light"] #tabellaRiepilogo,
+body[data-theme="light"] #tabellaRiepilogo th,
+body[data-theme="light"] #tabellaRiepilogo td {
+    color: #000;
+}
+
+body.dark #tabellaRiepilogo,
+body.dark #tabellaRiepilogo th,
+body.dark #tabellaRiepilogo td {
+    color: #fff;
+}
+
+/* Sfondo e bordi */
+body[data-theme="light"] #tabellaRiepilogo th { background-color: #f2f2f2; border-color: #ccc; }
+body[data-theme="light"] #tabellaRiepilogo td { background-color: #fff; border-color: #ddd; }
+
+body.dark #tabellaRiepilogo th { background-color: #222; border-color: #444; }
+body.dark #tabellaRiepilogo td { background-color: #1a1f2e; border-color: #444; }
+
+/* Allineamento colonne e gestione overflow */
+#tabellaRiepilogo th, #tabellaRiepilogo td {
+    text-align: center;
+    padding: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Contenitore scroll orizzontale */
+.table-container {
+    overflow-x: auto;
+}
+
+/* ============================
+   PULSANTE DETTAGLI
+   ============================ */
+.btn-dettagli {
+    padding: 4px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Tema Light */
+body[data-theme="light"] .btn-dettagli {
+    color: #000;
+    border-color: #000;
+    background-color: #f0f0f0;
+}
+
+body[data-theme="light"] .btn-dettagli:hover {
+    background-color: #ddd;
+}
+
+/* Tema Dark */
+body.dark .btn-dettagli {
+    color: #fff;
+    border-color: #fff;
+    background-color: #333;
+}
+
+body.dark .btn-dettagli:hover {
+    background-color: #555;
+}
+
+/* ============================
+   DETTAGLI TABELLA INTERNA
+   ============================ */
+.detail-table th, .detail-table td {
+    padding: 4px 6px;
+    font-size: 13px;
+}
+
+.detail-table th { background-color: rgba(0,0,0,0.05); }
+
+body.dark .detail-table th { background-color: rgba(255,255,255,0.1); }
+body.dark .detail-table td { border-color: rgba(255,255,255,0.15); }
+
+/* ============================
+   COLORI PROFITTO
+   ============================ */
+td.positivo { color: #4caf50; font-weight: bold; }
+td.negativo { color: #ff5252; font-weight: bold; }
+
+/* ============================
+   RESPONSIVE
+   ============================ */
+@media (max-width: 768px) {
+    #tabellaRiepilogo th,
+    #tabellaRiepilogo td,
+    .detail-table th,
+    .detail-table td {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
+
+    #tabellaRiepilogo,
+    .detail-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    /* Nascondi colonne secondarie per mobile */
+    #tabellaRiepilogo td:nth-child(4),
+    #tabellaRiepilogo th:nth-child(4),
+    #tabellaRiepilogo td:nth-child(5),
+    #tabellaRiepilogo th:nth-child(5),
+    #tabellaRiepilogo td:nth-child(6),
+    #tabellaRiepilogo th:nth-child(6) {
+        display: none;
+    }
+}
