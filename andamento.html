@@ -8,7 +8,7 @@
   <!-- tema generale -->
   <link rel="stylesheet" href="style.css?v=5">
   <!-- stile specifico per andamento -->
-  <link rel="stylesheet" href="andamento.css?v=1">
+  <link rel="stylesheet" href="andamento.css?v=2">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -38,31 +38,33 @@
     </div>
 
     <div class="mensile-wrap" aria-live="polite">
-      <h2 style="margin:6px 0 10px;">📊 Riepilogo Mensile</h2>
+      <h2>📊 Riepilogo Mensile</h2>
 
-      <table id="tabella-mensile" aria-describedby="riepilogo-mensile">
-        <colgroup>
-          <col> <!-- Data -->
-          <col> <!-- Investito -->
-          <col> <!-- Valore -->
-          <col> <!-- Incremento -->
-          <col> <!-- Profitto -->
-          <col> <!-- % Profitto -->
-          <col> <!-- Dettagli -->
-        </colgroup>
-        <thead>
-          <tr>
-            <th>Data (ultimo mese)</th>
-            <th>Investito</th>
-            <th>Valore</th>
-            <th>Incremento</th>
-            <th>Profitto</th>
-            <th>% Profitto</th>
-            <th>Dettagli</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="table-container">
+        <table id="tabella-mensile" aria-describedby="riepilogo-mensile">
+          <colgroup>
+            <col> <!-- Data -->
+            <col> <!-- Investito -->
+            <col> <!-- Valore -->
+            <col> <!-- Incremento -->
+            <col> <!-- Profitto -->
+            <col> <!-- % Profitto -->
+            <col> <!-- Dettagli -->
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Data (ultimo mese)</th>
+              <th>Investito</th>
+              <th>Valore</th>
+              <th>Incremento</th>
+              <th>Profitto</th>
+              <th>% Profitto</th>
+              <th>Dettagli</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -84,6 +86,14 @@
     return id;
   };
 
+  function getChartColors() {
+    const isDark = document.body.classList.contains('dark');
+    return {
+      textColor: isDark ? '#ecf0f1' : '#2c3e50',
+      gridColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    };
+  }
+
   async function loadAndamento() {
     try {
       const snap = await getDocs(collection(db, "andamento"));
@@ -100,17 +110,123 @@
       const giornaliero = raw.map(r => Number(r.GIORNALIERO || 0));
       const investito = raw.map(r => Number(r.INVESTITO || 0));
 
+      const colors = getChartColors();
+
       if (grafico) grafico.destroy();
       grafico = new Chart(ctx, {
         type:'line',
-        data:{ labels, datasets:[
-          { label:'Giornaliero', data:giornaliero, borderColor:'rgba(0,180,255,1)', backgroundColor:'rgba(0,180,255,0.12)', tension:0.3, fill:true },
-          { label:'Investito', data:investito, borderColor:'rgba(255,220,0,1)', backgroundColor:'rgba(255,220,0,0.08)', tension:0.3, fill:true }
-        ]},
+        data:{ 
+          labels, 
+          datasets:[
+            { 
+              label:'Valore Portafoglio', 
+              data:giornaliero, 
+              borderColor:'rgba(0,180,255,1)', 
+              backgroundColor:'rgba(0,180,255,0.15)', 
+              tension:0.4, 
+              fill:true,
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBackgroundColor: 'rgba(0,180,255,1)',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointHoverBackgroundColor: '#fff',
+              pointHoverBorderColor: 'rgba(0,180,255,1)',
+              pointHoverBorderWidth: 3
+            },
+            { 
+              label:'Investito', 
+              data:investito, 
+              borderColor:'rgba(255,200,0,1)', 
+              backgroundColor:'rgba(255,200,0,0.1)', 
+              tension:0.4, 
+              fill:true,
+              borderWidth: 3,
+              borderDash: [5, 5],
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBackgroundColor: 'rgba(255,200,0,1)',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointHoverBackgroundColor: '#fff',
+              pointHoverBorderColor: 'rgba(255,200,0,1)',
+              pointHoverBorderWidth: 3
+            }
+          ]
+        },
         options:{
           responsive:true,
-          plugins: { legend: { labels: { color: getComputedStyle(document.body).color } } },
-          scales: { x: { ticks: { color: getComputedStyle(document.body).color } }, y: { ticks: { color: getComputedStyle(document.body).color } } }
+          maintainAspectRatio: true,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: { 
+            legend: { 
+              labels: { 
+                color: colors.textColor,
+                font: {
+                  size: 14,
+                  weight: '600'
+                },
+                padding: 15,
+                usePointStyle: true,
+                pointStyle: 'circle'
+              },
+              position: 'top'
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              borderColor: 'rgba(0, 180, 255, 0.5)',
+              borderWidth: 1,
+              padding: 12,
+              displayColors: true,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  label += context.parsed.y.toFixed(2) + ' €';
+                  return label;
+                }
+              }
+            }
+          },
+          scales: { 
+            x: { 
+              ticks: { 
+                color: colors.textColor,
+                font: {
+                  size: 12,
+                  weight: '500'
+                }
+              },
+              grid: {
+                color: colors.gridColor,
+                drawBorder: false
+              }
+            }, 
+            y: { 
+              ticks: { 
+                color: colors.textColor,
+                font: {
+                  size: 12,
+                  weight: '500'
+                },
+                callback: function(value) {
+                  return value.toFixed(0) + ' €';
+                }
+              },
+              grid: {
+                color: colors.gridColor,
+                drawBorder: false
+              }
+            } 
+          }
         }
       });
 
@@ -142,10 +258,10 @@
       tr.dataset.mese = mese;
       tr.innerHTML = `
         <td>${formatFull(r.id)}</td>
-        <td class="right">${inv} €</td>
-        <td class="right">${val} €</td>
-        <td class="${incremento>=0?'positivo':'negativo'} right">${incremento} €</td>
-        <td class="${profitto>=0?'positivo':'negativo'} right">${profitto} €</td>
+        <td class="right">${inv.toFixed(2)} €</td>
+        <td class="right">${val.toFixed(2)} €</td>
+        <td class="${incremento>=0?'positivo':'negativo'} right">${incremento.toFixed(2)} €</td>
+        <td class="${profitto>=0?'positivo':'negativo'} right">${profitto.toFixed(2)} €</td>
         <td class="${profitto>=0?'positivo':'negativo'} right">${perc}%</td>
         <td class="center"><button class="btn-toggle" data-mese="${mese}">Dettagli ▸</button></td>
       `;
@@ -187,9 +303,9 @@
                 const pct = inv>0?((pf/inv)*100).toFixed(2):"0.00";
                 return `<tr data-docid="${r.id}">
                   <td>${formatFull(r.id)}</td>
-                  <td class="right">${inv} €</td>
-                  <td class="right">${val} €</td>
-                  <td class="right ${pf>=0?'positivo':'negativo'}">${pf} €</td>
+                  <td class="right">${inv.toFixed(2)} €</td>
+                  <td class="right">${val.toFixed(2)} €</td>
+                  <td class="right ${pf>=0?'positivo':'negativo'}">${pf.toFixed(2)} €</td>
                   <td class="right ${pf>=0?'positivo':'negativo'}">${pct}%</td>
                   <td class="center"><button class="btn-edit" data-docid="${r.id}">✏️ Modifica</button></td>
                 </tr>`;
@@ -206,13 +322,13 @@
       if (editBtn) {
         const tr = editBtn.closest("tr");
         const tds = tr.querySelectorAll("td");
-        const curInv = tds[1].textContent.replace(' €','').trim();
-        const curVal = tds[2].textContent.replace(' €','').trim();
-        tds[1].innerHTML = `<input class="input-invest" type="number" step="0.01" value="${Number(curInv)}" style="width:110px">`;
-        tds[2].innerHTML = `<input class="input-val" type="number" step="0.01" value="${Number(curVal)}" style="width:110px">`;
+        const curInv = parseFloat(tds[1].textContent.replace(' €','').trim());
+        const curVal = parseFloat(tds[2].textContent.replace(' €','').trim());
+        tds[1].innerHTML = `<input class="input-invest" type="number" step="0.01" value="${curInv}" style="width:110px">`;
+        tds[2].innerHTML = `<input class="input-val" type="number" step="0.01" value="${curVal}" style="width:110px">`;
         tds[3].textContent = '-';
         tds[4].textContent = '-';
-        tds[5].innerHTML = `<button class="btn-save" data-docid="${editBtn.dataset.docid}">💾 Salva</button> <button class="btn-cancel" data-docid="${editBtn.dataset.docid}">❌ Annulla</button>`;
+        tds[5].innerHTML = `<button class="btn-save" data-docid="${editBtn.dataset.docid}">💾 Salva</button> <button class="btn-cancel" data-docid="${editBtn.dataset.docid}">✖ Annulla</button>`;
         tr.classList.add("editing");
         return;
       }
