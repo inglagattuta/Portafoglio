@@ -1319,3 +1319,16 @@ td.negativo {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+body[data-theme="light"] .mensile-table td,
+body[data-theme="light"] .mensile-table th {
+  color: #000 !important;
+}
+body.dark .btn-dettagli {
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+body.dark .btn-dettagli:hover {
+  background: #fff !important;
+  color: #000 !important;
+}
