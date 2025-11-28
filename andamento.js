@@ -16,6 +16,20 @@ async function loadAndamento() {
     GIORNALIERO: Number(doc.data().GIORNALIERO || 0)
   }));
 
+if (records.length) {
+  const last = records[records.length - 1];
+  const inv = last.INVESTITO;
+  const val = last.GIORNALIERO;
+  const profitto = val - inv;
+  const perc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : "0.00";
+
+  document.getElementById("box-investito").querySelector(".value").textContent = `${inv} €`;
+  document.getElementById("box-valore").querySelector(".value").textContent = `${val} €`;
+  document.getElementById("box-profitto").querySelector(".value").textContent = `${profitto} €`;
+  document.getElementById("box-percentuale").querySelector(".value").textContent = `${perc}%`;
+}
+
+  
   console.log("DEBUG record count:", records.length);
   if (records.length === 0) return;
 
