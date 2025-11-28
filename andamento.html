@@ -27,13 +27,36 @@
       border-radius: 18px;
       box-shadow: 0 0 25px rgba(0,0,0,0.35);
       backdrop-filter: blur(6px);
+      height: 430px;
     }
 
-    /* assicuriamoci che il canvas abbia altezza */
     #grafico {
       width: 100% !important;
-      height: 420px !important;
+      height: 380px !important;
       display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+    }
+
+    th {
+      background: rgba(255,255,255,0.08);
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.08);
     }
   </style>
 </head>
@@ -43,101 +66,64 @@
   <h1>📈 Andamento Portafoglio</h1>
 
   <div id="grafico-container">
-   <canvas id="grafico"></canvas>
+    <canvas id="grafico"></canvas>
   </div>
 
-<h2 style="margin-top: 35px; margin-bottom: 15px; text-align:center;">
-  📊 Riepilogo Mensile
-</h2>
+  <h2 style="margin-top: 35px; margin-bottom: 15px; text-align:center;">
+    📊 Riepilogo Mensile
+  </h2>
 
-<table id="tabella-mensile" class="mensile-table">
-  <thead>
-    <tr>
-      <th>Data</th>
-      <th>Investito</th>
-      <th>Valore</th>
-      <th>Incremento</th>
-      <th>Profitto</th>
-      <th>% Profitto</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+  <table id="tabella-mensile" class="mensile-table">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Investito</th>
+        <th>Valore</th>
+        <th>Incremento</th>
+        <th>Profitto</th>
+        <th>% Profitto</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  
 <script type="module">
   import { db } from "./firebase-config.js";
   import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-  // prende il context 2d
   const ctx = document.getElementById("grafico").getContext("2d");
   let grafico = null;
 
   async function loadAndamento() {
-    try {
-      const snap = await getDocs(collection(db, "andamento"));
+    const snap = await getDocs(collection(db, "andamento"));
 
-      // costruisco array di record usando doc.id come DATA
-      const records = [];
-      snap.forEach(doc => {
-        const d = doc.data();
-        records.push({ id: doc.id, ...d });
-      });
+    const records = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      records.push({ id: doc.id, ...d });
+    });
 
-      console.log("DEBUG: records raw", records);
-      if (!records.length) {
-        console.log("DEBUG: nessun record trovato in Firestore");
-        return;
-      }
+    if (!records.length) return;
 
-      // ordina per id (es. "2025-01-03")
-      records.sort((a, b) => {
-        // converti id in Date per confrontare
-        const da = new Date(a.id);
-        const db_ = new Date(b.id);
-        return da - db_;
-      });
+    // Ordina per data
+    records.sort((a,b) => new Date(a.id) - new Date(b.id));
 
-      // prepara dati per il grafico
-      const labels = [];
-      const valoriGiornaliero = [];
-      const valoriInvestito = [];
+    // === DATI GRAFICO ===
+    const labels = [];
+    const giornaliero = [];
+    const investito = [];
 
-      records.forEach((r) => {
-        // usa r.id come data, i campi numerici da document
-        if (r.id == null) return;
-        // accetta 0 come valore (usa == null per controllare null/undefined)
-        if (r.GIORNALIERO == null || r.INVESTITO == null) return;
+    records.forEach(r => {
+      if (r.GIORNALIERO == null || r.INVESTITO == null) return;
 
-        // r.id è tipo "2025-01-03" -> estraggo gg/mm per asse X
-        const parts = String(r.id).split("-");
-        let label;
-        if (parts.length >= 3) {
-          label = `${parts[2].padStart(2,"0")}/${parts[1].padStart(2,"0")}`; // gg/mm
-        } else {
-          label = r.id;
-        }
+      const [yyyy, mm, dd] = r.id.split("-");
+      labels.push(`${dd}/${mm}`);
+      giornaliero.push(Number(r.GIORNALIERO));
+      investito.push(Number(r.INVESTITO));
+    });
 
-        labels.push(label);
-        valoriGiornaliero.push(Number(r.GIORNALIERO));
-        valoriInvestito.push(Number(r.INVESTITO));
-      });
-
-      console.log("DEBUG labels:", labels);
-      console.log("DEBUG giornaliero:", valoriGiornaliero);
-      console.log("DEBUG investito:", valoriInvestito);
-
-      // se non ci sono dati validi, esci
-      if (!labels.length || !valoriGiornaliero.length || !valoriInvestito.length) {
-        console.log("DEBUG: Nessun dato valido per il grafico");
-        return;
-      }
-
-      renderGrafico(labels, valoriGiornaliero, valoriInvestito);
-
-    } catch (err) {
-      console.error("Errore loadAndamento:", err);
-    }
+    renderGrafico(labels, giornaliero, investito);
+    generaTabellaMensile(records);
   }
 
   function renderGrafico(labels, giornaliero, investito) {
@@ -151,23 +137,21 @@
           {
             label: "Giornaliero",
             data: giornaliero,
-            borderColor: "rgba(0, 180, 255, 0.95)",
-            backgroundColor: "rgba(0, 180, 255, 0.18)",
-            pointRadius: 3,
-            pointHoverRadius: 6,
-            borderWidth: 3,
+            borderColor: "rgba(0, 180, 255, 1)",
+            backgroundColor: "rgba(0, 180, 255, 0.25)",
             tension: 0.35,
+            borderWidth: 3,
+            pointRadius: 2,
             fill: true,
           },
           {
             label: "Investito",
             data: investito,
-            borderColor: "rgba(255, 220, 0, 0.95)",
-            backgroundColor: "rgba(255, 220, 0, 0.14)",
-            pointRadius: 3,
-            pointHoverRadius: 6,
-            borderWidth: 3,
+            borderColor: "rgba(255, 220, 0, 1)",
+            backgroundColor: "rgba(255, 220, 0, 0.25)",
             tension: 0.35,
+            borderWidth: 3,
+            pointRadius: 2,
             fill: true,
           }
         ]
@@ -175,39 +159,65 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: "#fff" } },
+          y: { ticks: { color: "#fff" } }
+        },
         plugins: {
-          legend: {
-            labels: { color: "#ffffff", font: { size: 13 } }
-          },
+          legend: { labels: { color: "#fff" }},
           tooltip: {
-            backgroundColor: "rgba(0,0,0,0.75)",
+            backgroundColor: "rgba(0,0,0,0.7)",
             titleColor: "#fff",
             bodyColor: "#fff",
-            padding: 10,
-            displayColors: false,
-            callbacks: {
-              // mostra label con valore e dataset name
-              label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} €`
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: { color: "#ddd", maxRotation: 45, minRotation: 45 },
-            grid: { color: "rgba(255,255,255,0.03)" },
-            title: { display: true, text: "Data (gg/mm)", color: "#ccc" }
-          },
-          y: {
-            ticks: { color: "#ddd" },
-            grid: { color: "rgba(255,255,255,0.05)" },
-            title: { display: true, text: "Valore (€)", color: "#ccc" }
           }
         }
       }
     });
   }
 
-  // avvia
+  function generaTabellaMensile(records) {
+    const mesi = {};
+
+    // Prendi SOLO l'ultimo record di ogni mese
+    records.forEach(r => {
+      const date = new Date(r.id);
+      const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
+      mesi[key] = r; // sempre sovrascritto → resta l’ultimo del mese
+    });
+
+    const mesiOrdinati = Object.keys(mesi).sort();
+    const tbody = document.querySelector("#tabella-mensile tbody");
+    tbody.innerHTML = "";
+
+    let investitoPrecedente = null;
+
+    mesiOrdinati.forEach(m => {
+      const r = mesi[m];
+      const data = r.id;
+      const inv = Number(r.INVESTITO);
+      const val = Number(r.GIORNALIERO);
+
+      const incremento = investitoPrecedente != null ? inv - investitoPrecedente : 0;
+      investitoPrecedente = inv;
+
+      const profitto = val - inv;
+      const profittoPerc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : 0;
+
+      const row = `
+        <tr>
+          <td>${data}</td>
+          <td>${inv} €</td>
+          <td>${val} €</td>
+          <td>${incremento} €</td>
+          <td>${profitto} €</td>
+          <td>${profittoPerc}%</td>
+        </tr>
+      `;
+
+      tbody.innerHTML += row;
+    });
+  }
+
   loadAndamento();
 </script>
 
