@@ -1,8 +1,5 @@
 import { db } from "./firebase-config.js";
-import {
-  collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 async function loadAndamento() {
   console.log("DEBUG: caricamento andamento...");
@@ -10,13 +7,25 @@ async function loadAndamento() {
   const ref = collection(db, "andamento");
   const snapshot = await getDocs(ref);
 
+  // -------------------------------
+  // PREPARA RECORD
+  // -------------------------------
   let records = snapshot.docs.map(doc => ({
-    DATA: doc.data().DATA,
+    DATA: doc.id, // ID del doc = data
     INVESTITO: Number(doc.data().INVESTITO || 0),
     GIORNALIERO: Number(doc.data().GIORNALIERO || 0)
   }));
 
-if (records.length) {
+  if (records.length === 0) return;
+
+  // -------------------------------
+  // ORDINA PER DATA
+  // -------------------------------
+  records.sort((a, b) => new Date(a.DATA) - new Date(b.DATA));
+
+  // -------------------------------
+  // BOX RIEPILOGO
+  // -------------------------------
   const last = records[records.length - 1];
   const inv = last.INVESTITO;
   const val = last.GIORNALIERO;
@@ -27,16 +36,8 @@ if (records.length) {
   document.getElementById("box-valore").querySelector(".value").textContent = `${val} €`;
   document.getElementById("box-profitto").querySelector(".value").textContent = `${profitto} €`;
   document.getElementById("box-percentuale").querySelector(".value").textContent = `${perc}%`;
-}
 
-  
   console.log("DEBUG record count:", records.length);
-  if (records.length === 0) return;
-
-  // -------------------------------
-  // ORDINA PER DATA
-  // -------------------------------
-  records.sort((a, b) => new Date(a.DATA) - new Date(b.DATA));
 
   // -------------------------------
   // DATI PER IL GRAFICO
@@ -45,9 +46,6 @@ if (records.length) {
   const investito = records.map(r => r.INVESTITO);
   const giornaliero = records.map(r => r.GIORNALIERO);
 
-  // -------------------------------
-  // GRAFICO
-  // -------------------------------
   const ctx = document.getElementById("grafico").getContext("2d");
 
   new Chart(ctx, {
@@ -78,40 +76,28 @@ if (records.length) {
     options: {
       responsive: true,
       scales: {
-        x: {
-          ticks: { color: "#fff" }
-        },
-        y: {
-          ticks: { color: "#fff" }
-        }
+        x: { ticks: { color: "#fff" } },
+        y: { ticks: { color: "#fff" } }
       },
       plugins: {
-        legend: {
-          labels: { color: "#fff" }
-        }
+        legend: { labels: { color: "#fff" } }
       }
     }
   });
 
-  // --------------------------------------------------------
-  //   📌 CALCOLO RIEPILOGO MENSILE (ultimo giorno per ogni mese)
-  // --------------------------------------------------------
+  // -------------------------------
+  // RIEPILOGO MENSILE (ultimo giorno del mese)
+  // -------------------------------
   const perMese = {};
-
   records.forEach(r => {
     const [yy, mm] = r.DATA.split("-");
     const key = `${yy}-${mm}`;
-
-    // Mantiene SEMPRE l'ultimo record del mese
+    // Mantiene sempre l’ultimo record del mese
     perMese[key] = r;
   });
 
-  // Ordina le chiavi mese
   const mesi = Object.keys(perMese).sort();
 
-  // --------------------------------------------------------
-  //   📌 COSTRUZIONE DELLA TABELLA MENSILE
-  // --------------------------------------------------------
   const tbody = document.querySelector("#tabella-mensile tbody");
   tbody.innerHTML = "";
 
@@ -119,25 +105,17 @@ if (records.length) {
 
   mesi.forEach(mese => {
     const r = perMese[mese];
-
     const data = r.DATA;
     const invest = r.INVESTITO;
     const val = r.GIORNALIERO;
 
-    // Calcolo incremento
     let incremento = "-";
-    if (lastInvestito !== null) {
-      incremento = invest - lastInvestito;
-    }
+    if (lastInvestito !== null) incremento = invest - lastInvestito;
     lastInvestito = invest;
 
-    // profitto
     const profitto = val - invest;
-
-    // % profitto
     const profitPerc = invest > 0 ? ((profitto / invest) * 100).toFixed(2) : "0";
 
-    // Riga HTML
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${data}</td>
@@ -147,7 +125,6 @@ if (records.length) {
       <td class="${profitto >= 0 ? "positivo" : "negativo"}">${profitto} €</td>
       <td class="${profitto >= 0 ? "positivo" : "negativo"}">${profitPerc}%</td>
     `;
-
     tbody.appendChild(tr);
   });
 }
