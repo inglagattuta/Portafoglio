@@ -4,49 +4,59 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/f
 async function loadAndamento() {
   console.log("DEBUG: caricamento andamento...");
 
+  // ===============================
+  //  LEGGI FIREBASE
+  // ===============================
   const ref = collection(db, "andamento");
   const snapshot = await getDocs(ref);
 
-  // -------------------------------
-  // PREPARA RECORD
-  // -------------------------------
+  console.log("DOCS COUNT:", snapshot.size);
+
+  snapshot.forEach(doc => {
+    console.log("DOC:", doc.id, doc.data());
+  });
+
+  // ===============================
+  //  CREA RECORD
+  // ===============================
   let records = snapshot.docs.map(doc => ({
-    DATA: doc.id,
+    DATA: doc.id,  // ID = data
     INVESTITO: Number(doc.data().INVESTITO || 0),
     GIORNALIERO: Number(doc.data().GIORNALIERO || 0)
   }));
-const snapshot = await getDocs(ref);
 
-console.log("DOCS COUNT:", snapshot.size);
+  console.log("RECORDS:", records);
 
-snapshot.forEach(doc => {
-  console.log("DOC:", doc.id, doc.data());
-});
+  if (records.length === 0) {
+    console.warn("NESSUN DATO TROVATO");
+    return;
+  }
 
-  if (records.length === 0) return;
-
-  // -------------------------------
-  // ORDINA PER DATA
-  // -------------------------------
+  // ===============================
+  //  ORDINA PER DATA
+  // ===============================
   records.sort((a, b) => new Date(a.DATA) - new Date(b.DATA));
 
-  // -------------------------------
-  // BOX RIEPILOGO
-  // -------------------------------
+  // ===============================
+  //  📌 BOX RIEPILOGO
+  // ===============================
   const last = records[records.length - 1];
+
   const inv = last.INVESTITO;
   const val = last.GIORNALIERO;
   const profitto = val - inv;
   const perc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : "0.00";
+
+  console.log("BOX VALORI:", { inv, val, profitto, perc });
 
   document.getElementById("box-investito").querySelector(".value").textContent = `${inv} €`;
   document.getElementById("box-valore").querySelector(".value").textContent = `${val} €`;
   document.getElementById("box-profitto").querySelector(".value").textContent = `${profitto} €`;
   document.getElementById("box-percentuale").querySelector(".value").textContent = `${perc}%`;
 
-  // -------------------------------
-  // DATI PER IL GRAFICO
-  // -------------------------------
+  // ===============================
+  //  📈 GRAFICO
+  // ===============================
   const labels = records.map(r => r.DATA);
   const investito = records.map(r => r.INVESTITO);
   const giornaliero = records.map(r => r.GIORNALIERO);
@@ -90,14 +100,15 @@ snapshot.forEach(doc => {
     }
   });
 
-  // -------------------------------
-  // RIEPILOGO MENSILE (ultimo giorno del mese)
-  // -------------------------------
+  // ===============================
+  //  📅 TABELLA MENSILE
+  // ===============================
   const perMese = {};
+
   records.forEach(r => {
     const [yy, mm] = r.DATA.split("-");
     const key = `${yy}-${mm}`;
-    perMese[key] = r; // sostituisce sempre con l’ultimo record del mese
+    perMese[key] = r;
   });
 
   const mesi = Object.keys(perMese).sort();
@@ -109,6 +120,7 @@ snapshot.forEach(doc => {
 
   mesi.forEach(mese => {
     const r = perMese[mese];
+
     const data = r.DATA;
     const invest = r.INVESTITO;
     const val = r.GIORNALIERO;
