@@ -15,6 +15,13 @@ async function loadAndamento() {
     INVESTITO: Number(doc.data().INVESTITO || 0),
     GIORNALIERO: Number(doc.data().GIORNALIERO || 0)
   }));
+const snapshot = await getDocs(ref);
+
+console.log("DOCS COUNT:", snapshot.size);
+
+snapshot.forEach(doc => {
+  console.log("DOC:", doc.id, doc.data());
+});
 
   if (records.length === 0) return;
 
