@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Andamento Portafoglio</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,78 +14,102 @@
       font-family: Arial, sans-serif;
       margin: 20px;
     }
-
-    h1 {
-      text-align: center;
-      color: #fff;
-      margin-bottom: 30px;
-    }
-
+    h1 { text-align:center; color:#fff; margin-bottom:18px; }
     #grafico-container {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 30px;
-      border-radius: 18px;
-      box-shadow: 0 0 25px rgba(0,0,0,0.35);
-      backdrop-filter: blur(6px);
-      height: 430px;
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 18px rgba(0,0,0,0.35);
+      margin-bottom: 18px;
     }
+    #grafico { width:100% !important; height:360px !important; display:block; }
 
-    #grafico {
-      width: 100% !important;
-      height: 380px !important;
-      display: block;
+    /* Tabella riepilogo */
+    .mensile-wrap {
+      background: rgba(255,255,255,0.03);
+      padding: 18px;
+      border-radius: 12px;
+      margin-top: 12px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      overflow: hidden;
+      font-size: 14px;
+      color: #fff;
     }
-
-    th, td {
+    thead th {
+      background: rgba(255,255,255,0.06);
       padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      text-align: center;
+      text-align: left;
+    }
+    tbody td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
     }
 
-    th {
-      background: rgba(255,255,255,0.08);
+    .btn-toggle {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
     }
+    .btn-toggle:hover { background: rgba(255,255,255,0.03); }
 
-    tr:hover {
-      background: rgba(255,255,255,0.08);
+    .positivo { color: #4caf50; font-weight:600; }
+    .negativo { color: #ff5252; font-weight:600; }
+
+    /* dettagli (hidden row) */
+    .details-row td {
+      background: rgba(255,255,255,0.02);
+      padding: 0;
     }
+    .details-inner {
+      padding: 10px;
+    }
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size:13px;
+    }
+    .detail-table th, .detail-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      text-align: left;
+      color: #ddd;
+    }
+    .detail-table thead th { background: rgba(255,255,255,0.03); color:#fff; }
   </style>
 </head>
-
 <body>
-
   <h1>📈 Andamento Portafoglio</h1>
 
   <div id="grafico-container">
     <canvas id="grafico"></canvas>
   </div>
 
-  <h2 style="margin-top: 35px; margin-bottom: 15px; text-align:center;">
-    📊 Riepilogo Mensile
-  </h2>
+  <div class="mensile-wrap">
+    <h2 style="margin:8px 0 14px;">📊 Riepilogo Mensile</h2>
 
-  <table id="tabella-mensile" class="mensile-table">
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Investito</th>
-        <th>Valore</th>
-        <th>Incremento</th>
-        <th>Profitto</th>
-        <th>% Profitto</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <table id="tabella-mensile" aria-live="polite">
+      <thead>
+        <tr>
+          <th>Data (ultimo mese)</th>
+          <th>Investito</th>
+          <th>Valore</th>
+          <th>Incremento</th>
+          <th>Profitto</th>
+          <th>% Profitto</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
 <script type="module">
   import { db } from "./firebase-config.js";
@@ -94,130 +118,206 @@
   const ctx = document.getElementById("grafico").getContext("2d");
   let grafico = null;
 
+  // Utility: formatta id "YYYY-MM-DD" -> "DD/MM/YYYY" o "YYYY-MM-DD" se non match
+  function formatFullDate(id) {
+    if (!id) return "";
+    const parts = String(id).split("-");
+    if (parts.length >= 3) return `${parts[2].padStart(2,"0")}/${parts[1].padStart(2,"0")}/${parts[0]}`;
+    return id;
+  }
+  function formatShortDate(id) {
+    if (!id) return "";
+    const parts = String(id).split("-");
+    if (parts.length >= 3) return `${parts[2].padStart(2,"0")}/${parts[1].padStart(2,"0")}`;
+    return id;
+  }
+
   async function loadAndamento() {
-    const snap = await getDocs(collection(db, "andamento"));
+    try {
+      const snap = await getDocs(collection(db, "andamento"));
+      const raw = [];
+      snap.forEach(d => raw.push({ id: d.id, ...d.data() }));
 
-    const records = [];
-    snap.forEach(doc => {
-      const d = doc.data();
-      records.push({ id: doc.id, ...d });
-    });
+      if (!raw.length) {
+        console.log("Nessun dato in andamento");
+        return;
+      }
 
-    if (!records.length) return;
+      // ordina per id (data) ascendente
+      raw.sort((a,b) => new Date(a.id) - new Date(b.id));
 
-    // Ordina per data
-    records.sort((a,b) => new Date(a.id) - new Date(b.id));
+      // Grafico: estrai etichette e dataset (usa tutti i record)
+      const labels = [];
+      const valoriGiornaliero = [];
+      const valoriInvestito = [];
 
-    // === DATI GRAFICO ===
-    const labels = [];
-    const giornaliero = [];
-    const investito = [];
+      raw.forEach(r => {
+        if (r.GIORNALIERO == null || r.INVESTITO == null) return;
+        labels.push(formatShortDate(r.id));
+        valoriGiornaliero.push(Number(r.GIORNALIERO));
+        valoriInvestito.push(Number(r.INVESTITO));
+      });
 
-    records.forEach(r => {
-      if (r.GIORNALIERO == null || r.INVESTITO == null) return;
+      renderGrafico(labels, valoriGiornaliero, valoriInvestito);
 
-      const [yyyy, mm, dd] = r.id.split("-");
-      labels.push(`${dd}/${mm}`);
-      giornaliero.push(Number(r.GIORNALIERO));
-      investito.push(Number(r.INVESTITO));
-    });
+      // Crea riepilogo mensile: ultimo record per mese
+      const perMese = {}; // key: YYYY-MM
+      raw.forEach(r => {
+        const [yy, mm] = String(r.id).split("-");
+        const key = `${yy}-${mm}`;
+        perMese[key] = r; // sovrascrive -> ultimo del mese rimane
+      });
 
-    renderGrafico(labels, giornaliero, investito);
-    generaTabellaMensile(records);
+      const mesiOrdinati = Object.keys(perMese).sort();
+      renderTabellaMensile(mesiOrdinati, perMese, raw);
+    } catch (err) {
+      console.error("Errore loadAndamento:", err);
+    }
   }
 
   function renderGrafico(labels, giornaliero, investito) {
     if (grafico) grafico.destroy();
-
     grafico = new Chart(ctx, {
       type: "line",
       data: {
         labels,
         datasets: [
-          {
-            label: "Giornaliero",
-            data: giornaliero,
-            borderColor: "rgba(0, 180, 255, 1)",
-            backgroundColor: "rgba(0, 180, 255, 0.25)",
-            tension: 0.35,
-            borderWidth: 3,
-            pointRadius: 2,
-            fill: true,
-          },
-          {
-            label: "Investito",
-            data: investito,
-            borderColor: "rgba(255, 220, 0, 1)",
-            backgroundColor: "rgba(255, 220, 0, 0.25)",
-            tension: 0.35,
-            borderWidth: 3,
-            pointRadius: 2,
-            fill: true,
-          }
+          { label: "Giornaliero", data: giornaliero, borderColor: "rgba(0,180,255,1)", backgroundColor: "rgba(0,180,255,0.18)", tension:0.35, borderWidth:3, pointRadius:2, fill:true },
+          { label: "Investito", data: investito, borderColor: "rgba(255,220,0,1)", backgroundColor: "rgba(255,220,0,0.14)", tension:0.35, borderWidth:3, pointRadius:2, fill:true }
         ]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { ticks: { color: "#fff" } },
-          y: { ticks: { color: "#fff" } }
-        },
+        responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { labels: { color: "#fff" }},
+          legend: { labels: { color: "#fff" } },
           tooltip: {
-            backgroundColor: "rgba(0,0,0,0.7)",
-            titleColor: "#fff",
-            bodyColor: "#fff",
+            backgroundColor: "rgba(0,0,0,0.75)",
+            titleColor:"#fff", bodyColor:"#fff",
+            callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} €` }
           }
+        },
+        scales: {
+          x: { ticks: { color:"#ddd", maxRotation:45, minRotation:45 }, grid:{ color:"rgba(255,255,255,0.03)" }, title:{ display:true, text:"Data (gg/mm)", color:"#ccc" } },
+          y: { ticks: { color:"#ddd" }, grid:{ color:"rgba(255,255,255,0.05)" }, title:{ display:true, text:"Valore (€)", color:"#ccc" } }
         }
       }
     });
   }
 
-  function generaTabellaMensile(records) {
-    const mesi = {};
-
-    // Prendi SOLO l'ultimo record di ogni mese
-    records.forEach(r => {
-      const date = new Date(r.id);
-      const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
-      mesi[key] = r; // sempre sovrascritto → resta l’ultimo del mese
-    });
-
-    const mesiOrdinati = Object.keys(mesi).sort();
+  // Render tabella mensile + pulsante toggle per dettagli
+  function renderTabellaMensile(mesiOrdinati, perMese, rawRecords) {
     const tbody = document.querySelector("#tabella-mensile tbody");
     tbody.innerHTML = "";
 
-    let investitoPrecedente = null;
+    let lastInvestito = null;
 
-    mesiOrdinati.forEach(m => {
-      const r = mesi[m];
-      const data = r.id;
-      const inv = Number(r.INVESTITO);
-      const val = Number(r.GIORNALIERO);
+    mesiOrdinati.forEach((meseKey, idx) => {
+      const r = perMese[meseKey];
+      const dataUltimo = r.id; // 'YYYY-MM-DD'
 
-      const incremento = investitoPrecedente != null ? inv - investitoPrecedente : 0;
-      investitoPrecedente = inv;
+      const inv = Number(r.INVESTITO || 0);
+      const val = Number(r.GIORNALIERO || 0);
+
+      const incremento = lastInvestito !== null ? inv - lastInvestito : 0;
+      lastInvestito = inv;
 
       const profitto = val - inv;
-      const profittoPerc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : 0;
+      const perc = inv > 0 ? ((profitto / inv) * 100).toFixed(2) : "0.00";
 
-      const row = `
-        <tr>
-          <td>${data}</td>
-          <td>${inv} €</td>
-          <td>${val} €</td>
-          <td>${incremento} €</td>
-          <td>${profitto} €</td>
-          <td>${profittoPerc}%</td>
-        </tr>
+      // Riga principale
+      const tr = document.createElement("tr");
+      tr.dataset.mese = meseKey;
+      tr.innerHTML = `
+        <td>${formatFullDate(dataUltimo)}</td>
+        <td>${inv} €</td>
+        <td>${val} €</td>
+        <td class="${incremento >= 0 ? 'positivo' : 'negativo'}">${incremento} €</td>
+        <td class="${profitto >= 0 ? 'positivo' : 'negativo'}">${profitto} €</td>
+        <td class="${profitto >= 0 ? 'positivo' : 'negativo'}">${perc}%</td>
+        <td style="text-align:center;"><button class="btn-toggle" data-mese="${meseKey}">Dettagli ▸</button></td>
+      `;
+      tbody.appendChild(tr);
+
+      // Row dei dettagli (inizialmente nascosta)
+      const detRow = document.createElement("tr");
+      detRow.classList.add("details-row");
+      detRow.style.display = "none";
+      detRow.dataset.mese = meseKey;
+
+      const td = document.createElement("td");
+      td.colSpan = 7;
+      td.className = "details-inner";
+
+      // crea inner table placeholder (verrà popolata on toggle)
+      td.innerHTML = `<div class="details-inner"><em>Carica dettagli...</em></div>`;
+
+      detRow.appendChild(td);
+      tbody.appendChild(detRow);
+    });
+
+    // Event delegation: toggle dettagli
+    tbody.addEventListener("click", (ev) => {
+      const btn = ev.target.closest(".btn-toggle");
+      if (!btn) return;
+      const mese = btn.dataset.mese;
+      const detailsRow = tbody.querySelector(`tr.details-row[data-mese="${mese}"]`);
+      if (!detailsRow) return;
+
+      const isHidden = detailsRow.style.display === "none" || !detailsRow.style.display;
+      if (!isHidden) {
+        // chiudi
+        detailsRow.style.display = "none";
+        btn.textContent = "Dettagli ▸";
+        return;
+      }
+
+      // apri: popola se necessario
+      const container = detailsRow.querySelector(".details-inner");
+      // genera la tabella giornaliera per il mese dal rawRecords
+      const giornate = rawRecords.filter(rr => {
+        const [yy, mm] = rr.id.split("-");
+        return `${yy}-${mm}` === mese;
+      }).sort((a,b) => new Date(a.id) - new Date(b.id));
+
+      // Costruisci html tabellina interna (Opzione B)
+      const innerTable = document.createElement("table");
+      innerTable.className = "detail-table";
+      innerTable.innerHTML = `
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Investito</th>
+            <th>Valore</th>
+            <th>Profitto</th>
+            <th>% Profitto</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${giornate.map(g => {
+            const inv = Number(g.INVESTITO || 0);
+            const val = Number(g.GIORNALIERO || 0);
+            const pf = val - inv;
+            const pct = inv > 0 ? ((pf / inv) * 100).toFixed(2) : "0.00";
+            return `<tr>
+              <td>${formatFullDate(g.id)}</td>
+              <td>${inv} €</td>
+              <td>${val} €</td>
+              <td class="${pf >= 0 ? 'positivo' : 'negativo'}">${pf} €</td>
+              <td class="${pf >= 0 ? 'positivo' : 'negativo'}">${pct}%</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
       `;
 
-      tbody.innerHTML += row;
+      // sostituisci placeholder e mostra
+      container.innerHTML = "";
+      container.appendChild(innerTable);
+      detailsRow.style.display = "table-row";
+      btn.textContent = "Chiudi ▾";
     });
   }
 
+  // Avvia
   loadAndamento();
 </script>
 
