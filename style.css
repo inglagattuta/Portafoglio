@@ -1291,3 +1291,31 @@ td.negativo {
   text-align: center;
   color: #fff;
 }
+/* ===== Allineamento perfetto colonne tabella ===== */
+#tabella-mensile {
+  table-layout: fixed !important;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#tabella-mensile thead th,
+#tabella-mensile tbody td {
+  padding: 10px;
+  color: #fff;
+  border: none;
+  text-align: center !important;   /* UNIFICA TUTTO */
+  white-space: nowrap;              /* Impedisce che il testo vada a capo */
+}
+
+/* Ogni colonna stessa larghezza (7 colonne) */
+#tabella-mensile thead th,
+#tabella-mensile tbody td {
+  width: calc(100% / 7);
+}
+
+/* Evita che il contenuto allunghi la cella */
+#tabella-mensile td,
+#tabella-mensile th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
