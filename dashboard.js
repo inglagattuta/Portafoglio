@@ -22,84 +22,94 @@ const CRESCITA_LIST = [
 const CRYPTO_LIST = ["BTC", "ETH", "XRP"];
 
 // ===============================
-// VAR GLOBALI CHART
+// VARIABILI GLOBALI CHART
 // ===============================
 let chartCategory = null;
 let chartInvested = null;
 let chartByType = null;
 let chartTopScore12 = null;
 let chartTopPrice = null;
-let currentTopLimit = 5;
+let chartTopProfit = null;
+
+let currentTopLimit = 5;      // prezzo
+let currentProfitLimit = 5;   // profitti
 
 // ===============================
-// UTIL
+// UTILS
 // ===============================
 function safeNum(v) {
   return Number(v ?? 0) || 0;
 }
 
 function destroyIfExists(chart) {
-  if (chart && typeof chart.destroy === "function") {
-    chart.destroy();
-  }
+  if (chart && typeof chart.destroy === "function") chart.destroy();
 }
 
 // ===============================
-// AVVIO DOCOUMENTO
+// AVVIO DOCUMENTO
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Dashboard: DOM pronto, carico dati...");
   loadCharts();
 
-  // Toggle buttons (se presenti in DOM)
+  // Toggle prezzo
   document.getElementById("btnTop5Price")?.addEventListener("click", () => {
     currentTopLimit = 5;
-    updateTopButtons();
+    updateTopButtonsPrice();
     if (window._lastRows) buildTopPriceChart(window._lastRows, currentTopLimit);
   });
+
   document.getElementById("btnTop10Price")?.addEventListener("click", () => {
     currentTopLimit = 10;
-    updateTopButtons();
+    updateTopButtonsPrice();
     if (window._lastRows) buildTopPriceChart(window._lastRows, currentTopLimit);
+  });
+
+  // Toggle profitti
+  document.getElementById("btnTop5Profit")?.addEventListener("click", () => {
+    currentProfitLimit = 5;
+    updateTopButtonsProfit();
+    if (window._lastRows) buildTopProfitChart(window._lastRows, currentProfitLimit);
+  });
+
+  document.getElementById("btnTop10Profit")?.addEventListener("click", () => {
+    currentProfitLimit = 10;
+    updateTopButtonsProfit();
+    if (window._lastRows) buildTopProfitChart(window._lastRows, currentProfitLimit);
   });
 });
 
-function updateTopButtons() {
+function updateTopButtonsPrice() {
   document.getElementById("btnTop5Price")?.classList.toggle("active", currentTopLimit === 5);
   document.getElementById("btnTop10Price")?.classList.toggle("active", currentTopLimit === 10);
 }
 
-// ===============================
-// MAIN: CARICA DATI E RENDER
-// ===============================
-async function loadCharts() {
-  try {
-    const snap = await getDocs(collection(db, "portafoglio"));
-    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    if (!rows.length) {
-      console.warn("Nessun documento trovato in 'portafoglio'.");
-      return;
-    }
-
-    // salvo globalmente per refresh grafici
-    window._lastRows = rows;
-
-    // calcoli e render
-    calcCategoryBoxes(rows);
-    buildCategoryChart(rows);
-    buildInvestedChart(rows);
-    buildTypeChart(rows);
-    buildTopScore12Chart(rows);
-    buildTopPriceChart(rows, currentTopLimit);
-
-  } catch (e) {
-    console.error("Errore loadCharts:", e);
-  }
+function updateTopButtonsProfit() {
+  document.getElementById("btnTop5Profit")?.classList.toggle("active", currentProfitLimit === 5);
+  document.getElementById("btnTop10Profit")?.classList.toggle("active", currentProfitLimit === 10);
 }
 
 // ===============================
-// MINI CARDS: percentuali per categoria
+// MAIN
+// ===============================
+async function loadCharts() {
+  const snap = await getDocs(collection(db, "portafoglio"));
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  if (!rows.length) return;
+
+  window._lastRows = rows;
+
+  calcCategoryBoxes(rows);
+  buildCategoryChart(rows);
+  buildInvestedChart(rows);
+  buildTypeChart(rows);
+  buildTopScore12Chart(rows);
+  buildTopPriceChart(rows, currentTopLimit);
+  buildTopProfitChart(rows, currentProfitLimit);   // <-- nuovo grafico
+}
+
+// ===============================
+// MINI CARDS
 // ===============================
 function calcCategoryBoxes(rows) {
   const totalInvested = rows.reduce((s, r) => s + safeNum(r.prezzo_acquisto), 0);
@@ -117,70 +127,46 @@ function calcCategoryBoxes(rows) {
   const pCrescita = totalInvested ? (sumCrescita / totalInvested * 100) : 0;
   const pCrypto = totalInvested ? (sumCrypto / totalInvested * 100) : 0;
 
-  // Sicurezza: verifico esistenza elementi nel DOM
-  const elDiv = document.getElementById("pctDividendi");
-  const elCresc = document.getElementById("pctCrescita");
-  const elCripto = document.getElementById("pctCripto");
-
-  if (elDiv) elDiv.innerText = `${pDiv.toFixed(2)}% — ${sumDiv.toFixed(2)} €`;
-  if (elCresc) elCresc.innerText = `${pCrescita.toFixed(2)}% — ${sumCrescita.toFixed(2)} €`;
-  if (elCripto) elCripto.innerText = `${pCrypto.toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
+  document.getElementById("pctDividendi").innerText = `${pDiv.toFixed(2)}% — ${sumDiv.toFixed(2)} €`;
+  document.getElementById("pctCrescita").innerText = `${pCrescita.toFixed(2)}% — ${sumCrescita.toFixed(2)} €`;
+  document.getElementById("pctCripto").innerText = `${pCrypto.toFixed(2)}% — ${sumCrypto.toFixed(2)} €`;
 }
 
 // ===============================
-// CHART 1: ALLOCAZIONE PER CATEGORIA (Dividendi / Crescita / Cripto)
+// CHART 1: CATEGORIE
 // ===============================
 function buildCategoryChart(rows) {
-  let sumDividendi = 0;
-  let sumCrescita = 0;
-  let sumCripto = 0;
+  let sumDividendi = 0, sumCrescita = 0, sumCripto = 0;
 
   rows.forEach(r => {
     const nome = (r.nome || "").trim().toUpperCase();
     const investito = safeNum(r.prezzo_acquisto);
 
-    if (DIVIDENDI_LIST.includes(nome)) {
-      sumDividendi += investito;
-    } 
-    else if (CRESCITA_LIST.includes(nome)) {
-      sumCrescita += investito;
-    }
-    else if (CRYPTO_LIST.includes(nome)) {
-      sumCripto += investito;
-    }
-    // Se non rientra in nessuna categoria → non lo conteggiamo
+    if (DIVIDENDI_LIST.includes(nome)) sumDividendi += investito;
+    else if (CRESCITA_LIST.includes(nome)) sumCrescita += investito;
+    else if (CRYPTO_LIST.includes(nome)) sumCripto += investito;
   });
 
-  const labels = ["Dividendi", "Crescita", "Cripto"];
-  const data = [sumDividendi, sumCrescita, sumCripto];
-
   destroyIfExists(chartCategory);
-
   chartCategory = new Chart(document.getElementById("chartCategory"), {
     type: "pie",
     data: {
-      labels,
+      labels: ["Dividendi", "Crescita", "Cripto"],
       datasets: [{
-        data,
-        backgroundColor: ["#6c5ce7", "#00cec9", "#fdcb6e"], // viola / acqua / gold
+        data: [sumDividendi, sumCrescita, sumCripto],
+        backgroundColor: ["#6c5ce7", "#00cec9", "#fdcb6e"],
         borderWidth: 0
       }]
     },
     options: {
       maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          position: "bottom"
-        }
-      }
+      plugins: { legend: { position: "bottom" } }
     }
   });
 }
 
-
 // ===============================
-// CHART 2: INVESTITO VS VALORE (pie)
+// CHART 2: INVESTITO VS ATTUALE
 // ===============================
 function buildInvestedChart(rows) {
   const invested = rows.reduce((s, r) => s + safeNum(r.prezzo_acquisto), 0);
@@ -195,16 +181,17 @@ function buildInvestedChart(rows) {
     },
     options: {
       maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: "bottom" } }
+      plugins: { legend: { position: "bottom" } }
     }
   });
 }
 
 // ===============================
-// CHART 3: TIPI DI INVESTIMENTO (pie)
+// CHART 3: TIPOLOGIE
 // ===============================
 function buildTypeChart(rows) {
   const byType = {};
+
   rows.forEach(r => {
     const k = r.tipologia || "Altro";
     byType[k] = (byType[k] || 0) + safeNum(r.prezzo_acquisto);
@@ -219,13 +206,13 @@ function buildTypeChart(rows) {
     },
     options: {
       maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: "bottom" } }
+      plugins: { legend: { position: "bottom" } }
     }
   });
 }
 
 // ===============================
-// CHART 4: TOP SCORE > 12 (bar horizontal)
+// CHART 4: TOP SCORE
 // ===============================
 function buildTopScore12Chart(rows) {
   const top = rows
@@ -233,21 +220,16 @@ function buildTopScore12Chart(rows) {
     .sort((a,b) => safeNum(b.score) - safeNum(a.score))
     .slice(0, 5);
 
-  if (!top.length) {
-    destroyIfExists(chartTopScore12);
-    return;
-  }
-
   destroyIfExists(chartTopScore12);
   chartTopScore12 = new Chart(document.getElementById("chartTopScore12"), {
     type: "bar",
     data: {
-      labels: top.map(x => x.nome || "N/A"),
+      labels: top.map(x => x.nome),
       datasets: [{ data: top.map(x => safeNum(x.score)) }]
     },
     options: {
-      maintainAspectRatio: false,
       indexAxis: "y",
+      maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: { x: { beginAtZero: true } }
     }
@@ -255,46 +237,63 @@ function buildTopScore12Chart(rows) {
 }
 
 // ===============================
-// CHART 5: TOP TITOLI PER PREZZO (bar horizontal, DUE SERIE)
+// CHART 5: TOP PREZZO
 // ===============================
 function buildTopPriceChart(rows, limit = 5) {
-  if (!Array.isArray(rows) || rows.length === 0) return;
-
   const sorted = [...rows].sort((a,b) => safeNum(b.prezzo_corrente) - safeNum(a.prezzo_corrente));
   const top = sorted.slice(0, limit);
 
-  const labels = top.map(x => x.nome || "N/A");
-  const prezziAcq = top.map(x => safeNum(x.prezzo_acquisto));
-  const prezziCorr = top.map(x => safeNum(x.prezzo_corrente));
-
-  // canvas check
-  const canvas = document.getElementById("chartTopPrice");
-  if (!canvas) return;
-
   destroyIfExists(chartTopPrice);
-  chartTopPrice = new Chart(canvas, {
+  chartTopPrice = new Chart(document.getElementById("chartTopPrice"), {
     type: "bar",
     data: {
-      labels,
+      labels: top.map(x => x.nome),
       datasets: [
         {
           label: "Prezzo Acquisto",
-          data: prezziAcq,
-          // don't hardcode color if you prefer Chart default; here kept for readability
-          backgroundColor: "rgba(54, 162, 235, 0.7)"
+          data: top.map(x => safeNum(x.prezzo_acquisto)),
+          backgroundColor: "rgba(54,162,235,0.7)"
         },
         {
           label: "Prezzo Corrente",
-          data: prezziCorr,
-          backgroundColor: "rgba(255, 99, 132, 0.7)"
+          data: top.map(x => safeNum(x.prezzo_corrente)),
+          backgroundColor: "rgba(255,99,132,0.7)"
         }
       ]
     },
     options: {
-      maintainAspectRatio: false,
       indexAxis: "y",
-      responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { position: "bottom" } },
+      scales: { x: { beginAtZero: true } }
+    }
+  });
+}
+
+// ===============================
+// CHART 6: TOP PROFITTI (NUOVO)
+// ===============================
+function buildTopProfitChart(rows, limit = 5) {
+  const sorted = [...rows]
+    .filter(x => !isNaN(safeNum(x.profitto)))
+    .sort((a, b) => safeNum(b.profitto) - safeNum(a.profitto))
+    .slice(0, limit);
+
+  destroyIfExists(chartTopProfit);
+  chartTopProfit = new Chart(document.getElementById("chartTopProfit"), {
+    type: "bar",
+    data: {
+      labels: sorted.map(x => x.nome),
+      datasets: [{
+        label: "Profitto (€)",
+        data: sorted.map(x => safeNum(x.profitto)),
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
       scales: { x: { beginAtZero: true } }
     }
   });
