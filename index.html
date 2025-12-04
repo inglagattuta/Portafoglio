@@ -96,7 +96,7 @@
       </div>
 
       <div class="sort-group">
-        <button class="sort-btn" data-sort="valore">
+        <button class="sort-btn" data-sort="valoreAttuale">
           Valore attuale
           <span class="sort-indicator">↕</span>
         </button>
@@ -108,7 +108,7 @@
           Score
           <span class="sort-indicator">↕</span>
         </button>
-        <button class="sort-btn" data-sort="dividendo">
+        <button class="sort-btn" data-sort="dividendiAnnui">
           Dividendi annui
           <span class="sort-indicator">↕</span>
         </button>
@@ -149,8 +149,8 @@
               <th class="sortable" data-key="prezzoAttuale">Prezzo attuale</th>
               <th class="sortable" data-key="valoreAttuale">Valore attuale</th>
               <th class="sortable" data-key="pl">P/L</th>
-              <th class="sortable" data-key="yield">Yield %</th>
-              <th class="sortable" data-key="dividendi">Dividendi annui</th>
+              <th class="sortable" data-key="yieldPerc">Yield %</th>
+              <th class="sortable" data-key="dividendiAnnui">Dividendi annui</th>
               <th class="sortable" data-key="score">Score</th>
               <th>Azioni</th>
             </tr>
@@ -200,15 +200,15 @@
     <section class="charts-grid" aria-label="Grafici portafoglio">
       <div class="chart-card">
         <h2>Allocazione per tipo</h2>
-        <canvas id="chartAllocazione"></canvas>
+        anvas id="chartAllocazione"></canvas>
       </div>
       <div class="chart-card">
         <h2>Performance investimenti</h2>
-        <canvas id="chartPerformance"></canvas>
+        anvas id="chartPerformance"></canvas>
       </div>
       <div class="chart-card">
         <h2>Top 10 per valore</h2>
-        <canvas id="chartTop10"></canvas>
+        anvas id="chartTop10"></canvas>
       </div>
     </section>
   </div>
@@ -243,8 +243,18 @@
     </div>
   </div>
 
-  <!-- SCRIPT APPLICAZIONE -->
-  <script>
+  <!-- SCRIPT APPLICAZIONE (modulo) -->
+  <script type="module">
+    import {
+      db,
+      collection,
+      getDocs,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      doc
+    } from './firebase-config.js';
+
     // THEME TOGGLE
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
@@ -262,21 +272,35 @@
       applyTheme(themeToggle.checked ? 'dark' : 'light');
     });
 
-    // DATI DUMMY / HOOK PER I TUOI DATI
-    // Sostituisci questo array con fetch da Firebase o altra sorgente
-    let portfolioData = [
-      // ESEMPIO:
-      // {
-      //   ticker: 'AAPL',
-      //   nome: 'Apple Inc.',
-      //   tipo: 'Stock',
-      //   quantita: 10,
-      //   prezzoMedio: 150,
-      //   prezzoAttuale: 180,
-      //   dividendoPerAzione: 1,
-      //   score: 80
-      // }
-    ];
+    // DATI PORTAFOGLIO DA FIRESTORE
+    let portfolioData = [];
+    const collectionName = 'portfolio'; // nome collection Firestore
+
+    async function loadPortfolio() {
+      try {
+        const snap = await getDocs(collection(db, collectionName));
+        portfolioData = snap.docs.map(d => {
+          const data = d.data();
+          const valoreAttuale = data.quantita * data.prezzoAttuale;
+          const valoreIniziale = data.quantita * data.prezzoMedio;
+          const pl = valoreAttuale - valoreIniziale;
+          const dividendiAnnui = data.quantita * (data.dividendoPerAzione || 0);
+          const yieldPerc = valoreIniziale !== 0 ? (dividendiAnnui / valoreIniziale) * 100 : 0;
+
+          return {
+            id: d.id,
+            ...data,
+            valoreAttuale,
+            pl,
+            dividendiAnnui,
+            yieldPerc
+          };
+        });
+        renderTable(portfolioData);
+      } catch (e) {
+        console.error('Errore caricamento portafoglio', e);
+      }
+    }
 
     // RENDER TABELLA
     const tbody = document.getElementById('portfolioBody');
@@ -292,11 +316,12 @@
       tbody.innerHTML = '';
 
       data.forEach(row => {
-        const valoreAttuale = row.quantita * row.prezzoAttuale;
+        const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
         const valoreIniziale = row.quantita * row.prezzoMedio;
-        const pl = valoreAttuale - valoreIniziale;
+        const pl = row.pl ?? (valoreAttuale - valoreIniziale);
         const plPerc = valoreIniziale !== 0 ? (pl / valoreIniziale) * 100 : 0;
-        const dividendiAnnui = row.quantita * (row.dividendoPerAzione || 0);
+        const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
+        const yieldPerc = row.yieldPerc ?? (valoreIniziale !== 0 ? (dividendiAnnui / valoreIniziale) * 100 : 0);
 
         const tr = document.createElement('tr');
 
@@ -320,15 +345,15 @@
           <td class="${plClass}">
             ${formatCurrency(pl)} (${plPerc.toFixed(2)}%)
           </td>
-          <td>${row.yieldPerc ? row.yieldPerc.toFixed(2) + '%' : '-'}</td>
+          <td>${yieldPerc ? yieldPerc.toFixed(2) + '%' : '-'}</td>
           <td>${dividendiAnnui ? formatCurrency(dividendiAnnui) : '€ 0,00'}</td>
           <td class="score-cell ${scoreClass}">
             ${row.score ?? '-'}
           </td>
           <td>
             <div class="action-buttons">
-              <button class="btn-edit" data-ticker="${row.ticker}">Modifica</button>
-              <button class="btn-delete" data-ticker="${row.ticker}">Elimina</button>
+              <button class="btn-edit" data-id="${row.id}">Modifica</button>
+              <button class="btn-delete" data-id="${row.id}">Elimina</button>
             </div>
           </td>
         `;
@@ -352,9 +377,9 @@
       let countScore = 0;
 
       data.forEach(row => {
-        const valoreAttuale = row.quantita * row.prezzoAttuale;
+        const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
         const valoreIniziale = row.quantita * row.prezzoMedio;
-        const dividendiAnnui = row.quantita * (row.dividendoPerAzione || 0);
+        const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
 
         valoreTot += valoreAttuale;
         valoreInit += valoreIniziale;
@@ -395,8 +420,10 @@
       let valoreTot = 0;
       let valoreInit = 0;
       data.forEach(row => {
-        valoreTot += row.quantita * row.prezzoAttuale;
-        valoreInit += row.quantita * row.prezzoMedio;
+        const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
+        const valoreIniziale = row.quantita * row.prezzoMedio;
+        valoreTot += valoreAttuale;
+        valoreInit += valoreIniziale;
       });
       const rendimentoPerc = valoreInit !== 0 ? ((valoreTot - valoreInit) / valoreInit) * 100 : 0;
 
@@ -416,7 +443,7 @@
 
       // Per titolo
       data.forEach(row => {
-        const dividendiAnnui = row.quantita * (row.dividendoPerAzione || 0);
+        const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
         if (!dividendiAnnui) return;
 
         const card = document.createElement('div');
@@ -445,7 +472,10 @@
       });
 
       // Per mese (dummy: distribuzione uniforme su 12 mesi)
-      const totaleDiv = data.reduce((sum, row) => sum + row.quantita * (row.dividendoPerAzione || 0), 0);
+      const totaleDiv = data.reduce((sum, row) => {
+        const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
+        return sum + dividendiAnnui;
+      }, 0);
       const mensile = totaleDiv / 12;
 
       const mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
@@ -474,8 +504,8 @@
       // Allocazione per tipo
       const byType = {};
       data.forEach(row => {
-        const val = row.quantita * row.prezzoAttuale;
-        byType[row.tipo] = (byType[row.tipo] || 0) + val;
+        const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
+        byType[row.tipo] = (byType[row.tipo] || 0) + valoreAttuale;
       });
 
       chartAllocazione = new Chart(ctxAlloc, {
@@ -508,7 +538,7 @@
             },
             {
               label: 'Valore attuale',
-              data: data.map(r => r.quantita * r.prezzoAttuale),
+              data: data.map(r => r.valoreAttuale ?? (r.quantita * r.prezzoAttuale)),
               backgroundColor: 'rgba(56, 189, 248, 0.8)'
             }
           ]
@@ -524,7 +554,8 @@
 
       // Top 10 per valore
       const sorted = [...data].sort((a, b) =>
-        (b.quantita * b.prezzoAttuale) - (a.quantita * a.prezzoAttuale)
+        (b.valoreAttuale ?? (b.quantita * b.prezzoAttuale)) -
+        (a.valoreAttuale ?? (a.quantita * a.prezzoAttuale))
       ).slice(0, 10);
 
       chartTop10 = new Chart(ctxTop10, {
@@ -533,7 +564,7 @@
           labels: sorted.map(r => r.ticker),
           datasets: [{
             label: 'Valore attuale',
-            data: sorted.map(r => r.quantita * r.prezzoAttuale),
+            data: sorted.map(r => r.valoreAttuale ?? (r.quantita * r.prezzoAttuale)),
             backgroundColor: '#4ade80'
           }]
         },
@@ -550,10 +581,10 @@
     const modalClose = document.getElementById('modalClose');
     const modalSave = document.getElementById('modalSave');
 
-    let editingTicker = null;
+    let editingId = null;
 
     function openModal(row) {
-      editingTicker = row.ticker;
+      editingId = row.id;
       document.getElementById('modalTicker').value = row.ticker;
       document.getElementById('modalQuantita').value = row.quantita;
       document.getElementById('modalPrezzoMedio').value = row.prezzoMedio;
@@ -565,7 +596,7 @@
 
     function closeModal() {
       modal.style.display = 'none';
-      editingTicker = null;
+      editingId = null;
     }
 
     modalClose.addEventListener('click', closeModal);
@@ -573,8 +604,8 @@
       if (e.target === modal) closeModal();
     });
 
-    modalSave.addEventListener('click', () => {
-      if (!editingTicker) return;
+    modalSave.addEventListener('click', async () => {
+      if (!editingId) return;
       const q = parseFloat(document.getElementById('modalQuantita').value) || 0;
       const pm = parseFloat(document.getElementById('modalPrezzoMedio').value) || 0;
       const pa = parseFloat(document.getElementById('modalPrezzoAttuale').value) || 0;
@@ -582,44 +613,59 @@
       const score = document.getElementById('modalScore').value;
       const scoreNum = score === '' ? null : parseFloat(score);
 
-      portfolioData = portfolioData.map(row => {
-        if (row.ticker === editingTicker) {
-          return {
-            ...row,
-            quantita: q,
-            prezzoMedio: pm,
-            prezzoAttuale: pa,
-            dividendoPerAzione: div,
-            score: scoreNum
-          };
-        }
-        return row;
-      });
+      try {
+        await updateDoc(doc(db, collectionName, editingId), {
+          quantita: q,
+          prezzoMedio: pm,
+          prezzoAttuale: pa,
+          dividendoPerAzione: div,
+          score: scoreNum
+        });
 
-      // TODO: qui puoi fare update su Firebase / backend
+        portfolioData = portfolioData.map(row => {
+          if (row.id === editingId) {
+            return {
+              ...row,
+              quantita: q,
+              prezzoMedio: pm,
+              prezzoAttuale: pa,
+              dividendoPerAzione: div,
+              score: scoreNum
+            };
+          }
+          return row;
+        });
 
-      renderTable(portfolioData);
-      closeModal();
+        renderTable(portfolioData);
+        closeModal();
+      } catch (e) {
+        console.error('Errore update documento', e);
+      }
     });
 
     function attachRowActions() {
       document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', () => {
-          const ticker = btn.getAttribute('data-ticker');
-          const row = portfolioData.find(r => r.ticker === ticker);
+          const id = btn.getAttribute('data-id');
+          const row = portfolioData.find(r => r.id === id);
           if (row) openModal(row);
         });
       });
 
       document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const ticker = btn.getAttribute('data-ticker');
-          if (!confirm('Vuoi davvero eliminare ' + ticker + ' dal portafoglio?')) return;
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          const row = portfolioData.find(r => r.id === id);
+          if (!row) return;
+          if (!confirm('Vuoi davvero eliminare ' + row.ticker + ' dal portafoglio?')) return;
 
-          portfolioData = portfolioData.filter(r => r.ticker !== ticker);
-
-          // TODO: delete anche su backend
-          renderTable(portfolioData);
+          try {
+            await deleteDoc(doc(db, collectionName, id));
+            portfolioData = portfolioData.filter(r => r.id !== id);
+            renderTable(portfolioData);
+          } catch (e) {
+            console.error('Errore delete documento', e);
+          }
         });
       });
     }
@@ -658,8 +704,7 @@
         const key = btn.getAttribute('data-sort');
 
         if (currentSortKey === key) {
-          currentSortDir *= 2;
-          if (currentSortDir > 1) currentSortDir = -1;
+          currentSortDir *= -1;
         } else {
           currentSortKey = key;
           currentSortDir = 1;
@@ -681,19 +726,53 @@
     });
 
     // BOTTONI PRINCIPALI (hook)
-    document.getElementById('btnAdd').addEventListener('click', () => {
-      // TODO: apri un modal di "Nuovo titolo" oppure aggiungi riga vuota
-      alert('Qui puoi aprire un form per aggiungere un nuovo titolo.');
+    document.getElementById('btnAdd').addEventListener('click', async () => {
+      // Esempio minimale: aggiunge un titolo dummy in Firestore
+      try {
+        const ref = await addDoc(collection(db, collectionName), {
+          ticker: 'NEW',
+          nome: 'Nuovo titolo',
+          tipo: 'Stock',
+          quantita: 1,
+          prezzoMedio: 100,
+          prezzoAttuale: 100,
+          dividendoPerAzione: 0,
+          score: null
+        });
+        portfolioData.push({
+          id: ref.id,
+          ticker: 'NEW',
+          nome: 'Nuovo titolo',
+          tipo: 'Stock',
+          quantita: 1,
+          prezzoMedio: 100,
+          prezzoAttuale: 100,
+          dividendoPerAzione: 0,
+          score: null,
+          valoreAttuale: 100,
+          pl: 0,
+          dividendiAnnui: 0,
+          yieldPerc: 0
+        });
+        renderTable(portfolioData);
+      } catch (e) {
+        console.error('Errore add documento', e);
+      }
     });
 
     document.getElementById('btnExport').addEventListener('click', () => {
-      // TODO: export JSON/CSV
-      alert('Qui puoi implementare esportazione JSON/CSV.');
+      const json = JSON.stringify(portfolioData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'portfolio.json';
+      a.click();
+      URL.revokeObjectURL(url);
     });
 
     document.getElementById('btnImportJson').addEventListener('click', () => {
-      // TODO: import JSON
-      alert('Qui puoi implementare importazione JSON.');
+      alert('Implementa qui import JSON e sync su Firestore se ti serve.');
     });
 
     // TOGGLE DIVIDENDI
@@ -703,17 +782,17 @@
     toggleTitoli.addEventListener('click', () => {
       toggleTitoli.classList.add('active');
       toggleMese.classList.remove('active');
-      // Puoi aggiungere logica per nascondere/mostrare layout
+      // eventuale logica UI
     });
 
     toggleMese.addEventListener('click', () => {
       toggleMese.classList.add('active');
       toggleTitoli.classList.remove('active');
-      // Idem sopra
+      // eventuale logica UI
     });
 
     // INIT
-    renderTable(portfolioData);
+    loadPortfolio();
   </script>
 </body>
 </html>
