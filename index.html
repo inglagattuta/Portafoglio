@@ -5,343 +5,43 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Portafoglio Investimenti</title>
 
-  <!-- CSS -->
+  <!-- CSS (cache-busting) -->
   <link rel="stylesheet" href="style.css?v=10">
 
-  <!-- XLSX -->
+  <!-- Carica Firebase config come module (defer-like, ma keep as module) -->
+ 
+  <!-- XLSX (non-module) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- main.js come module -->
+  <!-- main.js come module, con defer implicito per type=module -->
   <script type="module" src="main.js?v=4"></script>
-
-  <style>
-    /* Layout generale */
-    body {
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      background: radial-gradient(circle at top, #1e293b 0, #020617 40%, #000000 100%);
-      padding: 40px 16px;
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
-    }
-
-    .main-wrapper {
-      width: 100%;
-      max-width: 480px;
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 24px;
-      padding: 24px 20px 20px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      backdrop-filter: blur(18px);
-      color: #e5e7eb;
-    }
-
-    /* Header */
-    header {
-      margin-bottom: 18px;
-    }
-
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .hero-title {
-      font-size: 1.6rem;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      background: linear-gradient(135deg, #38bdf8, #22c55e);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin: 0;
-    }
-
-    .hero-subtitle {
-      font-size: 0.9rem;
-      color: #9ca3af;
-      margin: 4px 0 0;
-    }
-
-    /* Theme toggle */
-    .theme-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .switch {
-      position: relative;
-      width: 56px;
-      height: 28px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      inset: 0;
-      background: #cbd5e0;
-      border-radius: 28px;
-      cursor: pointer;
-      transition: 250ms ease;
-    }
-
-    .slider::before {
-      content: "";
-      position: absolute;
-      height: 22px;
-      width: 22px;
-      left: 3px;
-      bottom: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: 250ms ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    input:checked + .slider {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    input:checked + .slider::before {
-      transform: translateX(28px);
-    }
-
-    /* Stats compatte */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .stat-card {
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.8);
-    }
-
-    .stat-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #9ca3af;
-      margin-bottom: 2px;
-    }
-
-    .stat-value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #e5e7eb;
-    }
-
-    .stat-subvalue {
-      font-size: 0.75rem;
-      color: #22c55e;
-      margin-top: 2px;
-    }
-
-    /* Pulsanti principali */
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .file-label,
-    .export-btn,
-    .dashboard-btn {
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.7);
-      white-space: nowrap;
-    }
-
-    .file-label input {
-      display: none;
-    }
-
-    .export-btn {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      border-color: transparent;
-    }
-
-    .dashboard-btn {
-      background: linear-gradient(135deg, #38bdf8, #1d4ed8);
-      border-color: transparent;
-    }
-
-    .dashboard-btn.dividendi {
-      background: linear-gradient(135deg, #f97316, #ea580c);
-    }
-
-    .dashboard-btn.andamento {
-      background: linear-gradient(135deg, #a855f7, #7c3aed);
-    }
-
-    .file-label:hover,
-    .export-btn:hover,
-    .dashboard-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.9);
-      border-color: #38bdf8;
-    }
-
-    /* Tabella */
-    .table-container {
-      margin-top: 16px;
-      max-height: 55vh;
-      overflow: auto;
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(15, 23, 42, 0.9);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 600px;
-      font-size: 0.8rem;
-    }
-
-    thead {
-      position: sticky;
-      top: 0;
-      background: linear-gradient(135deg, #020617, #0f172a);
-      z-index: 1;
-    }
-
-    th, td {
-      padding: 8px 10px;
-      border-bottom: 1px solid rgba(30, 64, 175, 0.4);
-      color: #e5e7eb;
-      text-align: left;
-    }
-
-    tbody tr:hover td {
-      background: rgba(30, 64, 175, 0.35);
-    }
-
-    /* Elenco dettagliato con toggle */
-    .list-toggle-wrapper {
-      margin-top: 16px;
-    }
-
-    .list-toggle-btn {
-      width: 100%;
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.7);
-      margin-bottom: 8px;
-    }
-
-    .list-toggle-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.9);
-      border-color: #38bdf8;
-    }
-
-    .detailed-list {
-      max-height: 40vh;
-      overflow-y: auto;
-      padding: 10px 12px;
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(15, 23, 42, 0.9);
-      font-size: 0.8rem;
-      color: #e5e7eb;
-    }
-
-    .detailed-item {
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(30, 64, 175, 0.4);
-    }
-
-    .detailed-item:last-child {
-      border-bottom: none;
-    }
-
-    .detailed-item-title {
-      font-weight: 600;
-    }
-
-    .detailed-item-meta {
-      color: #9ca3af;
-      font-size: 0.75rem;
-    }
-
-    @media (max-width: 600px) {
-      .main-wrapper {
-        padding: 20px 14px 16px;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      table {
-        min-width: 520px;
-      }
-    }
-  </style>
 </head>
-
 <body data-theme="light">
-  <div class="main-wrapper">
+
+  <div class="container">
+
     <header>
-      <div class="header-top">
+      <div class="header-top" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div>
-          <h1 class="hero-title">💼 Portfolio Manager</h1>
-          <p class="hero-subtitle">Francesco La Gattuta</p>
+          <h1 style="margin:0;">💼 Portfolio Manager</h1>
+          <p class="subtitle" style="margin:4px 0 0;">Francesco La Gattuta</p>
         </div>
 
-        <div class="theme-toggle">
-          <label class="switch">
-            <input type="checkbox" id="themeSwitch">
-            <span class="slider"></span>
-          </label>
-          <span id="themeLabel"></span>
-        </div>
+        <!-- Toggle Dark Mode -->
+    <div class="theme-toggle">
+  <label class="switch">
+    <input type="checkbox" id="themeSwitch">
+    <span class="slider"></span>
+  </label>
+  <span id="themeLabel"></span>
+</div>
+
+
+
       </div>
     </header>
 
     <!-- STATISTICHE -->
-    <div class="stats-grid">
+    <div class="stats-grid" style="margin-top:18px;">
       <div class="stat-card">
         <div class="stat-label">Totale Investito</div>
         <div class="stat-value" id="totInvestito">0.00 €</div>
@@ -357,15 +57,15 @@
         <div class="stat-value" id="totDividendi">0.00 €</div>
       </div>
 
-      <div class="stat-card">
-        <div class="stat-label">Profitto Totale</div>
-        <div class="stat-value" id="totProfitto">0.00 €</div>
-        <div class="stat-subvalue" id="totProfittoPerc">0%</div>
-      </div>
+     <div class="stat-card">
+  <div class="stat-label">Profitto Totale</div>
+  <div class="stat-value" id="totProfitto">0.00 €</div>
+  <div class="stat-subvalue" id="totProfittoPerc" style="font-size:14px; opacity:0.75; margin-top:4px;">0%</div>
+</div>
     </div>
 
     <!-- CONTROLLI -->
-    <div class="controls">
+    <div class="controls" style="margin-top:16px;">
       <label class="file-label">
         📥 Importa Excel
         <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
@@ -373,13 +73,14 @@
 
       <button class="export-btn" onclick="exportExcel()">📤 Esporta Excel</button>
 
-      <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>
-      <a class="dashboard-btn dividendi" href="dividendi.html">💵 Dividendi</a>
-      <a class="dashboard-btn andamento" href="andamento.html">📈 Andamento</a>
+      <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>  
+      <a class="dashboard-btn" href="dividendi.html" style="background:#6c5ce7;">💵 Dividendi</a>
+      <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
+
     </div>
 
     <!-- TABELLA -->
-    <div class="table-container">
+    <div class="table-container" style="margin-top:18px;">
       <table>
         <thead>
           <tr id="headerRow"></tr>
@@ -388,86 +89,30 @@
       </table>
     </div>
 
-    <!-- ELENCO DETTAGLIATO CON TOGGLE -->
-    <div class="list-toggle-wrapper">
-      <button id="toggleListBtn" class="list-toggle-btn">
-        👁️ Vedi elenco dettagliato
-      </button>
-
-      <div id="detailedList" class="detailed-list" style="display:none;">
-        <!-- Popolato da refreshDetailedList() -->
-      </div>
-    </div>
   </div>
 
-  <!-- Modal root -->
+  <!-- Modal root (main.js uses ensureModal() to append #editModal when needed) -->
   <div id="modal-root"></div>
+<script>
+  const switchEl = document.getElementById("themeSwitch");
+  const themeLabel = document.querySelector('.theme-toggle span') || document.getElementById("themeLabel");
 
-  <script>
-    // --- Tema chiaro/scuro ---
-    const switchEl = document.getElementById("themeSwitch");
-    const themeLabel = document.getElementById("themeLabel");
+  // Legge preferenza (o fallback a light)
+  const saved = localStorage.getItem("theme") || "light";
+  document.body.dataset.theme = saved;
+  if (saved === "dark") document.body.classList.add("dark");
+  switchEl.checked = saved === "dark";
+  if(themeLabel) themeLabel.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
 
-    const saved = localStorage.getItem("theme") || "light";
-    document.body.dataset.theme = saved;
-    if (saved === "dark") document.body.classList.add("dark");
-    switchEl.checked = saved === "dark";
-    if (themeLabel) themeLabel.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
+  switchEl.addEventListener("change", () => {
+    const mode = switchEl.checked ? "dark" : "light";
+    document.body.dataset.theme = mode;
+    if(mode === "dark") document.body.classList.add("dark");
+    else document.body.classList.remove("dark");
+    if(themeLabel) themeLabel.textContent = mode === "dark" ? "🌙 Dark" : "☀️ Light";
+    localStorage.setItem("theme", mode);
+  });
+</script>
 
-    switchEl.addEventListener("change", () => {
-      const mode = switchEl.checked ? "dark" : "light";
-      document.body.dataset.theme = mode;
-      if (mode === "dark") document.body.classList.add("dark");
-      else document.body.classList.remove("dark");
-      if (themeLabel) themeLabel.textContent = mode === "dark" ? "🌙 Dark" : "☀️ Light";
-      localStorage.setItem("theme", mode);
-    });
-
-    // --- Toggle elenco dettagliato ---
-    const toggleListBtn = document.getElementById('toggleListBtn');
-    const detailedList = document.getElementById('detailedList');
-
-    if (toggleListBtn && detailedList) {
-      toggleListBtn.addEventListener('click', () => {
-        const isHidden = detailedList.style.display === 'none' || detailedList.style.display === '';
-        detailedList.style.display = isHidden ? 'block' : 'none';
-        toggleListBtn.textContent = isHidden
-          ? '🙈 Nascondi elenco dettagliato'
-          : '👁️ Vedi elenco dettagliato';
-      });
-    }
-
-    // Funzione usata da main.js dopo aver popolato la tabella
-    window.refreshDetailedList = function () {
-      const body = document.getElementById('tableBody');
-      if (!body || !detailedList) return;
-
-      detailedList.innerHTML = '';
-
-      const rows = Array.from(body.querySelectorAll('tr'));
-      rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (!cells.length) return;
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'detailed-item';
-
-        const title = document.createElement('div');
-        title.className = 'detailed-item-title';
-        title.textContent = cells[0].textContent || 'Voce';
-
-        const meta = document.createElement('div');
-        meta.className = 'detailed-item-meta';
-        meta.textContent = Array.from(cells)
-          .slice(1)
-          .map(td => td.textContent.trim())
-          .join(' • ');
-
-        wrapper.appendChild(title);
-        wrapper.appendChild(meta);
-        detailedList.appendChild(wrapper);
-      });
-    };
-  </script>
 </body>
 </html>
