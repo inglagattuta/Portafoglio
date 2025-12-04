@@ -25,6 +25,9 @@ const bxDividendi = document.getElementById("totDividendi");
 const bxProfitto  = document.getElementById("totProfitto");
 const elPerc      = document.getElementById("totProfittoPerc");
 
+// elemento elenco dettagliato (se esiste sulla pagina)
+const detailedList = document.getElementById("detailedList");
+
 // -------------------------------------------------------------
 // COLUMNS DEFINITIONS
 // -------------------------------------------------------------
@@ -228,9 +231,9 @@ async function openEditModal(docId) {
     });
 
     updated.profitto =
-      (updated.prezzo_corrente || 0) - 
-      (updated.prezzo_acquisto || 0) + 
-      (updated.dividendi || 0) + 
+      (updated.prezzo_corrente || 0) -
+      (updated.prezzo_acquisto || 0) +
+      (updated.dividendi || 0) +
       (updated.prelevato || 0);
 
     updated.score = Number(updated.score || 0);
@@ -334,17 +337,13 @@ function updateStats(docs) {
   const profit = totVal - totInv + totDiv + totPre;
   const percProfit = totInv > 0 ? (profit / totInv) * 100 : 0;
 
-  // Aggiorna valori principali
   bxInvestito.textContent = fmtEuro(totInv);
   bxValore.textContent    = fmtEuro(totVal);
   bxDividendi.textContent = fmtEuro(totDiv);
 
-  // Aggiorna profitto totale
   bxProfitto.textContent  = fmtEuro(profit);
   bxProfitto.style.color  = profit >= 0 ? "#2ecc71" : "#e74c3c";
 
-  // NUOVO: aggiorna % profitto con colore
-  const elPerc = document.getElementById("totProfittoPerc");
   if (elPerc) {
     elPerc.textContent = percProfit.toFixed(2) + " %";
     elPerc.style.color = percProfit >= 0 ? "#2ecc71" : "#e74c3c";
@@ -352,9 +351,46 @@ function updateStats(docs) {
   }
 }
 
+// -------------------------------------------------------------
+// ELENCO DETTAGLIATO (usa le righe della tabella)
+// -------------------------------------------------------------
+function refreshDetailedListInternal() {
+  if (!detailedList) return;
 
+  detailedList.innerHTML = "";
+
+  const rows = Array.from(tableBody.querySelectorAll("tr"));
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    if (!cells.length) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "detailed-item";
+
+    const title = document.createElement("div");
+    title.className = "detailed-item-title";
+    title.textContent = cells[0].textContent || "Voce";
+
+    const meta = document.createElement("div");
+    meta.className = "detailed-item-meta";
+    meta.textContent = Array.from(cells)
+      .slice(1)
+      .map(td => td.textContent.trim())
+      .join(" • ");
+
+    wrapper.appendChild(title);
+    wrapper.appendChild(meta);
+    detailedList.appendChild(wrapper);
+  });
+}
+
+// espone la funzione anche a window (se vuoi usarla da altro codice)
+window.refreshDetailedList = refreshDetailedListInternal;
+
+// -------------------------------------------------------------
+// LOAD DATA
+// -------------------------------------------------------------
 async function loadData() {
-  // Pulisce la tabella
   tableBody.innerHTML = "";
   renderHeader();
 
@@ -365,36 +401,31 @@ async function loadData() {
   }
 
   try {
-    console.log("Caricamento dati da Firebase...");
     const snap = await getDocs(collection(db, "portafoglio"));
-    console.log("Documenti trovati:", snap.docs.length);
 
     if (snap.docs.length === 0) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = columns.length + 1; // include la colonna Azioni
+      td.colSpan = columns.length + 1;
       td.textContent = "Nessun dato trovato!";
       td.style.textAlign = "center";
       td.style.fontStyle = "italic";
       tr.appendChild(td);
       tableBody.appendChild(tr);
 
-      // Azzera anche i box principali
-      bxInvestito.textContent = "0 €";
-      bxValore.textContent = "0 €";
-      bxDividendi.textContent = "0 €";
-      bxProfitto.textContent = "0 €";
-      elPerc.textContent = "0 %";
+      bxInvestito.textContent = "0.00 €";
+      bxValore.textContent    = "0.00 €";
+      bxDividendi.textContent = "0.00 €";
+      bxProfitto.textContent  = "0.00 €";
+      if (elPerc) elPerc.textContent = "0.00 %";
 
+      refreshDetailedListInternal();
       return;
     }
 
-    // Popola la tabella
     snap.docs.forEach(docSnap => {
       const d = docSnap.data();
       const id = docSnap.id;
-
-      console.log("Documento:", id, d);
 
       const tr = document.createElement("tr");
 
@@ -404,8 +435,10 @@ async function loadData() {
         td.style.display = hiddenCols.has(col) ? "none" : "table-cell";
 
         if (col === "profitto") {
-          const p = (Number(d.prezzo_corrente) || 0) - (Number(d.prezzo_acquisto) || 0) +
-                    (Number(d.dividendi) || 0) + (Number(d.prelevato) || 0);
+          const p = (Number(d.prezzo_corrente) || 0) -
+                    (Number(d.prezzo_acquisto) || 0) +
+                    (Number(d.dividendi) || 0) +
+                    (Number(d.prelevato) || 0);
           td.textContent = fmtEuro(p);
           td.dataset.raw = p;
         } else if (euroCols.has(col)) {
@@ -416,30 +449,26 @@ async function loadData() {
           const v = Number(d[col] || 0);
           td.textContent = fmtPerc(v);
           td.dataset.raw = v;
-       } else if (col === "score") {
-  const v = Number(d[col] || 0);
-  td.textContent = fmtScore(v);
-  td.dataset.raw = v;
+        } else if (col === "score") {
+          const v = Number(d[col] || 0);
+          td.textContent = fmtScore(v);
+          td.dataset.raw = v;
 
-  // --- COLORAZIONE SCORE ---
-  if (v >= 12) {
-    td.style.color = "#2ecc71";   // verde
-  } else if (v < 12 && v >= 8) {
-    td.style.color = "#f1c40f";   // giallo
-  } else {
-    td.style.color = "#e74c3c";   // rosso
-  }
-
-} else {
-  td.textContent = d[col] ?? "";
-  td.dataset.raw = (d[col] ?? "").toString();
-}
-
+          if (v >= 12) {
+            td.style.color = "#2ecc71";
+          } else if (v < 12 && v >= 8) {
+            td.style.color = "#f1c40f";
+          } else {
+            td.style.color = "#e74c3c";
+          }
+        } else {
+          td.textContent = d[col] ?? "";
+          td.dataset.raw = (d[col] ?? "").toString();
+        }
 
         tr.appendChild(td);
       });
 
-      // TD con bottoni Azioni
       const tdA = document.createElement("td");
       tdA.classList.add("action-buttons");
       tdA.style.textAlign = "center";
@@ -469,34 +498,15 @@ async function loadData() {
 
     updateStats(snap.docs);
     enableSorting();
+    refreshDetailedListInternal();
 
   } catch (e) {
     console.error("Errore nel caricamento dati:", e);
     alert("Errore nel caricamento dati, controlla console.");
   }
 }
-// ======================
-// DARK MODE HANDLER
-// ======================
-const themeSwitch = document.getElementById("themeSwitch");
 
-// Carica preferenza salvata
-if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark");
-    if (themeSwitch) themeSwitch.checked = true;
-}
-
-// Toggle manuale
-if (themeSwitch) {
-    themeSwitch.addEventListener("change", () => {
-        if (themeSwitch.checked) {
-            document.body.classList.add("dark");
-            localStorage.setItem("theme", "dark");
-        } else {
-            document.body.classList.remove("dark");
-            localStorage.setItem("theme", "light");
-        }
-    });
-}
-
+// -------------------------------------------------------------
+// INIT
+// -------------------------------------------------------------
 loadData();
