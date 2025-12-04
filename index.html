@@ -244,555 +244,543 @@
   </div>
 
   <!-- SCRIPT APPLICAZIONE (modulo) -->
-  <script type="module">
-    import {
-      db,
-      collection,
-      getDocs,
-      addDoc,
-      updateDoc,
-      deleteDoc,
-      doc
-    } from './firebase-config.js';
+ <script type="module">
+  import app, { db } from './firebase-config.js';
+  import {
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc
+  } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    // THEME TOGGLE
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
+  // THEME TOGGLE
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
 
-    function applyTheme(theme) {
-      body.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
-      themeToggle.checked = theme === 'dark';
+  function applyTheme(theme) {
+    body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    themeToggle.checked = theme === 'dark';
+  }
+
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+
+  themeToggle.addEventListener('change', () => {
+    applyTheme(themeToggle.checked ? 'dark' : 'light');
+  });
+
+  // DATI PORTAFOGLIO DA FIRESTORE
+  let portfolioData = [];
+  const collectionName = 'portfolio';
+
+  async function loadPortfolio() {
+    try {
+      const snap = await getDocs(collection(db, collectionName));
+      portfolioData = snap.docs.map(d => {
+        const data = d.data();
+        const valoreAttuale = data.quantita * data.prezzoAttuale;
+        const valoreIniziale = data.quantita * data.prezzoMedio;
+        const pl = valoreAttuale - valoreIniziale;
+        const dividendiAnnui = data.quantita * (data.dividendoPerAzione || 0);
+        const yieldPerc = valoreIniziale !== 0 ? (dividendiAnnui / valoreIniziale) * 100 : 0;
+
+        return {
+          id: d.id,
+          ...data,
+          valoreAttuale,
+          pl,
+          dividendiAnnui,
+          yieldPerc
+        };
+      });
+      renderTable(portfolioData);
+    } catch (e) {
+      console.error('Errore caricamento portafoglio', e);
     }
+  }
 
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
+  // RENDER TABELLA
+  const tbody = document.getElementById('portfolioBody');
 
-    themeToggle.addEventListener('change', () => {
-      applyTheme(themeToggle.checked ? 'dark' : 'light');
+  function formatCurrency(value) {
+    return '€ ' + value.toLocaleString('it-IT', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  function renderTable(data) {
+    tbody.innerHTML = '';
+
+    data.forEach(row => {
+      const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
+      const valoreIniziale = row.quantita * row.prezzoMedio;
+      const pl = row.pl ?? (valoreAttuale - valoreIniziale);
+      const plPerc = valoreIniziale !== 0 ? (pl / valoreIniziale) * 100 : 0;
+      const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
+      const yieldPerc = row.yieldPerc ?? (valoreIniziale !== 0 ? (dividendiAnnui / valoreIniziale) * 100 : 0);
+
+      const tr = document.createElement('tr');
+
+      const plClass =
+        pl > 0 ? 'profit-positive' :
+        pl < 0 ? 'profit-negative' :
+        'profit-neutral';
+
+      let scoreClass = 'score-low';
+      if (row.score >= 70) scoreClass = 'score-high';
+      else if (row.score >= 40) scoreClass = 'score-medium';
+
+      tr.innerHTML = `
+        <td>${row.ticker}</td>
+        <td>${row.nome || ''}</td>
+        <td>${row.tipo || ''}</td>
+        <td>${row.quantita}</td>
+        <td>${formatCurrency(row.prezzoMedio)}</td>
+        <td>${formatCurrency(row.prezzoAttuale)}</td>
+        <td>${formatCurrency(valoreAttuale)}</td>
+        <td class="${plClass}">
+          ${formatCurrency(pl)} (${plPerc.toFixed(2)}%)
+        </td>
+        <td>${yieldPerc ? yieldPerc.toFixed(2) + '%' : '-'}</td>
+        <td>${dividendiAnnui ? formatCurrency(dividendiAnnui) : '€ 0,00'}</td>
+        <td class="score-cell ${scoreClass}">
+          ${row.score ?? '-'}
+        </td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-edit" data-id="${row.id}">Modifica</button>
+            <button class="btn-delete" data-id="${row.id}">Elimina</button>
+          </div>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
     });
 
-    // DATI PORTAFOGLIO DA FIRESTORE
-    let portfolioData = [];
-    const collectionName = 'portfolio'; // nome collection Firestore
+    attachRowActions();
+    updateStats(data);
+    updateMiniCards(data);
+    updateDividendi(data);
+    updateCharts(data);
+  }
 
-    async function loadPortfolio() {
-      try {
-        const snap = await getDocs(collection(db, collectionName));
-        portfolioData = snap.docs.map(d => {
-          const data = d.data();
-          const valoreAttuale = data.quantita * data.prezzoAttuale;
-          const valoreIniziale = data.quantita * data.prezzoMedio;
-          const pl = valoreAttuale - valoreIniziale;
-          const dividendiAnnui = data.quantita * (data.dividendoPerAzione || 0);
-          const yieldPerc = valoreIniziale !== 0 ? (dividendiAnnui / valoreIniziale) * 100 : 0;
+  // --- da qui in poi puoi lasciare praticamente tutto il tuo JS originale,
+  // adattando solo dove servono id/ticker per Firestore ---
 
-          return {
-            id: d.id,
-            ...data,
-            valoreAttuale,
-            pl,
-            dividendiAnnui,
-            yieldPerc
-          };
-        });
-        renderTable(portfolioData);
-      } catch (e) {
-        console.error('Errore caricamento portafoglio', e);
+  function updateStats(data) {
+    let valoreTot = 0;
+    let valoreInit = 0;
+    let totaleDiv = 0;
+    let sommaScore = 0;
+    let countScore = 0;
+
+    data.forEach(row => {
+      const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
+      const valoreIniziale = row.quantita * row.prezzoMedio;
+      const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
+
+      valoreTot += valoreAttuale;
+      valoreInit += valoreIniziale;
+      totaleDiv += dividendiAnnui;
+
+      if (typeof row.score === 'number') {
+        sommaScore += row.score;
+        countScore++;
       }
-    }
+    });
 
-    // RENDER TABELLA
-    const tbody = document.getElementById('portfolioBody');
+    const pl = valoreTot - valoreInit;
+    const plPerc = valoreInit !== 0 ? (pl / valoreInit) * 100 : 0;
+    const scoreMedio = countScore ? sommaScore / countScore : null;
 
-    function formatCurrency(value) {
-      return '€ ' + value.toLocaleString('it-IT', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    }
+    document.getElementById('statValoreTotale').textContent = formatCurrency(valoreTot);
+    document.getElementById('statValoreIniziale').textContent = 'Investito iniziale: ' + formatCurrency(valoreInit);
 
-    function renderTable(data) {
-      tbody.innerHTML = '';
+    const plElem = document.getElementById('statPL');
+    plElem.textContent = formatCurrency(pl);
 
-      data.forEach(row => {
-        const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
-        const valoreIniziale = row.quantita * row.prezzoMedio;
-        const pl = row.pl ?? (valoreAttuale - valoreIniziale);
-        const plPerc = valoreIniziale !== 0 ? (pl / valoreIniziale) * 100 : 0;
-        const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
-        const yieldPerc = row.yieldPerc ?? (valoreIniziale !== 0 ? (dividendiAnnui / valoreIniziale) * 100 : 0);
+    const plPercElem = document.getElementById('statPLPerc');
+    plPercElem.textContent = plPerc.toFixed(2) + '%';
 
-        const tr = document.createElement('tr');
+    document.getElementById('statDividendi').textContent = formatCurrency(totaleDiv);
+    const yoc = valoreInit !== 0 ? (totaleDiv / valoreInit) * 100 : 0;
+    document.getElementById('statYieldOnCost').textContent = 'Yield on cost: ' + yoc.toFixed(2) + '%';
 
-        const plClass =
-          pl > 0 ? 'profit-positive' :
-          pl < 0 ? 'profit-negative' :
-          'profit-neutral';
+    document.getElementById('statRischio').textContent = scoreMedio !== null ? scoreMedio.toFixed(1) : '–';
+    document.getElementById('statScoreMedio').textContent = scoreMedio !== null ? 'Score medio: ' + scoreMedio.toFixed(1) : 'Score medio: –';
+  }
 
-        let scoreClass = 'score-low';
-        if (row.score >= 70) scoreClass = 'score-high';
-        else if (row.score >= 40) scoreClass = 'score-medium';
+  function updateMiniCards(data) {
+    const titoli = data.length;
+    const etf = data.filter(r => r.tipo === 'ETF').length;
+    const crypto = data.filter(r => r.tipo === 'Crypto').length;
 
-        tr.innerHTML = `
-          <td>${row.ticker}</td>
-          <td>${row.nome || ''}</td>
-          <td>${row.tipo || ''}</td>
-          <td>${row.quantita}</td>
-          <td>${formatCurrency(row.prezzoMedio)}</td>
-          <td>${formatCurrency(row.prezzoAttuale)}</td>
-          <td>${formatCurrency(valoreAttuale)}</td>
-          <td class="${plClass}">
-            ${formatCurrency(pl)} (${plPerc.toFixed(2)}%)
-          </td>
-          <td>${yieldPerc ? yieldPerc.toFixed(2) + '%' : '-'}</td>
-          <td>${dividendiAnnui ? formatCurrency(dividendiAnnui) : '€ 0,00'}</td>
-          <td class="score-cell ${scoreClass}">
-            ${row.score ?? '-'}
-          </td>
-          <td>
-            <div class="action-buttons">
-              <button class="btn-edit" data-id="${row.id}">Modifica</button>
-              <button class="btn-delete" data-id="${row.id}">Elimina</button>
-            </div>
-          </td>
-        `;
+    let valoreTot = 0;
+    let valoreInit = 0;
+    data.forEach(row => {
+      const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
+      const valoreIniziale = row.quantita * row.prezzoMedio;
+      valoreTot += valoreAttuale;
+      valoreInit += valoreIniziale;
+    });
+    const rendimentoPerc = valoreInit !== 0 ? ((valoreTot - valoreInit) / valoreInit) * 100 : 0;
 
-        tbody.appendChild(tr);
-      });
+    document.getElementById('miniTitoli').textContent = titoli;
+    document.getElementById('miniETF').textContent = etf;
+    document.getElementById('miniCrypto').textContent = crypto;
+    document.getElementById('miniRendimento').textContent = rendimentoPerc.toFixed(2) + '%';
+  }
 
-      attachRowActions();
-      updateStats(data);
-      updateMiniCards(data);
-      updateDividendi(data);
-      updateCharts(data);
-    }
+  function updateDividendi(data) {
+    const perTitoloContainer = document.getElementById('dividendiPerTitolo');
+    const meseBody = document.getElementById('dividendiMeseBody');
 
-    // STATISTICHE
-    function updateStats(data) {
-      let valoreTot = 0;
-      let valoreInit = 0;
-      let totaleDiv = 0;
-      let sommaScore = 0;
-      let countScore = 0;
+    perTitoloContainer.innerHTML = '';
+    meseBody.innerHTML = '';
 
-      data.forEach(row => {
-        const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
-        const valoreIniziale = row.quantita * row.prezzoMedio;
-        const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
+    data.forEach(row => {
+      const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
+      if (!dividendiAnnui) return;
 
-        valoreTot += valoreAttuale;
-        valoreInit += valoreIniziale;
-        totaleDiv += dividendiAnnui;
-
-        if (typeof row.score === 'number') {
-          sommaScore += row.score;
-          countScore++;
-        }
-      });
-
-      const pl = valoreTot - valoreInit;
-      const plPerc = valoreInit !== 0 ? (pl / valoreInit) * 100 : 0;
-      const scoreMedio = countScore ? sommaScore / countScore : null;
-
-      document.getElementById('statValoreTotale').textContent = formatCurrency(valoreTot);
-      document.getElementById('statValoreIniziale').textContent = 'Investito iniziale: ' + formatCurrency(valoreInit);
-
-      const plElem = document.getElementById('statPL');
-      plElem.textContent = formatCurrency(pl);
-
-      const plPercElem = document.getElementById('statPLPerc');
-      plPercElem.textContent = plPerc.toFixed(2) + '%';
-
-      document.getElementById('statDividendi').textContent = formatCurrency(totaleDiv);
-      const yoc = valoreInit !== 0 ? (totaleDiv / valoreInit) * 100 : 0;
-      document.getElementById('statYieldOnCost').textContent = 'Yield on cost: ' + yoc.toFixed(2) + '%';
-
-      document.getElementById('statRischio').textContent = scoreMedio !== null ? scoreMedio.toFixed(1) : '–';
-      document.getElementById('statScoreMedio').textContent = scoreMedio !== null ? 'Score medio: ' + scoreMedio.toFixed(1) : 'Score medio: –';
-    }
-
-    function updateMiniCards(data) {
-      const titoli = data.length;
-      const etf = data.filter(r => r.tipo === 'ETF').length;
-      const crypto = data.filter(r => r.tipo === 'Crypto').length;
-
-      let valoreTot = 0;
-      let valoreInit = 0;
-      data.forEach(row => {
-        const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
-        const valoreIniziale = row.quantita * row.prezzoMedio;
-        valoreTot += valoreAttuale;
-        valoreInit += valoreIniziale;
-      });
-      const rendimentoPerc = valoreInit !== 0 ? ((valoreTot - valoreInit) / valoreInit) * 100 : 0;
-
-      document.getElementById('miniTitoli').textContent = titoli;
-      document.getElementById('miniETF').textContent = etf;
-      document.getElementById('miniCrypto').textContent = crypto;
-      document.getElementById('miniRendimento').textContent = rendimentoPerc.toFixed(2) + '%';
-    }
-
-    // DIVIDENDI
-    function updateDividendi(data) {
-      const perTitoloContainer = document.getElementById('dividendiPerTitolo');
-      const meseBody = document.getElementById('dividendiMeseBody');
-
-      perTitoloContainer.innerHTML = '';
-      meseBody.innerHTML = '';
-
-      // Per titolo
-      data.forEach(row => {
-        const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
-        if (!dividendiAnnui) return;
-
-        const card = document.createElement('div');
-        card.className = 'card-item';
-        card.innerHTML = `
-          <div class="card-header">
-            <div class="card-title">${row.ticker}</div>
-            <div class="card-badge">Yield: ${row.yieldPerc ? row.yieldPerc.toFixed(2) + '%' : '–'}</div>
+      const card = document.createElement('div');
+      card.className = 'card-item';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">${row.ticker}</div>
+          <div class="card-badge">Yield: ${row.yieldPerc ? row.yieldPerc.toFixed(2) + '%' : '–'}</div>
+        </div>
+        <div class="card-body">
+          <div class="card-row">
+            <span>Dividendi annui</span>
+            <strong>${formatCurrency(dividendiAnnui)}</strong>
           </div>
-          <div class="card-body">
-            <div class="card-row">
-              <span>Dividendi annui</span>
-              <strong>${formatCurrency(dividendiAnnui)}</strong>
-            </div>
-            <div class="card-row">
-              <span>Quantità</span>
-              <strong>${row.quantita}</strong>
-            </div>
+          <div class="card-row">
+            <span>Quantità</span>
+            <strong>${row.quantita}</strong>
           </div>
-          <div class="card-footer">
-            <span>Tipo: <b>${row.tipo || '-'}</b></span>
-            <span>Score: <b>${row.score ?? '-'}</b></span>
-          </div>
-        `;
-        perTitoloContainer.appendChild(card);
-      });
+        </div>
+        <div class="card-footer">
+          <span>Tipo: <b>${row.tipo || '-'}</b></span>
+          <span>Score: <b>${row.score ?? '-'}</b></span>
+        </div>
+      `;
+      perTitoloContainer.appendChild(card);
+    });
 
-      // Per mese (dummy: distribuzione uniforme su 12 mesi)
-      const totaleDiv = data.reduce((sum, row) => {
-        const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
-        return sum + dividendiAnnui;
-      }, 0);
-      const mensile = totaleDiv / 12;
+    const totaleDiv = data.reduce((sum, row) => {
+      const dividendiAnnui = row.dividendiAnnui ?? (row.quantita * (row.dividendoPerAzione || 0));
+      return sum + dividendiAnnui;
+    }, 0);
+    const mensile = totaleDiv / 12;
 
-      const mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-      mesi.forEach(m => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${m}</td>
-          <td>${formatCurrency(mensile)}</td>
-        `;
-        meseBody.appendChild(tr);
-      });
-    }
+    const mesi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+    mesi.forEach(m => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${m}</td>
+        <td>${formatCurrency(mensile)}</td>
+      `;
+      meseBody.appendChild(tr);
+    });
+  }
 
-    // GRAFICI
-    let chartAllocazione, chartPerformance, chartTop10;
+  let chartAllocazione, chartPerformance, chartTop10;
 
-    function updateCharts(data) {
-      const ctxAlloc = document.getElementById('chartAllocazione').getContext('2d');
-      const ctxPerf = document.getElementById('chartPerformance').getContext('2d');
-      const ctxTop10 = document.getElementById('chartTop10').getContext('2d');
+  function updateCharts(data) {
+    const ctxAlloc = document.getElementById('chartAllocazione').getContext('2d');
+    const ctxPerf = document.getElementById('chartPerformance').getContext('2d');
+    const ctxTop10 = document.getElementById('chartTop10').getContext('2d');
 
-      if (chartAllocazione) chartAllocazione.destroy();
-      if (chartPerformance) chartPerformance.destroy();
-      if (chartTop10) chartTop10.destroy();
+    if (chartAllocazione) chartAllocazione.destroy();
+    if (chartPerformance) chartPerformance.destroy();
+    if (chartTop10) chartTop10.destroy();
 
-      // Allocazione per tipo
-      const byType = {};
-      data.forEach(row => {
-        const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
-        byType[row.tipo] = (byType[row.tipo] || 0) + valoreAttuale;
-      });
+    const byType = {};
+    data.forEach(row => {
+      const valoreAttuale = row.valoreAttuale ?? (row.quantita * row.prezzoAttuale);
+      byType[row.tipo] = (byType[row.tipo] || 0) + valoreAttuale;
+    });
 
-      chartAllocazione = new Chart(ctxAlloc, {
-        type: 'doughnut',
-        data: {
-          labels: Object.keys(byType),
-          datasets: [{
-            data: Object.values(byType),
-            backgroundColor: ['#667eea', '#38bdf8', '#22c55e', '#f97316', '#e11d48']
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
+    chartAllocazione = new Chart(ctxAlloc, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(byType),
+        datasets: [{
+          data: Object.values(byType),
+          backgroundColor: ['#667eea', '#38bdf8', '#22c55e', '#f97316', '#e11d48']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' }
         }
-      });
+      }
+    });
 
-      // Performance
-      chartPerformance = new Chart(ctxPerf, {
-        type: 'bar',
-        data: {
-          labels: data.map(r => r.ticker),
-          datasets: [
-            {
-              label: 'Investito',
-              data: data.map(r => r.quantita * r.prezzoMedio),
-              backgroundColor: 'rgba(148, 163, 184, 0.7)'
-            },
-            {
-              label: 'Valore attuale',
-              data: data.map(r => r.valoreAttuale ?? (r.quantita * r.prezzoAttuale)),
-              backgroundColor: 'rgba(56, 189, 248, 0.8)'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: { stacked: false },
-            y: { stacked: false }
-          }
-        }
-      });
-
-      // Top 10 per valore
-      const sorted = [...data].sort((a, b) =>
-        (b.valoreAttuale ?? (b.quantita * b.prezzoAttuale)) -
-        (a.valoreAttuale ?? (a.quantita * a.prezzoAttuale))
-      ).slice(0, 10);
-
-      chartTop10 = new Chart(ctxTop10, {
-        type: 'bar',
-        data: {
-          labels: sorted.map(r => r.ticker),
-          datasets: [{
+    chartPerformance = new Chart(ctxPerf, {
+      type: 'bar',
+      data: {
+        labels: data.map(r => r.ticker),
+        datasets: [
+          {
+            label: 'Investito',
+            data: data.map(r => r.quantita * r.prezzoMedio),
+            backgroundColor: 'rgba(148, 163, 184, 0.7)'
+          },
+          {
             label: 'Valore attuale',
-            data: sorted.map(r => r.valoreAttuale ?? (r.quantita * r.prezzoAttuale)),
-            backgroundColor: '#4ade80'
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false
-        }
-      });
-    }
-
-    // AZIONI RIGA (Modifica / Elimina)
-    const modal = document.getElementById('editModal');
-    const modalClose = document.getElementById('modalClose');
-    const modalSave = document.getElementById('modalSave');
-
-    let editingId = null;
-
-    function openModal(row) {
-      editingId = row.id;
-      document.getElementById('modalTicker').value = row.ticker;
-      document.getElementById('modalQuantita').value = row.quantita;
-      document.getElementById('modalPrezzoMedio').value = row.prezzoMedio;
-      document.getElementById('modalPrezzoAttuale').value = row.prezzoAttuale;
-      document.getElementById('modalDividendo').value = row.dividendoPerAzione || 0;
-      document.getElementById('modalScore').value = row.score ?? '';
-      modal.style.display = 'flex';
-    }
-
-    function closeModal() {
-      modal.style.display = 'none';
-      editingId = null;
-    }
-
-    modalClose.addEventListener('click', closeModal);
-    modal.addEventListener('click', e => {
-      if (e.target === modal) closeModal();
-    });
-
-    modalSave.addEventListener('click', async () => {
-      if (!editingId) return;
-      const q = parseFloat(document.getElementById('modalQuantita').value) || 0;
-      const pm = parseFloat(document.getElementById('modalPrezzoMedio').value) || 0;
-      const pa = parseFloat(document.getElementById('modalPrezzoAttuale').value) || 0;
-      const div = parseFloat(document.getElementById('modalDividendo').value) || 0;
-      const score = document.getElementById('modalScore').value;
-      const scoreNum = score === '' ? null : parseFloat(score);
-
-      try {
-        await updateDoc(doc(db, collectionName, editingId), {
-          quantita: q,
-          prezzoMedio: pm,
-          prezzoAttuale: pa,
-          dividendoPerAzione: div,
-          score: scoreNum
-        });
-
-        portfolioData = portfolioData.map(row => {
-          if (row.id === editingId) {
-            return {
-              ...row,
-              quantita: q,
-              prezzoMedio: pm,
-              prezzoAttuale: pa,
-              dividendoPerAzione: div,
-              score: scoreNum
-            };
+            data: data.map(r => r.valoreAttuale ?? (r.quantita * r.prezzoAttuale)),
+            backgroundColor: 'rgba(56, 189, 248, 0.8)'
           }
-          return row;
-        });
-
-        renderTable(portfolioData);
-        closeModal();
-      } catch (e) {
-        console.error('Errore update documento', e);
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { stacked: false },
+          y: { stacked: false }
+        }
       }
     });
 
-    function attachRowActions() {
-      document.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-id');
-          const row = portfolioData.find(r => r.id === id);
-          if (row) openModal(row);
-        });
+    const sorted = [...data].sort((a, b) =>
+      (b.valoreAttuale ?? (b.quantita * b.prezzoAttuale)) -
+      (a.valoreAttuale ?? (a.quantita * a.prezzoAttuale))
+    ).slice(0, 10);
+
+    chartTop10 = new Chart(ctxTop10, {
+      type: 'bar',
+      data: {
+        labels: sorted.map(r => r.ticker),
+        datasets: [{
+          label: 'Valore attuale',
+          data: sorted.map(r => r.valoreAttuale ?? (r.quantita * r.prezzoAttuale)),
+          backgroundColor: '#4ade80'
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  }
+
+  const modal = document.getElementById('editModal');
+  const modalClose = document.getElementById('modalClose');
+  const modalSave = document.getElementById('modalSave');
+
+  let editingId = null;
+
+  function openModal(row) {
+    editingId = row.id;
+    document.getElementById('modalTicker').value = row.ticker;
+    document.getElementById('modalQuantita').value = row.quantita;
+    document.getElementById('modalPrezzoMedio').value = row.prezzoMedio;
+    document.getElementById('modalPrezzoAttuale').value = row.prezzoAttuale;
+    document.getElementById('modalDividendo').value = row.dividendoPerAzione || 0;
+    document.getElementById('modalScore').value = row.score ?? '';
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+    editingId = null;
+  }
+
+  modalClose.addEventListener('click', closeModal);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeModal();
+  });
+
+  modalSave.addEventListener('click', async () => {
+    if (!editingId) return;
+    const q = parseFloat(document.getElementById('modalQuantita').value) || 0;
+    const pm = parseFloat(document.getElementById('modalPrezzoMedio').value) || 0;
+    const pa = parseFloat(document.getElementById('modalPrezzoAttuale').value) || 0;
+    const div = parseFloat(document.getElementById('modalDividendo').value) || 0;
+    const score = document.getElementById('modalScore').value;
+    const scoreNum = score === '' ? null : parseFloat(score);
+
+    try {
+      await updateDoc(doc(db, collectionName, editingId), {
+        quantita: q,
+        prezzoMedio: pm,
+        prezzoAttuale: pa,
+        dividendoPerAzione: div,
+        score: scoreNum
       });
 
-      document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-id');
-          const row = portfolioData.find(r => r.id === id);
-          if (!row) return;
-          if (!confirm('Vuoi davvero eliminare ' + row.ticker + ' dal portafoglio?')) return;
-
-          try {
-            await deleteDoc(doc(db, collectionName, id));
-            portfolioData = portfolioData.filter(r => r.id !== id);
-            renderTable(portfolioData);
-          } catch (e) {
-            console.error('Errore delete documento', e);
-          }
-        });
+      portfolioData = portfolioData.map(row => {
+        if (row.id === editingId) {
+          return {
+            ...row,
+            quantita: q,
+            prezzoMedio: pm,
+            prezzoAttuale: pa,
+            dividendoPerAzione: div,
+            score: scoreNum
+          };
+        }
+        return row;
       });
+
+      renderTable(portfolioData);
+      closeModal();
+    } catch (e) {
+      console.error('Errore update documento', e);
     }
+  });
 
-    // FILTRI / RICERCA
-    const searchInput = document.getElementById('searchInput');
-    const typeFilter = document.getElementById('typeFilter');
-
-    function applyFilters() {
-      const term = searchInput.value.toLowerCase();
-      const type = typeFilter.value;
-
-      const filtered = portfolioData.filter(row => {
-        const matchTerm =
-          row.ticker.toLowerCase().includes(term) ||
-          (row.nome || '').toLowerCase().includes(term);
-
-        const matchType = type ? row.tipo === type : true;
-
-        return matchTerm && matchType;
-      });
-
-      renderTable(filtered);
-    }
-
-    searchInput.addEventListener('input', applyFilters);
-    typeFilter.addEventListener('change', applyFilters);
-
-    // ORDINAMENTO
-    const sortButtons = document.querySelectorAll('.sort-btn');
-    let currentSortKey = null;
-    let currentSortDir = 1;
-
-    sortButtons.forEach(btn => {
+  function attachRowActions() {
+    document.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', () => {
-        const key = btn.getAttribute('data-sort');
-
-        if (currentSortKey === key) {
-          currentSortDir *= -1;
-        } else {
-          currentSortKey = key;
-          currentSortDir = 1;
-        }
-
-        sortButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const sorted = [...portfolioData].sort((a, b) => {
-          const av = a[key] ?? 0;
-          const bv = b[key] ?? 0;
-          if (av < bv) return -1 * currentSortDir;
-          if (av > bv) return 1 * currentSortDir;
-          return 0;
-        });
-
-        renderTable(sorted);
+        const id = btn.getAttribute('data-id');
+        const row = portfolioData.find(r => r.id === id);
+        if (row) openModal(row);
       });
     });
 
-    // BOTTONI PRINCIPALI (hook)
-    document.getElementById('btnAdd').addEventListener('click', async () => {
-      // Esempio minimale: aggiunge un titolo dummy in Firestore
-      try {
-        const ref = await addDoc(collection(db, collectionName), {
-          ticker: 'NEW',
-          nome: 'Nuovo titolo',
-          tipo: 'Stock',
-          quantita: 1,
-          prezzoMedio: 100,
-          prezzoAttuale: 100,
-          dividendoPerAzione: 0,
-          score: null
-        });
-        portfolioData.push({
-          id: ref.id,
-          ticker: 'NEW',
-          nome: 'Nuovo titolo',
-          tipo: 'Stock',
-          quantita: 1,
-          prezzoMedio: 100,
-          prezzoAttuale: 100,
-          dividendoPerAzione: 0,
-          score: null,
-          valoreAttuale: 100,
-          pl: 0,
-          dividendiAnnui: 0,
-          yieldPerc: 0
-        });
-        renderTable(portfolioData);
-      } catch (e) {
-        console.error('Errore add documento', e);
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const row = portfolioData.find(r => r.id === id);
+        if (!row) return;
+        if (!confirm('Vuoi davvero eliminare ' + row.ticker + ' dal portafoglio?')) return;
+
+        try {
+          await deleteDoc(doc(db, collectionName, id));
+          portfolioData = portfolioData.filter(r => r.id !== id);
+          renderTable(portfolioData);
+        } catch (e) {
+          console.error('Errore delete documento', e);
+        }
+      });
+    });
+  }
+
+  const searchInput = document.getElementById('searchInput');
+  const typeFilter = document.getElementById('typeFilter');
+
+  function applyFilters() {
+    const term = searchInput.value.toLowerCase();
+    const type = typeFilter.value;
+
+    const filtered = portfolioData.filter(row => {
+      const matchTerm =
+        row.ticker.toLowerCase().includes(term) ||
+        (row.nome || '').toLowerCase().includes(term);
+
+      const matchType = type ? row.tipo === type : true;
+
+      return matchTerm && matchType;
+    });
+
+    renderTable(filtered);
+  }
+
+  searchInput.addEventListener('input', applyFilters);
+  typeFilter.addEventListener('change', applyFilters);
+
+  const sortButtons = document.querySelectorAll('.sort-btn');
+  let currentSortKey = null;
+  let currentSortDir = 1;
+
+  sortButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.getAttribute('data-sort');
+
+      if (currentSortKey === key) {
+        currentSortDir *= -1;
+      } else {
+        currentSortKey = key;
+        currentSortDir = 1;
       }
+
+      sortButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const sorted = [...portfolioData].sort((a, b) => {
+        const av = a[key] ?? 0;
+        const bv = b[key] ?? 0;
+        if (av < bv) return -1 * currentSortDir;
+        if (av > bv) return 1 * currentSortDir;
+        return 0;
+      });
+
+      renderTable(sorted);
     });
+  });
 
-    document.getElementById('btnExport').addEventListener('click', () => {
-      const json = JSON.stringify(portfolioData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'portfolio.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+  document.getElementById('btnAdd').addEventListener('click', async () => {
+    try {
+      const ref = await addDoc(collection(db, collectionName), {
+        ticker: 'NEW',
+        nome: 'Nuovo titolo',
+        tipo: 'Stock',
+        quantita: 1,
+        prezzoMedio: 100,
+        prezzoAttuale: 100,
+        dividendoPerAzione: 0,
+        score: null
+      });
+      portfolioData.push({
+        id: ref.id,
+        ticker: 'NEW',
+        nome: 'Nuovo titolo',
+        tipo: 'Stock',
+        quantita: 1,
+        prezzoMedio: 100,
+        prezzoAttuale: 100,
+        dividendoPerAzione: 0,
+        score: null,
+        valoreAttuale: 100,
+        pl: 0,
+        dividendiAnnui: 0,
+        yieldPerc: 0
+      });
+      renderTable(portfolioData);
+    } catch (e) {
+      console.error('Errore add documento', e);
+    }
+  });
 
-    document.getElementById('btnImportJson').addEventListener('click', () => {
-      alert('Implementa qui import JSON e sync su Firestore se ti serve.');
-    });
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const json = JSON.stringify(portfolioData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'portfolio.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 
-    // TOGGLE DIVIDENDI
-    const toggleTitoli = document.getElementById('toggleDividendiTitoli');
-    const toggleMese = document.getElementById('toggleDividendiMese');
+  document.getElementById('btnImportJson').addEventListener('click', () => {
+    alert('Implementa qui import JSON e sync su Firestore se ti serve.');
+  });
 
-    toggleTitoli.addEventListener('click', () => {
-      toggleTitoli.classList.add('active');
-      toggleMese.classList.remove('active');
-      // eventuale logica UI
-    });
+  const toggleTitoli = document.getElementById('toggleDividendiTitoli');
+  const toggleMese = document.getElementById('toggleDividendiMese');
 
-    toggleMese.addEventListener('click', () => {
-      toggleMese.classList.add('active');
-      toggleTitoli.classList.remove('active');
-      // eventuale logica UI
-    });
+  toggleTitoli.addEventListener('click', () => {
+    toggleTitoli.classList.add('active');
+    toggleMese.classList.remove('active');
+  });
 
-    // INIT
-    loadPortfolio();
-  </script>
+  toggleMese.addEventListener('click', () => {
+    toggleMese.classList.add('active');
+    toggleTitoli.classList.remove('active');
+  });
+
+  // INIT
+  loadPortfolio();
+</script>
+
 </body>
 </html>
