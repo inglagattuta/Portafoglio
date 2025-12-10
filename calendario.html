@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendario Dividendi</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-900 text-gray-100 p-4">
+  <h1 class="text-3xl font-bold mb-6">Calendario Dividendi</h1>
+
+  <section id="stats" class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4"></section>
+  <section>
+    <h2 class="text-xl font-semibold mb-2">Prossimi 30 giorni</h2>
+    <div id="next30" class="space-y-2"></div>
+  </section>
+
+  <section class="mt-8">
+    <h2 class="text-xl font-semibold mb-2">Tutti i Pagamenti</h2>
+    <table class="min-w-full bg-gray-800 rounded-lg overflow-hidden">
+      <thead>
+        <tr class="bg-gray-700 text-gray-200">
+          <th class="p-2 text-left">Ticker</th>
+          <th class="p-2 text-left">Data</th>
+          <th class="p-2 text-left">Frequenza</th>
+          <th class="p-2 text-left">Yield</th>
+        </tr>
+      </thead>
+      <tbody id="allPayments"></tbody>
+    </table>
+  </section>
+
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    async function load() {
+      const snap = await getDocs(collection(db, "dividendi_annual"));
+      const items = [];
+
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (!d.date_pagamento) return;
+
+        d.date_pagamento.forEach(date => {
+          items.push({
+            ticker: d.ticker,
+            prezzo: d.prezzo_acquisto,
+            ultimo: d.ultimo_dividendo,
+            date,
+            freq: d.date_pagamento.length
+          });
+        });
+      });
+
+      items.sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+      renderStats(items);
+      renderNext30(items);
+      renderAll(items);
+    }
+
+    function renderStats(items) {
+      const total = items.reduce((acc, x)=> acc + (x.ultimo || 0), 0).toFixed(2);
+      const freq = {};
+      items.forEach(x => freq[x.ticker] = (freq[x.ticker] || 0) + 1);
+
+      document.getElementById("stats").innerHTML = `
+        <div class='bg-gray-800 p-4 rounded-xl shadow'>
+          <div class='text-gray-400 text-sm'>Dividendi annuali (per quota)</div>
+          <div class='text-2xl font-bold'>€ ${total}</div>
+        </div>
+        <div class='bg-gray-800 p-4 rounded-xl shadow'>
+          <div class='text-gray-400 text-sm'>Titoli nel calendario</div>
+          <div class='text-2xl font-bold'>${Object.keys(freq).length}</div>
+        </div>
+        <div class='bg-gray-800 p-4 rounded-xl shadow'>
+          <div class='text-gray-400 text-sm'>Eventi totali</div>
+          <div class='text-2xl font-bold'>${items.length}</div>
+        </div>`;
+    }
+
+    function renderNext30(items) {
+      const today = new Date();
+      const future = new Date();
+      future.setDate(today.getDate() + 30);
+
+      const list = items.filter(x => {
+        const d = new Date(x.date);
+        return d >= today && d <= future;
+      });
+
+      document.getElementById("next30").innerHTML = list.map(x => `
+        <div class='bg-gray-800 p-3 rounded-lg border border-gray-700'>
+          <div class='font-bold text-lg'>${x.ticker}</div>
+          <div class='text-gray-400'>${x.date}</div>
+          <div class='text-sm text-green-400'>Yield: ${(x.ultimo / x.prezzo * 100).toFixed(2)}%</div>
+        </div>`).join("");
+    }
+
+    function renderAll(items) {
+      document.getElementById("allPayments").innerHTML = items.map(x => `
+        <tr class='border-b border-gray-700'>
+          <td class='p-2'>${x.ticker}</td>
+          <td class='p-2'>${x.date}</td>
+          <td class='p-2'>${x.freq}x/anno</td>
+          <td class='p-2'>${(x.ultimo / x.prezzo * 100).toFixed(2)}%</td>
+        </tr>`).join("");
+    }
+
+    load();
+  </script>
+</body>
+</html>
