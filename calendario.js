@@ -20,22 +20,18 @@ async function loadCalendario() {
 
   console.log("Dati caricati calendario:", rows);
 
-  // Popola statistiche
   updateStats(rows);
 
-  // Popola tabella (mese corrente default)
   const meseCorrente = new Date().getMonth() + 1;
   renderTable(rows, meseCorrente);
 
-  // Listener select mese
   document.getElementById("selectMese").addEventListener("change", e => {
-    const meseSel = parseInt(e.target.value);
-    renderTable(rows, meseSel);
+    renderTable(rows, Number(e.target.value));
   });
 }
 
 // ===============================
-// POPOLA I 3 BOX SUPERIORI
+// POPOLA I BOX
 // ===============================
 function updateStats(rows) {
   let totaleAnnuale = 0;
@@ -46,13 +42,9 @@ function updateStats(rows) {
     const div = Number(r.ultimo_dividendo || 0);
     const arr = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
-    // Calcolo dividendo annualizzato
-    totaleAnnuale += div * (arr.length > 0 ? arr.length : 1);
-
+    totaleAnnuale += div * arr.length;
     tickers.add(r.ticker);
-
-    // Numero eventi
-    eventi += arr.length > 0 ? arr.length : 1;
+    eventi += arr.length;
   });
 
   document.getElementById("dividendiAnnui").textContent =
@@ -72,41 +64,33 @@ function renderTable(rows, meseFiltrato) {
   rows.forEach(r => {
     const prezzo = Number(r.prezzo_acquisto || 1);
     const importo = Number(r.ultimo_dividendo || 0);
-    const arrDate = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
-    // Quante volte paga in un anno
-    const mensilita = arrDate.length > 0 ? arrDate.length : 1;
+    const datePag = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
-    // Yield singolo
+    // Yield singolo dividendo
     const yieldSingolo = prezzo > 0 ? (importo / prezzo) * 100 : 0;
 
     // Yield annuale
-    const yieldAnnuale = yieldSingolo * mensilita;
+    const yieldAnnuale = yieldSingolo * datePag.length;
 
-    // Se non ci sono mesi → riga neutra
-    const mesi = arrDate.length > 0 ? arrDate : [0];
+    datePag.forEach(data => {
 
-    mesi.forEach(m => {
-      if (meseFiltrato !== m) return;
+      // Estrai mese dalla stringa data
+      const mese = new Date(data).getMonth() + 1;
 
-      const dataPag = m === 0 ? "—" : `01/${String(m).padStart(2, "0")}`;
+      if (mese !== meseFiltrato) return;
 
       const tr = document.createElement("tr");
-
       tr.innerHTML = `
         <td>${r.ticker}</td>
-        <td>${dataPag}</td>
+        <td>${data}</td>
         <td>${importo.toFixed(4)} €</td>
         <td>${yieldSingolo.toFixed(2)}%</td>
         <td>${yieldAnnuale.toFixed(2)}%</td>
       `;
-
       body.appendChild(tr);
     });
   });
 }
 
-// ===============================
-// AVVIO SCRIPT
-// ===============================
 loadCalendario();
