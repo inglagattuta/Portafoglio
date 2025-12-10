@@ -5,42 +5,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calendario Dividendi</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-</head>
-<body class="bg-gray-900 text-gray-100 p-4">
-  <h1 class="text-3xl font-bold mb-6">Calendario Dividendi</h1>
 
+  <style>
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .controls button,
+    .controls a {
+      background: #2d3436;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+    .controls a.dashboard-btn {
+      background: #0984e3;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100 p-4">
+
+  <h1 class="text-3xl font-bold mb-6">📅 Calendario Dividendi</h1>
+
+  <!-- BOTTONI NAVIGAZIONE -->
+  <div class="controls">
+    <button onclick="window.location.href='index.html'">🏠 Home</button>
+
+    <a class="dashboard-btn" href="dashboard.html">
+      📊 Dashboard
+    </a>
+
+    <button onclick="window.location.href='dividendi.html'">💰 Dividendi</button>
+    <button onclick="window.location.href='andamento.html'">📈 Andamento</button>
+    <button onclick="window.location.href='calendario.html'">📅 Calendario</button>
+  </div>
+
+  <!-- STATISTICHE -->
   <section id="stats" class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4"></section>
+
+  <!-- PROSSIMI 30 GIORNI -->
   <section>
     <h2 class="text-xl font-semibold mb-2">Prossimi 30 giorni</h2>
     <div id="next30" class="space-y-2"></div>
   </section>
-<div class="flex gap-3 mb-6 mt-6">
-  <button onclick="window.location.href='index.html'"
-          class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-    🏠 Home
-  </button>
 
-  <a href="dashboard.html"
-     class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg">
-    📊 Dashboard
-  </a>
-
-  <button onclick="window.location.href='dividendi.html'"
-          class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-    💰 Dividendi
-  </button>
-
-  <button onclick="window.location.href='andamento.html'"
-          class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-    📈 Andamento
-  </button>
-
- 
-</div>
-
-
+  <!-- TABELLA COMPLETA -->
   <section class="mt-8">
     <h2 class="text-xl font-semibold mb-2">Tutti i Pagamenti</h2>
+
     <table class="min-w-full bg-gray-800 rounded-lg overflow-hidden">
       <thead>
         <tr class="bg-gray-700 text-gray-200">
@@ -48,12 +66,14 @@
           <th class="p-2 text-left">Data</th>
           <th class="p-2 text-left">Frequenza</th>
           <th class="p-2 text-left">Yield</th>
+          <th class="p-2 text-left">Yield Annuale</th>
         </tr>
       </thead>
       <tbody id="allPayments"></tbody>
     </table>
   </section>
 
+  <!-- SCRIPT -->
   <script type="module">
     import { db } from "./firebase-config.js";
     import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
@@ -77,15 +97,18 @@
         });
       });
 
-      items.sort((a,b)=> new Date(a.date) - new Date(b.date));
+      items.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       renderStats(items);
       renderNext30(items);
       renderAll(items);
     }
 
+    /* ======================
+       STATISTICHE TOP
+    ====================== */
     function renderStats(items) {
-      const total = items.reduce((acc, x)=> acc + (x.ultimo || 0), 0).toFixed(2);
+      const total = items.reduce((acc, x) => acc + (x.ultimo || 0), 0).toFixed(2);
       const freq = {};
       items.forEach(x => freq[x.ticker] = (freq[x.ticker] || 0) + 1);
 
@@ -94,16 +117,22 @@
           <div class='text-gray-400 text-sm'>Dividendi annuali (per quota)</div>
           <div class='text-2xl font-bold'>€ ${total}</div>
         </div>
+
         <div class='bg-gray-800 p-4 rounded-xl shadow'>
           <div class='text-gray-400 text-sm'>Titoli nel calendario</div>
           <div class='text-2xl font-bold'>${Object.keys(freq).length}</div>
         </div>
+
         <div class='bg-gray-800 p-4 rounded-xl shadow'>
           <div class='text-gray-400 text-sm'>Eventi totali</div>
           <div class='text-2xl font-bold'>${items.length}</div>
-        </div>`;
+        </div>
+      `;
     }
 
+    /* ======================
+       PROSSIMI 30 GIORNI
+    ====================== */
     function renderNext30(items) {
       const today = new Date();
       const future = new Date();
@@ -114,25 +143,43 @@
         return d >= today && d <= future;
       });
 
-      document.getElementById("next30").innerHTML = list.map(x => `
-        <div class='bg-gray-800 p-3 rounded-lg border border-gray-700'>
-          <div class='font-bold text-lg'>${x.ticker}</div>
-          <div class='text-gray-400'>${x.date}</div>
-          <div class='text-sm text-green-400'>Yield: ${(x.ultimo / x.prezzo * 100).toFixed(2)}%</div>
-        </div>`).join("");
+      document.getElementById("next30").innerHTML = list.map(x => {
+        const yieldAnnuale = (x.ultimo * x.freq / x.prezzo) * 100;
+
+        return `
+          <div class='bg-gray-800 p-3 rounded-lg border border-gray-700'>
+            <div class='font-bold text-lg'>${x.ticker}</div>
+            <div class='text-gray-400'>${x.date}</div>
+            <div class='text-sm text-green-400'>
+              Yield Annuale: ${yieldAnnuale.toFixed(2)}%
+            </div>
+          </div>
+        `;
+      }).join("");
     }
 
+    /* ======================
+       TABELLA COMPLETA
+    ====================== */
     function renderAll(items) {
-      document.getElementById("allPayments").innerHTML = items.map(x => `
-        <tr class='border-b border-gray-700'>
-          <td class='p-2'>${x.ticker}</td>
-          <td class='p-2'>${x.date}</td>
-          <td class='p-2'>${x.freq}x/anno</td>
-          <td class='p-2'>${(x.ultimo / x.prezzo * 100).toFixed(2)}%</td>
-        </tr>`).join("");
+      document.getElementById("allPayments").innerHTML = items.map(x => {
+        const yieldSingolo = (x.ultimo / x.prezzo) * 100;
+        const yieldAnnuale = (x.ultimo * x.freq / x.prezzo) * 100;
+
+        return `
+          <tr class='border-b border-gray-700'>
+            <td class='p-2'>${x.ticker}</td>
+            <td class='p-2'>${x.date}</td>
+            <td class='p-2'>${x.freq}x/anno</td>
+            <td class='p-2'>${yieldSingolo.toFixed(2)}%</td>
+            <td class='p-2 text-green-400'>${yieldAnnuale.toFixed(2)}%</td>
+          </tr>
+        `;
+      }).join("");
     }
 
     load();
   </script>
+
 </body>
 </html>
