@@ -11,12 +11,11 @@
 
 <body>
   <script>
-  const savedTheme = localStorage.getItem("theme") || "light";
-  document.body.dataset.theme = savedTheme;
-  if (savedTheme === "dark") document.body.classList.add("dark");
-  else document.body.classList.remove("dark");
-</script>
-
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.body.dataset.theme = savedTheme;
+    if (savedTheme === "dark") document.body.classList.add("dark");
+    else document.body.classList.remove("dark");
+  </script>
 
   <div class="container">
 
@@ -29,25 +28,26 @@
       <button onclick="window.location.href='index.html'">🏠 Home</button>
       <button onclick="window.location.href='dividendi.html'">💰 Dividendi</button>
       <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
+      <a class="dashboard-btn" href="calendario.html" style="background:#6c5ce7;">📅 Calendario</a>
     </div>
 
     <!-- MINI CARDS CATEGORIE -->
-<div class="mini-cards">
-  <div class="mini-card">
-    <h3>Dividendi</h3>
-    <p id="pctDividendi">0%</p>
-  </div>
+    <div class="mini-cards">
+      <div class="mini-card">
+        <h3>Dividendi</h3>
+        <p id="pctDividendi">0%</p>
+      </div>
 
-  <div class="mini-card">
-    <h3>Crescita</h3>
-    <p id="pctCrescita">0%</p>
-  </div>
+      <div class="mini-card">
+        <h3>Crescita</h3>
+        <p id="pctCrescita">0%</p>
+      </div>
 
-  <div class="mini-card">
-    <h3>Cripto</h3>
-    <p id="pctCripto">0%</p>
-  </div>
-</div>
+      <div class="mini-card">
+        <h3>Cripto</h3>
+        <p id="pctCripto">0%</p>
+      </div>
+    </div>
 
     <!-- GRID GRAFICI -->
     <div class="charts-grid">
@@ -62,39 +62,37 @@
         <canvas id="chartInvested"></canvas>
       </div>
 
-  <div class="chart-card">
-  <h2>Tipi di investimento</h2>
-  <canvas id="chartByType"></canvas>
-</div>
-      
- <div class="chart-card">
-  <h2>Top 5 Titoli per Score</h2>
-  <canvas id="chartTopScore12"></canvas>
-</div>
+      <div class="chart-card">
+        <h2>Tipi di investimento</h2>
+        <canvas id="chartByType"></canvas>
+      </div>
 
       <div class="chart-card">
-<h2>Top Titoli per Prezzo</h2>
+        <h2>Top 5 Titoli per Score</h2>
+        <canvas id="chartTopScore12"></canvas>
+      </div>
 
-<div class="toggle-wrapper">
-  <button id="btnTop5Price" class="toggle-button active">Top 5</button>
-  <button id="btnTop10Price" class="toggle-button">Top 10</button>
-</div>
+      <div class="chart-card">
+        <h2>Top Titoli per Prezzo</h2>
 
+        <div class="toggle-wrapper">
+          <button id="btnTop5Price" class="toggle-button active">Top 5</button>
+          <button id="btnTop10Price" class="toggle-button">Top 10</button>
+        </div>
 
-  <canvas id="chartTopPrice"></canvas>
-</div>
+        <canvas id="chartTopPrice"></canvas>
+      </div>
 
-<div class="chart-card">
-  <h2>Top Profitti</h2>
+      <div class="chart-card">
+        <h2>Top Profitti</h2>
 
-  <div class="toggle-wrapper">
-    <button id="btnTop5Profit" class="toggle-button active">Top 5</button>
-    <button id="btnTop10Profit" class="toggle-button">Top 10</button>
-  </div>
+        <div class="toggle-wrapper">
+          <button id="btnTop5Profit" class="toggle-button active">Top 5</button>
+          <button id="btnTop10Profit" class="toggle-button">Top 10</button>
+        </div>
 
-  <canvas id="chartTopProfit"></canvas>
-</div>
-
+        <canvas id="chartTopProfit"></canvas>
+      </div>
 
     </div>
   </div>
@@ -106,5 +104,3 @@
   <script type="module" src="dashboard.js?v=4"></script>
 </body>
 </html>
-
-
