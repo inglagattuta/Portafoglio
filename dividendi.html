@@ -37,6 +37,21 @@
     font-size: 0.8em;
     opacity: 0.5;
   }
+
+  /* Mini-card per anni */
+  .mini-cards-year {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .mini-cards-year .mini-card {
+    flex: 1;
+    background: var(--card-bg, #f0f0f0);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+  }
 </style>
 
 </head>
@@ -50,92 +65,89 @@
 </script>
 
 
-  <div class="container">
+<div class="container">
 
-    <header>
-      <h1>💰 Dividendi</h1>
-      <p class="subtitle">Francesco La Gattuta</p>
-    </header>
+  <header>
+    <h1>💰 Dividendi</h1>
+    <p class="subtitle">Francesco La Gattuta</p>
+  </header>
 
-   <div class="controls">
-  <button onclick="window.location.href='index.html'">🏠 Home</button>
-  <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
-  <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
-  <a class="dashboard-btn" href="calendario.html" style="background:#6c5ce7;">📅 Calendario</a>
-</div>
+  <div class="controls">
+    <button onclick="window.location.href='index.html'">🏠 Home</button>
+    <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
+    <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
+    <a class="dashboard-btn" href="calendario.html" style="background:#6c5ce7;">📅 Calendario</a>
+  </div>
 
+  <div class="mini-cards">
 
-    <div class="mini-cards">
-
-      <div class="mini-card">
-        <h3>Totale Dividendi</h3>
-        <p id="totaleDividendi">0 €</p>
-      </div>
-
-      <div class="mini-card">
-        <h3>Mensile Stimato</h3>
-        <p id="mediaDividendi">0 €</p>
-      </div>
-
-      <div class="mini-card">
-        <h3>Totale Investito</h3>
-        <p id="totaleInvestito">0 €</p>
-      </div>
-
-      <div class="mini-card">
-        <h3>Dividend Yield</h3>
-        <p id="divYield">0%</p>
-      </div>
-
+    <div class="mini-card">
+      <h3>Totale Dividendi</h3>
+      <p id="totaleDividendi">0 €</p>
     </div>
 
-    <div class="dividendi-container">
+    <div class="mini-card">
+      <h3>Mensile Stimato</h3>
+      <p id="mediaDividendi">0 €</p>
+    </div>
 
-      <div class="top5-chart-row">
-        <div class="chart-card">
-          <h2>Top 10 Dividendi</h2>
-          <canvas id="chartTopDiv"></canvas>
-        </div>
-      </div>
+    <div class="mini-card">
+      <h3>Totale Investito</h3>
+      <p id="totaleInvestito">0 €</p>
+    </div>
 
-      <div class="dividendi-list-row">
-        <div class="chart-card wide">
-          <h2>Lista Titoli e Dividendi</h2>
-
-         <div class="sort-group">
-            <button class="sort-btn active" data-column="nome">Nome <span class="sort-indicator">↕</span></button>
-            <button class="sort-btn" data-column="dividendi">Dividendo € <span class="sort-indicator">↕</span></button>
-            <button class="sort-btn" data-column="tipologia">Tipologia <span class="sort-indicator">↕</span></button>
-            <button class="sort-btn" data-column="percentuale_portafoglio">% Portafoglio <span class="sort-indicator">↕</span></button>
-            <button class="sort-btn" data-column="yield">Yield % <span class="sort-indicator">↕</span></button>
-          </div>
-
-          <div class="filter-group">
-            <input id="searchCard" type="search" placeholder="Cerca per nome..." />
-            <select id="filterType">
-              <option value="">Tutti i tipi</option>
-              <option value="Azione">Azione</option>
-              <option value="Cripto">Cripto</option>
-              <option value="ETF">ETF</option>
-            </select>
-          </div>
-<div style="margin-top:10px;">
-  <label>
-    <input type="checkbox" id="toggleCards" />
-    Mostra/ Nascondi Card
-  </label>
-</div>
-
-        </div>
-
-        <div id="cardsContainer" class="cards-grid" aria-live="polite"></div>
-
-      </div>
+    <div class="mini-card">
+      <h3>Dividend Yield</h3>
+      <p id="divYield">0%</p>
     </div>
 
   </div>
 
+  <div class="dividendi-container">
 
+    <div class="top5-chart-row">
+      <div class="chart-card">
+        <h2>Top 10 Dividendi</h2>
+        <canvas id="chartTopDiv"></canvas>
+      </div>
+    </div>
+
+    <div class="dividendi-list-row">
+      <div class="chart-card wide">
+        <h2>Lista Titoli e Dividendi</h2>
+
+        <div class="sort-group">
+          <button class="sort-btn active" data-column="nome">Nome <span class="sort-indicator">↕</span></button>
+          <button class="sort-btn" data-column="dividendi">Dividendo € <span class="sort-indicator">↕</span></button>
+          <button class="sort-btn" data-column="tipologia">Tipologia <span class="sort-indicator">↕</span></button>
+          <button class="sort-btn" data-column="percentuale_portafoglio">% Portafoglio <span class="sort-indicator">↕</span></button>
+          <button class="sort-btn" data-column="yield">Yield % <span class="sort-indicator">↕</span></button>
+        </div>
+
+        <div class="filter-group">
+          <input id="searchCard" type="search" placeholder="Cerca per nome..." />
+          <select id="filterType">
+            <option value="">Tutti i tipi</option>
+            <option value="Azione">Azione</option>
+            <option value="Cripto">Cripto</option>
+            <option value="ETF">ETF</option>
+          </select>
+        </div>
+        <div style="margin-top:10px;">
+          <label>
+            <input type="checkbox" id="toggleCards" />
+            Mostra/ Nascondi Card
+          </label>
+        </div>
+
+      </div>
+
+      <div id="cardsContainer" class="cards-grid" aria-live="polite"></div>
+
+    </div>
+  </div>
+
+</div>
 
 <div class="dividendi-layout">
 
@@ -166,8 +178,22 @@
 
   <div class="dividendi-right">
     <h2>Dividendi per Mese (€)</h2>
-    <div style="height:350px;">
-     <canvas id="dividendiBarChart"></canvas>
+
+    <!-- Box Dividendi per anno -->
+    <div class="mini-cards-year">
+      <div class="mini-card">
+        <h3>Dividendi 2025</h3>
+        <p id="dividendi2025">0 €</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Dividendi 2026</h3>
+        <p id="dividendi2026">0 €</p>
+      </div>
+    </div>
+
+    <div style="height:350px; margin-top:10px;">
+      <canvas id="dividendiBarChart"></canvas>
     </div>
   </div>
 
@@ -194,16 +220,9 @@
   </div>
 </div>
 
-  <!-- TUTTA LA PAGINA QUI SOPRA -->
-
-
-
-<!-- 🚀 QUI VANNO GLI SCRIPT, SEMPRE A FINE PAGINA -->
-
+<!-- 🚀 SCRIPTS -->
 <script type="module" src="dividendi_mensili.js?v=4"></script>
 <script type="module" src="dividendi.js?v=3"></script>
 
 </body>
 </html>
-
-
