@@ -64,20 +64,13 @@ function renderTable(rows, meseFiltrato) {
   rows.forEach(r => {
     const prezzo = Number(r.prezzo_acquisto || 1);
     const importo = Number(r.ultimo_dividendo || 0);
-
     const datePag = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
-    // Yield singolo dividendo
     const yieldSingolo = prezzo > 0 ? (importo / prezzo) * 100 : 0;
-
-    // Yield annuale
     const yieldAnnuale = yieldSingolo * datePag.length;
 
     datePag.forEach(data => {
-
-      // Estrai mese dalla stringa data
       const mese = new Date(data).getMonth() + 1;
-
       if (mese !== meseFiltrato) return;
 
       const tr = document.createElement("tr");
