@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calendario Dividendi</title>
 
-  <!-- Stile generale -->
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=10">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script type="module" src="calendario.js?v=4"></script>
 </head>
 
 <body>
+
 <script>
-  // 🔥 sistema tema come in tutte le altre pagine
+  // Dark/Light theme identical to index
   const savedTheme = localStorage.getItem("theme") || "light";
   document.body.dataset.theme = savedTheme;
   if (savedTheme === "dark") document.body.classList.add("dark");
@@ -22,152 +24,72 @@
 
   <header>
     <h1>📅 Calendario Dividendi</h1>
-    <p class="subtitle">Prossime date di pagamento</p>
+    <p class="subtitle">Francesco La Gattuta</p>
   </header>
 
-  <!-- NAVIGATION BUTTONS — identici alle altre pagine -->
-  <div class="controls">
+  <!-- CONTROLLI IDENTICI ALL'INDEX -->
+  <div class="controls" style="margin-top:16px;">
     <button onclick="window.location.href='index.html'">🏠 Home</button>
-    <button onclick="window.location.href='dividendi.html'">💰 Dividendi</button>
-    <button onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
-    <button onclick="window.location.href='andamento.html'">📈 Andamento</button>
-    <a class="dashboard-btn" href="calendario.html" style="background:#6c5ce7;">
-      📅 Calendario
-    </a>
+    <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>
+    <a class="dashboard-btn" href="dividendi.html" style="background:#6c5ce7;">💵 Dividendi</a>
+    <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
+    <a class="dashboard-btn" href="calendario.html" style="background:#f1c40f; color:#000;">🗓️ Calendario</a>
   </div>
 
-  <!-- STATISTICHE -->
-  <section id="stats" class="cards-grid-3"></section>
+  <!-- MINI STAT CARDS come index -->
+  <div class="stats-grid" style="margin-top:18px;">
+    <div class="stat-card">
+      <div class="stat-label">Dividendi Annuali</div>
+      <div class="stat-value" id="dividendiAnnui">0.00 €</div>
+    </div>
 
-  <!-- PROSSIMI 30 GIORNI -->
-  <section style="margin-top:25px;">
-    <h2>Prossimi 30 giorni</h2>
-    <div id="next30" class="cards-list"></div>
-  </section>
+    <div class="stat-card">
+      <div class="stat-label">Titoli Totali</div>
+      <div class="stat-value" id="totTitoli">0</div>
+    </div>
 
-  <!-- TABELLA COMPLETA -->
-  <section style="margin-top:35px;">
-    <h2>Tutti i pagamenti</h2>
+    <div class="stat-card">
+      <div class="stat-label">Eventi Totali</div>
+      <div class="stat-value" id="totEventi">0</div>
+    </div>
+  </div>
 
-    <table class="styled-table">
+  <!-- SELETTORE MESE -->
+  <div style="margin-top:20px; display:flex; justify-content:center;">
+    <select id="selectMese" class="file-label" style="font-size:16px; padding:10px;">
+      <option value="1">Gennaio</option>
+      <option value="2">Febbraio</option>
+      <option value="3">Marzo</option>
+      <option value="4">Aprile</option>
+      <option value="5">Maggio</option>
+      <option value="6">Giugno</option>
+      <option value="7">Luglio</option>
+      <option value="8">Agosto</option>
+      <option value="9">Settembre</option>
+      <option value="10">Ottobre</option>
+      <option value="11">Novembre</option>
+      <option value="12">Dicembre</option>
+    </select>
+  </div>
+
+  <!-- TABELLA EVENTI -->
+  <div class="table-container" style="margin-top:20px;">
+    <table>
       <thead>
         <tr>
           <th>Ticker</th>
-          <th>Data</th>
-          <th>Frequenza</th>
-          <th>Yield</th>
+          <th>Nome</th>
+          <th>Data Pagamento</th>
+          <th>Importo</th>
           <th>Yield Annuale</th>
+          <th>Yield</th>
         </tr>
       </thead>
-      <tbody id="allPayments"></tbody>
+      <tbody id="calBody"></tbody>
     </table>
-  </section>
+  </div>
 
 </div>
-
-<!-- SCRIPT FIREBASE -->
-<script type="module">
-  import { db } from "./firebase-config.js";
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-
-  async function load() {
-    const snap = await getDocs(collection(db, "dividendi_annual"));
-    const items = [];
-
-    snap.forEach(doc => {
-      const d = doc.data();
-      if (!d.date_pagamento) return;
-
-      d.date_pagamento.forEach(date => {
-        items.push({
-          ticker: d.ticker,
-          prezzo: d.prezzo_acquisto,
-          ultimo: d.ultimo_dividendo,
-          date,
-          freq: d.date_pagamento.length
-        });
-      });
-    });
-
-    items.sort((a,b)=> new Date(a.date) - new Date(b.date));
-
-    renderStats(items);
-    renderNext30(items);
-    renderAll(items);
-  }
-
-  /* -----------------------
-       STATISTICHE
-  ------------------------ */
-  function renderStats(items) {
-    const total = items.reduce((acc, x)=> acc + (x.ultimo || 0), 0).toFixed(2);
-    const freq = {};
-    items.forEach(x => freq[x.ticker] = (freq[x.ticker] || 0) + 1);
-
-    document.getElementById("stats").innerHTML = `
-      <div class='mini-card'>
-        <h3>Dividendi annuali</h3>
-        <p>€ ${total}</p>
-      </div>
-      <div class='mini-card'>
-        <h3>Titoli</h3>
-        <p>${Object.keys(freq).length}</p>
-      </div>
-      <div class='mini-card'>
-        <h3>Eventi totali</h3>
-        <p>${items.length}</p>
-      </div>
-    `;
-  }
-
-  /* -----------------------
-       PROSSIMI 30 GIORNI
-  ------------------------ */
-  function renderNext30(items) {
-    const today = new Date();
-    const future = new Date();
-    future.setDate(today.getDate() + 30);
-
-    const list = items.filter(x => {
-      const d = new Date(x.date);
-      return d >= today && d <= future;
-    });
-
-    document.getElementById("next30").innerHTML = list.map(x => {
-      const yieldAnnual = (x.ultimo * x.freq / x.prezzo) * 100;
-
-      return `
-        <div class="card">
-          <h3>${x.ticker}</h3>
-          <p>${x.date}</p>
-          <p class="profit">Yield Annuale: ${yieldAnnual.toFixed(2)}%</p>
-        </div>
-      `;
-    }).join("");
-  }
-
-  /* -----------------------
-       TABELLA COMPLETA
-  ------------------------ */
-  function renderAll(items) {
-    document.getElementById("allPayments").innerHTML = items.map(x => {
-      const yieldSingle = (x.ultimo / x.prezzo) * 100;
-      const yieldAnnual = (x.ultimo * x.freq / x.prezzo) * 100;
-
-      return `
-        <tr>
-          <td>${x.ticker}</td>
-          <td>${x.date}</td>
-          <td>${x.freq}x/anno</td>
-          <td>${yieldSingle.toFixed(2)}%</td>
-          <td class="profit">${yieldAnnual.toFixed(2)}%</td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  load();
-</script>
 
 </body>
 </html>
