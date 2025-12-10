@@ -851,3 +851,30 @@ tr:last-child td {
     padding: 20px;
   }
 }
+
+/* Stile base del select */
+#selectMese {
+  color: #000;                 /* testo nero */
+  background: #fff;            /* sfondo bianco */
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* Opzioni del menu */
+#selectMese option {
+  color: #000 !important;      /* testo nero */
+  background: #fff !important; /* sfondo bianco */
+}
+
+/* DARK MODE (se il tuo sito usa body.dark o simile) */
+body.dark #selectMese {
+  color: #fff;
+  background: #222;
+  border-color: #555;
+}
+
+body.dark #selectMese option {
+  color: #fff !important;
+  background: #222 !important;
+}
