@@ -61,28 +61,61 @@ function renderTable(rows, meseFiltrato) {
   const body = document.getElementById("calBody");
   body.innerHTML = "";
 
+  let righe = [];
+
   rows.forEach(r => {
     const prezzo = Number(r.prezzo_acquisto || 1);
     const importo = Number(r.ultimo_dividendo || 0);
-    const datePag = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
+    const arrDate = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
+    const mensilita = arrDate.length > 0 ? arrDate.length : 1;
+
+    // Yield singolo dividendo
     const yieldSingolo = prezzo > 0 ? (importo / prezzo) * 100 : 0;
-    const yieldAnnuale = yieldSingolo * datePag.length;
 
-    datePag.forEach(data => {
-      const mese = new Date(data).getMonth() + 1;
-      if (mese !== meseFiltrato) return;
+    // Yield annuale
+    const yieldAnnuale = yieldSingolo * mensilita;
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${r.ticker}</td>
-        <td>${data}</td>
-        <td>${importo.toFixed(4)} €</td>
-        <td>${yieldSingolo.toFixed(2)}%</td>
-        <td>${yieldAnnuale.toFixed(2)}%</td>
-      `;
-      body.appendChild(tr);
+    // Se non ci sono date → use empty row con mese = 0
+    const dateList = arrDate.length > 0 ? arrDate : [""];
+
+    dateList.forEach(dataString => {
+      let mesePagamento = 0;
+      let dataDisplay = "—";
+
+      if (dataString) {
+        const d = new Date(dataString);
+        mesePagamento = d.getMonth() + 1;
+        dataDisplay = dataString;
+      }
+
+      if (mesePagamento === meseFiltrato) {
+        righe.push({
+          ticker: r.ticker,
+          data: dataDisplay,
+          importo,
+          yieldSingolo,
+          yieldAnnuale,
+          dataOrd: dataString ? new Date(dataString) : new Date("2100-01-01")
+        });
+      }
     });
+  });
+
+  // ORDINA LE RIGHE PER DATA (dataOrd)
+  righe.sort((a, b) => a.dataOrd - b.dataOrd);
+
+  // RENDER
+  righe.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.ticker}</td>
+      <td>${r.data}</td>
+      <td>${r.importo.toFixed(4)} €</td>
+      <td>${r.yieldSingolo.toFixed(2)}%</td>
+      <td>${r.yieldAnnuale.toFixed(2)}%</td>
+    `;
+    body.appendChild(tr);
   });
 }
 
