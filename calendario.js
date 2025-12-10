@@ -24,7 +24,8 @@ async function loadCalendario() {
   updateStats(rows);
 
   // Popola tabella (mese corrente default)
-  renderTable(rows, new Date().getMonth() + 1);
+  const meseCorrente = new Date().getMonth() + 1;
+  renderTable(rows, meseCorrente);
 
   // Listener select mese
   document.getElementById("selectMese").addEventListener("change", e => {
@@ -45,8 +46,12 @@ function updateStats(rows) {
     const div = Number(r.ultimo_dividendo || 0);
     const arr = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
+    // Calcolo dividendo annualizzato
     totaleAnnuale += div * (arr.length > 0 ? arr.length : 1);
+
     tickers.add(r.ticker);
+
+    // Numero eventi
     eventi += arr.length > 0 ? arr.length : 1;
   });
 
@@ -69,15 +74,16 @@ function renderTable(rows, meseFiltrato) {
     const importo = Number(r.ultimo_dividendo || 0);
     const arrDate = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
+    // Quante volte paga in un anno
     const mensilita = arrDate.length > 0 ? arrDate.length : 1;
 
-    // Yield singolo dividendo
+    // Yield singolo
     const yieldSingolo = prezzo > 0 ? (importo / prezzo) * 100 : 0;
 
     // Yield annuale
     const yieldAnnuale = yieldSingolo * mensilita;
 
-    // Per ogni mese (se vuoto → 1 riga "default")
+    // Se non ci sono mesi → riga neutra
     const mesi = arrDate.length > 0 ? arrDate : [0];
 
     mesi.forEach(m => {
@@ -100,5 +106,7 @@ function renderTable(rows, meseFiltrato) {
   });
 }
 
-// Avvio
+// ===============================
+// AVVIO SCRIPT
+// ===============================
 loadCalendario();
