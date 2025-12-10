@@ -12,9 +12,6 @@ import {
 // CARICA DATI
 // ===============================
 async function loadCalendario() {
-  console.log("Caricamento dati calendario...");
-
-  // ⚠️ Raccolta corretta
   const ref = collection(db, "dividendi_annual");
   const snapshot = await getDocs(ref);
 
@@ -26,7 +23,7 @@ async function loadCalendario() {
   // Popola statistiche
   updateStats(rows);
 
-  // Popola tabella prima volta (mese corrente)
+  // Popola tabella (mese corrente default)
   renderTable(rows, new Date().getMonth() + 1);
 
   // Listener select mese
@@ -37,62 +34,69 @@ async function loadCalendario() {
 }
 
 // ===============================
-// AGGIORNA I 3 BOX SUPERIORI
+// POPOLA I 3 BOX SUPERIORI
 // ===============================
 function updateStats(rows) {
   let totaleAnnuale = 0;
   let tickers = new Set();
+  let eventi = 0;
 
   rows.forEach(r => {
-    totaleAnnuale += Number(r.dividendo_annuo || 0);
+    const div = Number(r.ultimo_dividendo || 0);
+    const arr = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
+
+    totaleAnnuale += div * (arr.length > 0 ? arr.length : 1);
     tickers.add(r.ticker);
+    eventi += arr.length > 0 ? arr.length : 1;
   });
 
   document.getElementById("dividendiAnnui").textContent =
     totaleAnnuale.toFixed(2) + " €";
 
   document.getElementById("totTitoli").textContent = tickers.size;
-  document.getElementById("totEventi").textContent = rows.length;
+  document.getElementById("totEventi").textContent = eventi;
 }
 
 // ===============================
 // RENDER TABELLA
 // ===============================
-function renderTable(rows, mese) {
+function renderTable(rows, meseFiltrato) {
   const body = document.getElementById("calBody");
   body.innerHTML = "";
 
-  const filtrati = rows.filter(r => Number(r.mese_pagamento) === mese);
-
-  filtrati.forEach(r => {
-    const tr = document.createElement("tr");
-
-    const importo = Number(r.importo || 0);
+  rows.forEach(r => {
     const prezzo = Number(r.prezzo_acquisto || 1);
-    const quote = Number(r.quantita || 1);
-    const annuale = Number(r.dividendo_annuo || 0);
+    const importo = Number(r.ultimo_dividendo || 0);
+    const arrDate = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
-    // Yield mensile = importo * 12 / (prezzo * quantita) * 100
-    const yieldMensile = prezzo * quote > 0
-      ? (importo * 12 / (prezzo * quote)) * 100
-      : 0;
+    const mensilita = arrDate.length > 0 ? arrDate.length : 1;
 
-    // Yield annuale = dividendo_annuo / (prezzo * quantita) * 100
-    const yieldAnnuale = annuale && prezzo * quote > 0
-      ? (annuale / (prezzo * quote)) * 100
-      : 0;
+    // Yield singolo dividendo
+    const yieldSingolo = prezzo > 0 ? (importo / prezzo) * 100 : 0;
 
-    tr.innerHTML = `
-      <td>${r.ticker}</td>
-      <td>${r.nome}</td>
-      <td>${r.data_pagamento}</td>
-      <td>${importo.toFixed(2)} €</td>
+    // Yield annuale
+    const yieldAnnuale = yieldSingolo * mensilita;
 
-      <td>${yieldAnnuale.toFixed(2)}%</td>
-      <td>${yieldMensile.toFixed(2)}%</td>
-    `;
+    // Per ogni mese (se vuoto → 1 riga "default")
+    const mesi = arrDate.length > 0 ? arrDate : [0];
 
-    body.appendChild(tr);
+    mesi.forEach(m => {
+      if (meseFiltrato !== m) return;
+
+      const dataPag = m === 0 ? "—" : `01/${String(m).padStart(2, "0")}`;
+
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${r.ticker}</td>
+        <td>${dataPag}</td>
+        <td>${importo.toFixed(4)} €</td>
+        <td>${yieldSingolo.toFixed(2)}%</td>
+        <td>${yieldAnnuale.toFixed(2)}%</td>
+      `;
+
+      body.appendChild(tr);
+    });
   });
 }
 
