@@ -20,6 +20,9 @@ const modalEl = () => document.getElementById("modalEditMonth");
 const detailListEl = () => document.getElementById("detailList");
 const ctxMensile = () => document.getElementById("dividendiBarChart");
 
+const div2025El = () => document.getElementById("dividendi2025");
+const div2026El = () => document.getElementById("dividendi2026");
+
 let chartMensile = null;
 let editId = null;
 let editData = null;
@@ -43,9 +46,6 @@ async function loadMonths() {
       a.anno === b.anno ? String(a.mese).localeCompare(String(b.mese)) : a.anno - b.anno
     );
 
-    // render grafico
-    buildBarChart(mesi);
-
     // render tabella
     mesi.forEach(m => {
       const totale = (m.dettaglio || []).reduce((sum, r) => sum + Number(r.importo || 0), 0).toFixed(2);
@@ -64,6 +64,13 @@ async function loadMonths() {
     document.querySelectorAll("button[data-id]").forEach(btn =>
       btn.addEventListener("click", () => openEdit(btn.dataset.id))
     );
+
+    // render grafico
+    buildBarChart(mesi);
+
+    // aggiorna i totali per anno
+    updateDividendiPerAnno(mesi);
+
   } catch (err) {
     console.error("Errore loadMonths:", err);
   }
@@ -81,9 +88,31 @@ function buildBarChart(mesi) {
   const ctx = canvas.getContext("2d");
   chartMensile = new Chart(ctx, {
     type: "bar",
-    data: { labels, datasets: [{ label: "Dividendi €", data: values }] },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+    data: { labels, datasets: [{ label: "Dividendi €", data: values, backgroundColor: '#0984e3' }] },
+    options: { 
+      responsive:true, 
+      maintainAspectRatio:false, 
+      plugins:{legend:{display:false}}, 
+      scales:{ y:{ beginAtZero:true } } 
+    }
   });
+}
+
+// ===============================
+// CALCOLO DIVIDENDI PER ANNO
+// ===============================
+function updateDividendiPerAnno(mesi) {
+  let totale2025 = 0;
+  let totale2026 = 0;
+
+  mesi.forEach(m => {
+    const totale = (m.dettaglio || []).reduce((sum, r) => sum + Number(r.importo || 0), 0);
+    if (m.anno === 2025) totale2025 += totale;
+    if (m.anno === 2026) totale2026 += totale;
+  });
+
+  if(div2025El()) div2025El().textContent = totale2025.toFixed(2) + " €";
+  if(div2026El()) div2026El().textContent = totale2026.toFixed(2) + " €";
 }
 
 // Apri modal edit mese
