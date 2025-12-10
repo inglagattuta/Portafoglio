@@ -8,51 +8,43 @@
   <link rel="stylesheet" href="style.css?v=5">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-  /* --- RESPONSIVE TABLE WRAPPER --- */
-  .table-responsive {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+    /* --- RESPONSIVE TABLE WRAPPER --- */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
 
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
 
-  th, td {
-    white-space: nowrap;
-    padding: 8px;
-    text-align: left;
-  }
+    th, td {
+      white-space: nowrap;
+      padding: 8px;
+      text-align: left;
+    }
 
-  /* Rende le colonne cliccabili per ordinare */
-  th.sortable {
-    cursor: pointer;
-    position: relative;
-  }
+    /* Rende le colonne cliccabili per ordinare */
+    th.sortable {
+      cursor: pointer;
+      position: relative;
+    }
 
-  th.sortable::after {
-    content: " ⇅";
-    font-size: 0.8em;
-    opacity: 0.5;
-  }
+    th.sortable::after {
+      content: " ⇅";
+      font-size: 0.8em;
+      opacity: 0.5;
+    }
 
-  /* Mini-card per anni */
-  .mini-cards-year {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .mini-cards-year .mini-card {
-    flex: 1;
-    background: var(--card-bg, #f0f0f0);
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-  }
-</style>
+    /* Mini-cards layout per dividendi totali */
+    .dividendi-totali {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+  </style>
 
 </head>
 
@@ -63,7 +55,6 @@
   if (savedTheme === "dark") document.body.classList.add("dark");
   else document.body.classList.remove("dark");
 </script>
-
 
 <div class="container">
 
@@ -133,6 +124,7 @@
             <option value="ETF">ETF</option>
           </select>
         </div>
+
         <div style="margin-top:10px;">
           <label>
             <input type="checkbox" id="toggleCards" />
@@ -177,22 +169,21 @@
   </div>
 
   <div class="dividendi-right">
-    <h2>Dividendi per Mese (€)</h2>
 
-    <!-- Box Dividendi per anno -->
-    <div class="mini-cards-year">
+    <!-- NUOVI BOX DIVIDENDI ANNUALI -->
+    <div class="dividendi-totali">
       <div class="mini-card">
         <h3>Dividendi 2025</h3>
         <p id="dividendi2025">0 €</p>
       </div>
-
       <div class="mini-card">
         <h3>Dividendi 2026</h3>
         <p id="dividendi2026">0 €</p>
       </div>
     </div>
 
-    <div style="height:350px; margin-top:10px;">
+    <h2>Dividendi per Mese (€)</h2>
+    <div style="height:350px;">
       <canvas id="dividendiBarChart"></canvas>
     </div>
   </div>
@@ -220,7 +211,7 @@
   </div>
 </div>
 
-<!-- 🚀 SCRIPTS -->
+<!-- 🚀 SCRIPT -->
 <script type="module" src="dividendi_mensili.js?v=4"></script>
 <script type="module" src="dividendi.js?v=3"></script>
 
