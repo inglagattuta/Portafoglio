@@ -12,7 +12,10 @@ import {
 // CARICA DATI
 // ===============================
 async function loadCalendario() {
-  const ref = collection(db, "dividendi");
+  console.log("Caricamento dati calendario...");
+
+  // ⚠️ Raccolta corretta
+  const ref = collection(db, "dividendi_annual");
   const snapshot = await getDocs(ref);
 
   const rows = [];
@@ -23,10 +26,10 @@ async function loadCalendario() {
   // Popola statistiche
   updateStats(rows);
 
-  // Popola tabella prima volta
+  // Popola tabella prima volta (mese corrente)
   renderTable(rows, new Date().getMonth() + 1);
 
-  // Assegna listener al select
+  // Listener select mese
   document.getElementById("selectMese").addEventListener("change", e => {
     const meseSel = parseInt(e.target.value);
     renderTable(rows, meseSel);
@@ -74,7 +77,7 @@ function renderTable(rows, mese) {
       ? (importo * 12 / (prezzo * quote)) * 100
       : 0;
 
-    // Yield annuale già presente nei dati -> r.yield
+    // Yield annuale = dividendo_annuo / (prezzo * quantita) * 100
     const yieldAnnuale = annuale && prezzo * quote > 0
       ? (annuale / (prezzo * quote)) * 100
       : 0;
