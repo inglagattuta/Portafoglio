@@ -1,0 +1,112 @@
+/* ================================
+   CALENDARIO DIVIDENDI — STILE PREMIUM
+   ================================ */
+
+/* --- Contenitore generale --- */
+.table-container {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+/* --- Header fisso --- */
+.table-container table thead th {
+  position: sticky;
+  top: 0;
+  background: #1f2937; /* grigio scuro elegante */
+  color: #fff;
+  z-index: 10;
+  backdrop-filter: blur(6px);
+}
+
+/* --- Tabella base --- */
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  color: #e5e7eb;
+  background: #111827; /* sfondo scuro premium */
+}
+
+/* --- Celle --- */
+.table-container th,
+.table-container td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* --- Hover riga --- */
+.table-container tbody tr:hover {
+  background: rgba(255,255,255,0.05);
+  transition: 0.2s;
+}
+
+/* --- Heatmap YIELD (classe applicata via JS) --- */
+.yield-low {
+  color: #f87171;         /* rosso soft */
+}
+
+.yield-medium {
+  color: #facc15;         /* giallo oro */
+}
+
+.yield-high {
+  color: #4ade80;         /* verde brillante */
+}
+
+/* --- Colonna ordinata evidenziata --- */
+.sorted-col {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* --- Ricerca live --- */
+.search-box {
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.search-box input {
+  width: 260px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background: #1f2937;
+  color: #f3f4f6;
+  font-size: 14px;
+  outline: none;
+  transition: .2s;
+}
+
+.search-box input:focus {
+  border-color: #60a5fa;
+  background: #111827;
+}
+
+/* --- Frecce ordinamento --- */
+th.sortable {
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+th.sortable::after {
+  content: "⇅";
+  position: absolute;
+  right: 8px;
+  opacity: 0.35;
+  font-size: 12px;
+}
+
+th.sortable.sorted-asc::after {
+  content: "↑";
+  opacity: 1;
+}
+
+th.sortable.sorted-desc::after {
+  content: "↓";
+  opacity: 1;
+}
