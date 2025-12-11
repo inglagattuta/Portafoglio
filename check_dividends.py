@@ -3,6 +3,16 @@ from datetime import datetime, timedelta
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+# 🔥 TEST TELEGRAM
+import os
+requests.post(
+    f"https://api.telegram.org/bot{os.getenv('TELEGRAM_TOKEN')}/sendMessage",
+    data={"chat_id": os.getenv("TELEGRAM_CHAT_ID"), "text": "🔔 Test: Script avviato correttamente!"}
+)
+print("Messaggio di test inviato.")
+
+
+
 # ==========================
 # CONFIGURAZIONE TELEGRAM
 # ==========================
