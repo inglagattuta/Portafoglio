@@ -8,6 +8,8 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
+let sortState = {}; // Stato ordinamento colonne
+
 // ===============================
 // CARICA DATI
 // ===============================
@@ -18,18 +20,18 @@ async function loadCalendario() {
   const rows = [];
   snapshot.forEach(doc => rows.push(doc.data()));
 
-  console.log("Dati caricati calendario:", rows);
-
   updateStats(rows);
 
   const meseCorrente = new Date().getMonth() + 1;
   renderTable(rows, meseCorrente);
-
   aggiornaDettaglioTitoli(rows);
 
   document.getElementById("selectMese").addEventListener("change", e => {
     renderTable(rows, Number(e.target.value));
   });
+
+  // Attiva click ordinamento
+  setupSorting(rows);
 }
 
 // ===============================
@@ -72,10 +74,7 @@ function renderTable(rows, meseFiltrato) {
 
     const mensilita = arrDate.length > 0 ? arrDate.length : 1;
 
-    // Yield singolo dividendo
     const yieldSingolo = prezzo > 0 ? (importo / prezzo) * 100 : 0;
-
-    // Yield annuale
     const yieldAnnuale = yieldSingolo * mensilita;
 
     const dateList = arrDate.length > 0 ? arrDate : [""];
@@ -103,21 +102,25 @@ function renderTable(rows, meseFiltrato) {
     });
   });
 
-  // ORDINA PER DATA
+  // Ordina per data di default
   righe.sort((a, b) => a.dataOrd - b.dataOrd);
 
   // RENDER
   righe.forEach(r => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td>${r.ticker}</td>
       <td>${r.data}</td>
       <td>${r.importo.toFixed(4)} €</td>
       <td>${r.yieldSingolo.toFixed(2)}%</td>
-      <td>${r.yieldAnnuale.toFixed(2)}%</td>
+      <td class="yieldCell">${r.yieldAnnuale.toFixed(2)}%</td>
     `;
+
     body.appendChild(tr);
   });
+
+  aplicaColoriYield(body, 4);
 }
 
 // ===============================
@@ -136,7 +139,6 @@ function aggiornaDettaglioTitoli(rows) {
     const mensilita = arr.length > 0 ? arr.length : 1;
     const divAnnuale = ultimo * mensilita;
 
-    // prossima data → la minima futura
     const oggi = new Date();
     let prossima = arr
       .map(d => new Date(d))
@@ -158,11 +160,85 @@ function aggiornaDettaglioTitoli(rows) {
       <td>${ultimo.toFixed(4)} €</td>
       <td>${divAnnuale.toFixed(4)} €</td>
       <td>${prossimaData}</td>
-      <td>${yieldAnnuale}%</td>
+      <td class="yieldCell">${yieldAnnuale}%</td>
     `;
 
     body.appendChild(tr);
   });
+
+  aplicaColoriYield(body, 5);
+}
+
+// ===============================
+// 🎨 SCALA COLORE SU YIELD (verde → rosso)
+// ===============================
+function aplicaColoriYield(body, colIndex) {
+  const cells = [...body.querySelectorAll(`td:nth-child(${colIndex + 1})`)];
+
+  const values = cells
+    .map(cell => Number(cell.textContent.replace("%", "")))
+    .filter(n => !isNaN(n));
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  cells.forEach(cell => {
+    const val = Number(cell.textContent.replace("%", ""));
+    if (isNaN(val)) return;
+
+    const ratio = (val - min) / (max - min || 1);
+
+    const r = Math.round(255 - 180 * ratio);
+    const g = Math.round(80 + 150 * ratio);
+
+    cell.style.backgroundColor = `rgba(${r}, ${g}, 80, 0.25)`;
+  });
+}
+
+// ===============================
+// 📌 ORDINAMENTO CLICK INTESTAZIONI
+// ===============================
+function setupSorting(rows) {
+  const tables = [
+    { id: "calBody", headers: ["Ticker", "Data", "Importo", "Yield", "Yield annuale"] },
+    { id: "dettaglioTitoliBody", headers: ["Ticker", "Prezzo", "Ultimo", "Annuale", "Data", "Yield"] }
+  ];
+
+  tables.forEach(table => {
+    const head = document.querySelector(`table thead`);
+    if (!head) return;
+
+    [...head.querySelectorAll("th")].forEach((th, idx) => {
+      th.style.cursor = "pointer";
+      th.addEventListener("click", () => {
+        const tbody = document.getElementById(table.id);
+        ordinaTabella(tbody, idx);
+      });
+    });
+  });
+}
+
+function ordinaTabella(tbody, colIndex) {
+  const rows = [...tbody.querySelectorAll("tr")];
+  const key = tbody.id + "-" + colIndex;
+
+  const asc = !sortState[key];
+  sortState[key] = asc;
+
+  const sorted = rows.sort((a, b) => {
+    const A = a.children[colIndex].innerText.replace("€", "").replace("%", "").trim();
+    const B = b.children[colIndex].innerText.replace("€", "").replace("%", "").trim();
+
+    const numA = parseFloat(A);
+    const numB = parseFloat(B);
+
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return asc ? numA - numB : numB - numA;
+    }
+    return asc ? A.localeCompare(B) : B.localeCompare(A);
+  });
+
+  sorted.forEach(r => tbody.appendChild(r));
 }
 
 // ===============================
