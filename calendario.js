@@ -154,20 +154,32 @@ function aggiornaDettaglioTitoli(rows) {
 
     const tr = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td>${r.ticker}</td>
-      <td>${prezzo ? prezzo.toFixed(2) + " €" : "-"}</td>
-      <td>${ultimo.toFixed(4)} €</td>
-      <td>${divAnnuale.toFixed(4)} €</td>
-      <td>${prossimaData}</td>
-      <td class="yieldCell">${yieldAnnuale}%</td>
-    `;
+    const tipo = calcolaTipoFrequenza(arr.length);
+
+tr.innerHTML = `
+  <td>${r.ticker}</td>
+  <td>${prezzo ? prezzo.toFixed(2) + " €" : "-"}</td>
+  <td>${ultimo.toFixed(4)} €</td>
+  <td>${divAnnuale.toFixed(4)} €</td>
+  <td>${prossimaData}</td>
+  <td>${tipo}</td>  <!-- ⭐ NUOVA CELLA -->
+  <td class="yieldCell">${yieldAnnuale}%</td>
+`;
 
     body.appendChild(tr);
   });
 
   aplicaColoriYield(body, 5);
 }
+
+function calcolaTipoFrequenza(count) {
+  if (count >= 12) return "Mensile";
+  if (count === 4) return "Trimestrale";
+  if (count === 2) return "Semestrale";
+  if (count === 1) return "Annuale";
+  return "—";
+}
+
 
 // ===============================
 // 🎨 SCALA COLORE YIELD (verde → rosso)
