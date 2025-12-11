@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: pip install firebase-admin requests
 
-      - name: Decrypt Firebase key
+      - name: Write Firebase key
         run: |
           echo "${{ secrets.FIREBASE_KEY }}" > firebase-key.json
 
