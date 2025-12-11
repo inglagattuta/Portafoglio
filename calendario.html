@@ -2,12 +2,12 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Calendario Dividendi</title>
 
   <link rel="stylesheet" href="style.css?v=10">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script type="module" src="calendario.js?v=4"></script>
+  <script type="module" src="calendario.js?v=5"></script>
 </head>
 
 <body>
@@ -27,7 +27,7 @@
     <p class="subtitle">Francesco La Gattuta</p>
   </header>
 
-  <!-- CONTROLLI IDENTICI ALL'INDEX -->
+  <!-- CONTROLLI -->
   <div class="controls" style="margin-top:16px;">
     <button onclick="window.location.href='index.html'">🏠 Home</button>
     <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>
@@ -36,7 +36,7 @@
     <a class="dashboard-btn" href="calendario.html" style="background:#f1c40f; color:#000;">🗓️ Calendario</a>
   </div>
 
-  <!-- MINI STAT CARDS come index -->
+  <!-- STATISTICHE -->
   <div class="stats-grid" style="margin-top:18px;">
     <div class="stat-card">
       <div class="stat-label">Dividendi Annuali</div>
@@ -72,20 +72,38 @@
     </select>
   </div>
 
-  <!-- TABELLA EVENTI -->
+  <!-- TABELLA EVENTI MENSILI -->
   <div class="table-container" style="margin-top:20px;">
     <table>
-     <thead>
-  <tr>
-    <th>Ticker</th>
-    <th>Data pagamento</th>
-    <th>Importo</th>
-    <th>Yield</th>
-    <th>Yield annuale</th>
-  </tr>
-</thead>
-<tbody id="calBody"></tbody>
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Data pagamento</th>
+          <th>Importo</th>
+          <th>Yield</th>
+          <th>Yield annuale</th>
+        </tr>
+      </thead>
+      <tbody id="calBody"></tbody>
+    </table>
+  </div>
 
+  <!-- 🔥 NUOVA SEZIONE: DATI PER SINGOLO TITOLO -->
+  <h2 style="margin-top:40px; margin-bottom:10px;">📘 Dettaglio Titoli</h2>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Prezzo acquisto</th>
+          <th>Ultimo dividendo</th>
+          <th>Dividendo annuale</th>
+          <th>Prossima data dividendo</th>
+          <th>Yield annuale</th>
+        </tr>
+      </thead>
+      <tbody id="dettaglioTitoliBody"></tbody>
     </table>
   </div>
 
