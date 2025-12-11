@@ -874,6 +874,94 @@ body.dark #selectMese {
   border-color: #555;
 }
 
+
+/* ================================
+   TABELLE — STILE DATATABLE PRO
+   ================================ */
+
+/* Contenitore tabella */
+.table-container {
+  margin-top: 20px;
+  overflow-x: auto;
+  background: var(--card-bg, #ffffff);
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Tabella */
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+/* Header */
+.table-container th {
+  background: #2c3e50;
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #1a252f;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Celle */
+.table-container td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Righe alternate */
+.table-container tbody tr:nth-child(even) {
+  background: rgba(0,0,0,0.03);
+}
+
+/* Hover sulla riga */
+.table-container tbody tr:hover {
+  background: rgba(0,0,0,0.08);
+}
+
+/* Allineamento numeri */
+.table-container td:nth-child(n+3) {
+  text-align: right;
+}
+
+/* Celle yield colorate */
+.yieldCell {
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+/* Dark mode */
+body.dark .table-container {
+  background: #1e1e1e;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+body.dark .table-container th {
+  background: #111;
+  border-bottom-color: #222;
+}
+
+body.dark .table-container td {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+body.dark .table-container tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.03);
+}
+
+body.dark .table-container tbody tr:hover {
+  background: rgba(255,255,255,0.09);
+}
+
+
 body.dark #selectMese option {
   color: #fff !important;
   background: #222 !important;
