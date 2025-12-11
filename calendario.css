@@ -209,3 +209,62 @@ td:nth-child(3) {
     width: 100%;
   }
 }
+/* =========================================
+   ULTRA COMPACT MODE (DESKTOP > 1100px)
+   ========================================= */
+@media (min-width: 1100px) {
+
+  /* compattazione estrema */
+  .dual-table-wrapper table {
+    font-size: 12.5px;
+  }
+
+  .dual-table-wrapper th,
+  .dual-table-wrapper td {
+    padding: 5px 6px !important;
+  }
+
+  /* larghezze minime ancora più strette */
+  .dual-table-wrapper th:nth-child(1),
+  .dual-table-wrapper td:nth-child(1) {
+    width: 60px;     /* Ticker */
+  }
+
+  .dual-table-wrapper th:nth-child(2),
+  .dual-table-wrapper td:nth-child(2) {
+    width: 92px;     /* Data pagamento */
+  }
+
+  .dual-table-wrapper th:nth-child(3),
+  .dual-table-wrapper td:nth-child(3) {
+    width: 55px;     /* Importo */
+  }
+
+  .dual-table-wrapper th:nth-child(4),
+  .dual-table-wrapper td:nth-child(4) {
+    width: 55px;     /* Yield */
+  }
+
+  .dual-table-wrapper th:nth-child(5),
+  .dual-table-wrapper td:nth-child(5) {
+    width: 80px;     /* Yield annuale */
+  }
+
+  /* Dettaglio titoli: larghezze minime */
+  #dettaglioHead th:nth-child(1) { width: 70px; }
+  #dettaglioHead th:nth-child(2) { width: 85px; }
+  #dettaglioHead th:nth-child(3) { width: 95px; }
+  #dettaglioHead th:nth-child(4) { width: 90px; }
+  #dettaglioHead th:nth-child(5) { width: 110px; }
+  #dettaglioHead th:nth-child(6) { width: 70px; }
+  #dettaglioHead th:nth-child(7) { width: 90px; }
+
+  /* contenitore ancora più compatto */
+  .dual-table-wrapper {
+    gap: 12px;
+  }
+
+  .dual-table-wrapper .table-container {
+    padding: 6px;
+  }
+}
