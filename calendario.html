@@ -2,151 +2,112 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Calendario Dividendi</title>
 
-  <link rel="stylesheet" href="style.css?v=1">
-
-  <style>
-    /* Stile base se vuoi mantenerlo qui */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 8px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    
-    th {
-      background: #f0f0f0;
-      font-weight: bold;
-    }
-
-    tr:hover {
-      background-color: rgba(0,0,0,0.05);
-    }
-
-    .box {
-      padding: 12px;
-      border-radius: 8px;
-      background: #fafafa;
-      box-shadow: 0 0 4px rgba(0,0,0,0.1);
-      margin-bottom: 15px;
-    }
-
-    .stats {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .stats .box {
-      flex: 1;
-      min-width: 180px;
-      text-align: center;
-    }
-
-    select {
-      padding: 6px 8px;
-      margin-bottom: 15px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css?v=10">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script type="module" src="calendario.js?v=5"></script>
 </head>
 
 <body>
 
-  <h1>📅 Calendario Dividendi</h1>
+<script>
+  // Dark/Light theme identical to index
+  const savedTheme = localStorage.getItem("theme") || "light";
+  document.body.dataset.theme = savedTheme;
+  if (savedTheme === "dark") document.body.classList.add("dark");
+  else document.body.classList.remove("dark");
+</script>
 
-  <!-- =============================== -->
-  <!-- BOX STATISTICHE -->
-  <!-- =============================== -->
-  <div class="stats">
-    <div class="box">
-      <div>Totale Dividendi Annui</div>
-      <strong id="dividendiAnnui">0 €</strong>
+<div class="container">
+
+  <header>
+    <h1>📅 Calendario Dividendi</h1>
+    <p class="subtitle">Francesco La Gattuta</p>
+  </header>
+
+  <!-- CONTROLLI -->
+  <div class="controls" style="margin-top:16px;">
+    <button onclick="window.location.href='index.html'">🏠 Home</button>
+    <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>
+    <a class="dashboard-btn" href="dividendi.html" style="background:#6c5ce7;">💵 Dividendi</a>
+    <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
+    <a class="dashboard-btn" href="calendario.html" style="background:#f1c40f; color:#000;">🗓️ Calendario</a>
+  </div>
+
+  <!-- STATISTICHE -->
+  <div class="stats-grid" style="margin-top:18px;">
+    <div class="stat-card">
+      <div class="stat-label">Dividendi Annuali</div>
+      <div class="stat-value" id="dividendiAnnui">0.00 €</div>
     </div>
 
-    <div class="box">
-      <div>Totale Titoli</div>
-      <strong id="totTitoli">0</strong>
+    <div class="stat-card">
+      <div class="stat-label">Titoli Totali</div>
+      <div class="stat-value" id="totTitoli">0</div>
     </div>
 
-    <div class="box">
-      <div>Eventi Annuali</div>
-      <strong id="totEventi">0</strong>
+    <div class="stat-card">
+      <div class="stat-label">Eventi Totali</div>
+      <div class="stat-value" id="totEventi">0</div>
     </div>
   </div>
 
-  <!-- =============================== -->
-  <!-- SELEZIONE MESE -->
-  <!-- =============================== -->
-  <label for="selectMese"><strong>Seleziona mese:</strong></label>
-  <select id="selectMese">
-    <option value="1">Gennaio</option>
-    <option value="2">Febbraio</option>
-    <option value="3">Marzo</option>
-    <option value="4">Aprile</option>
-    <option value="5">Maggio</option>
-    <option value="6">Giugno</option>
-    <option value="7">Luglio</option>
-    <option value="8">Agosto</option>
-    <option value="9">Settembre</option>
-    <option value="10">Ottobre</option>
-    <option value="11">Novembre</option>
-    <option value="12">Dicembre</option>
-  </select>
+  <!-- SELETTORE MESE -->
+  <div style="margin-top:20px; display:flex; justify-content:center;">
+    <select id="selectMese" class="file-label" style="font-size:16px; padding:10px;">
+      <option value="1">Gennaio</option>
+      <option value="2">Febbraio</option>
+      <option value="3">Marzo</option>
+      <option value="4">Aprile</option>
+      <option value="5">Maggio</option>
+      <option value="6">Giugno</option>
+      <option value="7">Luglio</option>
+      <option value="8">Agosto</option>
+      <option value="9">Settembre</option>
+      <option value="10">Ottobre</option>
+      <option value="11">Novembre</option>
+      <option value="12">Dicembre</option>
+    </select>
+  </div>
 
-  <!-- =============================== -->
-  <!-- TABELLA CALENDARIO -->
-  <!-- =============================== -->
-  <h2>📌 Dividendi del mese</h2>
-
-  <div style="overflow-x: auto;">
+  <!-- TABELLA EVENTI MENSILI -->
+  <div class="table-container" style="margin-top:20px;">
     <table>
       <thead id="calHead">
         <tr>
           <th>Ticker</th>
-          <th>Data</th>
+          <th>Data pagamento</th>
           <th>Importo</th>
-          <th>Yield %</th>
-          <th>Yield Annuale %</th>
+          <th>Yield</th>
+          <th>Yield annuale</th>
         </tr>
       </thead>
       <tbody id="calBody"></tbody>
     </table>
   </div>
 
-  <br>
+  <!-- 🔥 NUOVA SEZIONE: DATI PER SINGOLO TITOLO -->
+  <h2 style="margin-top:40px; margin-bottom:10px;">📘 Dettaglio Titoli</h2>
 
-  <!-- =============================== -->
-  <!-- TABELLA DETTAGLIO TITOLI -->
-  <!-- =============================== -->
-  <h2>📊 Dettaglio Titoli</h2>
-
-  <div style="overflow-x: auto;">
+  <div class="table-container">
     <table>
       <thead id="dettaglioHead">
         <tr>
           <th>Ticker</th>
-          <th>Prezzo</th>
-          <th>Ultimo Dividendo</th>
-          <th>Dividendo Annuale</th>
-          <th>Prossima Data</th>
-          <th>Yield Annuale</th>
+          <th>Prezzo acquisto</th>
+          <th>Ultimo dividendo</th>
+          <th>Dividendo annuale</th>
+          <th>Prossima data dividendo</th>
+          <th>Yield annuale</th>
         </tr>
       </thead>
       <tbody id="dettaglioTitoliBody"></tbody>
     </table>
   </div>
 
-  <!-- =============================== -->
-  <!-- SCRIPT -->
-  <!-- =============================== -->
-  <script type="module" src="calendario.js?v=1"></script>
+</div>
 
 </body>
 </html>
