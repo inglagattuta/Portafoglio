@@ -264,6 +264,24 @@ td:nth-child(3) {
     gap: 12px;
   }
 
+
+   /* =========================================
+   FORZA LAYOUT VERTICALE (sempre)
+   ========================================= */
+
+.dual-table-wrapper {
+  display: block !important;
+}
+
+.dual-table-wrapper .table-container {
+  width: 100% !important;
+  margin-bottom: 20px;
+}
+
+.dual-table-wrapper .table-container:last-child {
+  margin-bottom: 0;
+}
+
   .dual-table-wrapper .table-container {
     padding: 6px;
   }
