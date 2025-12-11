@@ -110,3 +110,34 @@ th.sortable.sorted-desc::after {
   content: "↓";
   opacity: 1;
 }
+
+
+/* =======================
+   SCROLLBAR PREMIUM
+   ======================= */
+
+/* contenitore della tabella */
+.table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+/* Scrollbar WebKit (Chrome, Edge) */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #4b5563, #6b7280);
+  border-radius: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6b7280, #9ca3af);
+}
