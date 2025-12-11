@@ -161,3 +161,51 @@ td:nth-child(3) {
   color: #f1f5f9 !important;   /* colore chiaro visibile */
   background: transparent !important;
 }
+
+
+/* =========================================
+   LAYOUT DOPPIA TABELLA — RESPONSIVE
+   ========================================= */
+
+/* Contenitore delle due tabelle */
+.dual-table-wrapper {
+  display: flex;
+  gap: 20px;
+  margin-top: 25px;
+}
+
+/* Ogni tabella occupa metà dello spazio */
+.dual-table-wrapper .table-container {
+  flex: 1;
+  min-width: 0; /* evita overflow */
+}
+
+/* --- Versione COMPATTA --- */
+.table-container table th,
+.table-container table td {
+  padding: 8px 10px !important; /* più compattezza */
+  font-size: 14px;
+}
+
+.table-container table {
+  table-layout: fixed; /* colonne più strette */
+}
+
+/* riduci spazio tra colonne */
+.table-container td, 
+.table-container th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Versione MOBILE --- */
+@media (max-width: 900px) {
+  .dual-table-wrapper {
+    flex-direction: column;
+  }
+
+  .dual-table-wrapper .table-container {
+    width: 100%;
+  }
+}
