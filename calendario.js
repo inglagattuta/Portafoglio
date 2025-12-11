@@ -25,6 +25,8 @@ async function loadCalendario() {
   const meseCorrente = new Date().getMonth() + 1;
   renderTable(rows, meseCorrente);
 
+  aggiornaDettaglioTitoli(rows);
+
   document.getElementById("selectMese").addEventListener("change", e => {
     renderTable(rows, Number(e.target.value));
   });
@@ -55,7 +57,7 @@ function updateStats(rows) {
 }
 
 // ===============================
-// RENDER TABELLA
+// RENDER TABELLA MENSILE
 // ===============================
 function renderTable(rows, meseFiltrato) {
   const body = document.getElementById("calBody");
@@ -76,7 +78,6 @@ function renderTable(rows, meseFiltrato) {
     // Yield annuale
     const yieldAnnuale = yieldSingolo * mensilita;
 
-    // Se non ci sono date → use empty row con mese = 0
     const dateList = arrDate.length > 0 ? arrDate : [""];
 
     dateList.forEach(dataString => {
@@ -102,7 +103,7 @@ function renderTable(rows, meseFiltrato) {
     });
   });
 
-  // ORDINA LE RIGHE PER DATA (dataOrd)
+  // ORDINA PER DATA
   righe.sort((a, b) => a.dataOrd - b.dataOrd);
 
   // RENDER
@@ -119,4 +120,52 @@ function renderTable(rows, meseFiltrato) {
   });
 }
 
+// ===============================
+// 🔥 NUOVA TABELLA: DETTAGLIO TITOLI
+// ===============================
+function aggiornaDettaglioTitoli(rows) {
+  const body = document.getElementById("dettaglioTitoliBody");
+  if (!body) return;
+  body.innerHTML = "";
+
+  rows.forEach(r => {
+    const prezzo = Number(r.prezzo_acquisto || 0);
+    const ultimo = Number(r.ultimo_dividendo || 0);
+    const arr = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
+
+    const mensilita = arr.length > 0 ? arr.length : 1;
+    const divAnnuale = ultimo * mensilita;
+
+    // prossima data → la minima futura
+    const oggi = new Date();
+    let prossima = arr
+      .map(d => new Date(d))
+      .filter(d => d >= oggi)
+      .sort((a, b) => a - b)[0];
+
+    const prossimaData = prossima
+      ? prossima.toISOString().substring(0, 10)
+      : "—";
+
+    const yieldAnnuale =
+      prezzo > 0 ? ((divAnnuale / prezzo) * 100).toFixed(2) : "0.00";
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${r.ticker}</td>
+      <td>${prezzo ? prezzo.toFixed(2) + " €" : "-"}</td>
+      <td>${ultimo.toFixed(4)} €</td>
+      <td>${divAnnuale.toFixed(4)} €</td>
+      <td>${prossimaData}</td>
+      <td>${yieldAnnuale}%</td>
+    `;
+
+    body.appendChild(tr);
+  });
+}
+
+// ===============================
+// AVVIO
+// ===============================
 loadCalendario();
