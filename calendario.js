@@ -30,8 +30,8 @@ async function loadCalendario() {
     renderTable(rows, Number(e.target.value));
   });
 
-  // Attiva click ordinamento
-  setupSorting(rows);
+  // Attiva click ordinamento per entrambe le tabelle
+  setupSorting();
 }
 
 // ===============================
@@ -124,7 +124,7 @@ function renderTable(rows, meseFiltrato) {
 }
 
 // ===============================
-// 🔥 NUOVA TABELLA: DETTAGLIO TITOLI
+// 🔥 DETTAGLIO TITOLI
 // ===============================
 function aggiornaDettaglioTitoli(rows) {
   const body = document.getElementById("dettaglioTitoliBody");
@@ -170,7 +170,7 @@ function aggiornaDettaglioTitoli(rows) {
 }
 
 // ===============================
-// 🎨 SCALA COLORE SU YIELD (verde → rosso)
+// 🎨 SCALA COLORE YIELD (verde → rosso)
 // ===============================
 function aplicaColoriYield(body, colIndex) {
   const cells = [...body.querySelectorAll(`td:nth-child(${colIndex + 1})`)];
@@ -196,23 +196,24 @@ function aplicaColoriYield(body, colIndex) {
 }
 
 // ===============================
-// 📌 ORDINAMENTO CLICK INTESTAZIONI
+// 📌 ORDINAMENTO CLICK PER OGNI TABELLA
 // ===============================
-function setupSorting(rows) {
+function setupSorting() {
   const tables = [
-    { id: "calBody", headers: ["Ticker", "Data", "Importo", "Yield", "Yield annuale"] },
-    { id: "dettaglioTitoliBody", headers: ["Ticker", "Prezzo", "Ultimo", "Annuale", "Data", "Yield"] }
+    { head: "#calHead", body: "#calBody" },
+    { head: "#dettaglioHead", body: "#dettaglioTitoliBody" }
   ];
 
-  tables.forEach(table => {
-    const head = document.querySelector(`table thead`);
-    if (!head) return;
+  tables.forEach(tbl => {
+    const thead = document.querySelector(tbl.head);
+    const tbody = document.querySelector(tbl.body);
 
-    [...head.querySelectorAll("th")].forEach((th, idx) => {
+    if (!thead || !tbody) return;
+
+    [...thead.querySelectorAll("th")].forEach((th, colIndex) => {
       th.style.cursor = "pointer";
       th.addEventListener("click", () => {
-        const tbody = document.getElementById(table.id);
-        ordinaTabella(tbody, idx);
+        ordinaTabella(tbody, colIndex);
       });
     });
   });
