@@ -154,3 +154,10 @@ th.sortable.sorted-desc::after {
 .table-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #6b7280, #9ca3af);
 }
+
+
+/* Fix visibilità colonna IMPORTO */
+td:nth-child(3) {
+  color: #f1f5f9 !important;   /* colore chiaro visibile */
+  background: transparent !important;
+}
