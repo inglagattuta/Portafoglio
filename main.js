@@ -8,7 +8,6 @@ import {
   getDocs,
   getDoc,
   updateDoc,
-  setDoc,
   deleteDoc,
   doc
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
@@ -23,8 +22,7 @@ const bxInvestito = document.getElementById("totInvestito");
 const bxValore    = document.getElementById("valoreAttuale");
 const bxDividendi = document.getElementById("totDividendi");
 const bxProfitto  = document.getElementById("totProfitto");
-// Rimossa la variabile elPerc qui perché viene re-selezionata in updateStats
-// const elPerc      = document.getElementById("totProfittoPerc"); 
+
 
 // -------------------------------------------------------------
 // COLUMNS DEFINITIONS
@@ -346,15 +344,18 @@ function updateStats(docs) {
   // Aggiorna profitto totale
   bxProfitto.textContent  = fmtEuro(profit);
   
-  // Rimuovi colore inline, usa la classe sul div stat-card (che è il genitore)
-  bxProfitto.closest('.stat-card').classList.remove('positive', 'negative'); 
-  bxProfitto.closest('.stat-card').classList.add(profitClass);
+  // Rimuovi/Aggiungi classi al genitore (stat-card) per colore dinamico
+  const profitCard = bxProfitto.closest('.stat-card');
+  if(profitCard) {
+    profitCard.classList.remove('positive', 'negative'); 
+    profitCard.classList.add(profitClass);
+  }
 
-  // NUOVO: aggiorna % profitto con colore (rimossa la selezione DOM duplicata)
+
+  // Aggiorna % profitto
   const elPerc = document.getElementById("totProfittoPerc");
   if (elPerc) {
-    elPerc.textContent = fmtPerc(percProfit); // Usiamo la funzione di formattazione
-    // Applichiamo la classe di colore al DIV della percentuale
+    elPerc.textContent = fmtPerc(percProfit); 
     elPerc.classList.remove("positive", "negative");
     elPerc.classList.add(profitClass);
   }
@@ -376,14 +377,13 @@ async function loadData() {
     console.log("Caricamento dati da Firebase...");
     const snap = await getDocs(collection(db, "portafoglio"));
     console.log("Documenti trovati:", snap.docs.length);
-    
-    // Seleziona l'elemento della percentuale (è utile selezionarlo qui se è fuori dallo scope)
+
     const elPerc = document.getElementById("totProfittoPerc");
 
     if (snap.docs.length === 0) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = columns.length + 1; // include la colonna Azioni
+      td.colSpan = columns.length + 1;
       td.textContent = "Nessun dato trovato!";
       td.style.textAlign = "center";
       td.style.fontStyle = "italic";
@@ -395,12 +395,11 @@ async function loadData() {
       bxValore.textContent = "0 €";
       bxDividendi.textContent = "0 €";
       bxProfitto.textContent = "0 €";
-      if(elPerc) elPerc.textContent = "0 %"; // Usiamo elPerc selezionato
-        
-      // Rimuoviamo le classi di colore se non ci sono dati
-      bxProfitto.closest('.stat-card')?.classList.remove('positive', 'negative');
-      if(elPerc) elPerc.classList.remove('positive', 'negative');
-
+      if(elPerc) {
+            elPerc.textContent = "0 %";
+            elPerc.classList.remove('positive', 'negative');
+        }
+      bxProfitto.closest('.stat-card')?.classList.remove('positive', 'negative');
       return;
     }
 
@@ -408,8 +407,6 @@ async function loadData() {
     snap.docs.forEach(docSnap => {
       const d = docSnap.data();
       const id = docSnap.id;
-
-      console.log("Documento:", id, d);
 
       const tr = document.createElement("tr");
 
@@ -423,7 +420,6 @@ async function loadData() {
                     (Number(d.dividendi) || 0) + (Number(d.prelevato) || 0);
           td.textContent = fmtEuro(p);
           td.dataset.raw = p;
-          // Colora il profitto della riga
           td.classList.add(p >= 0 ? "positive" : "negative");
         } else if (euroCols.has(col)) {
           const v = Number(d[col] || 0);
@@ -438,7 +434,6 @@ async function loadData() {
            td.textContent = fmtScore(v);
            td.dataset.raw = v;
 
-           // --- COLORAZIONE SCORE: Sostituito stile inline con classi (che dovrai definire in index.css) ---
            if (v >= 12) {
              td.classList.add("score-high");
            } else if (v < 12 && v >= 8) {
@@ -452,7 +447,6 @@ async function loadData() {
            td.dataset.raw = (d[col] ?? "").toString();
         }
 
-
         tr.appendChild(td);
       });
 
@@ -463,14 +457,12 @@ async function loadData() {
 
       const btE = document.createElement("button");
       btE.textContent = "Modifica";
-      btE.classList.add("btn-edit"); // Aggiungi classe CSS
-      // RIMOSSO: stile inline (btE.style.backgroundColor = "#27ae60"; btE.style.color = "white";)
+      btE.classList.add("btn-edit");
       btE.onclick = () => openEditModal(id);
 
       const btD = document.createElement("button");
       btD.textContent = "Cancella";
-      btD.classList.add("btn-delete"); // Aggiungi classe CSS
-      // RIMOSSO: stile inline (btD.style.backgroundColor = "#e74c3c"; btD.style.color = "white";)
+      btD.classList.add("btn-delete");
       btD.onclick = async () => {
         if (!confirm("Confermi?")) return;
         await deleteDoc(doc(db, "portafoglio", id));
@@ -492,32 +484,5 @@ async function loadData() {
     alert("Errore nel caricamento dati, controlla console.");
   }
 }
-// ======================
-// DARK MODE HANDLER
-// La logica del Dark Mode è stata gestita nell'HTML in-page, 
-// quindi questa sezione è stata commentata o rimossa per evitare duplicati
-// se la tua logica HTML è già funzionante.
-// ======================
-/*
-const themeSwitch = document.getElementById("themeSwitch");
 
-// Carica preferenza salvata
-if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark");
-    if (themeSwitch) themeSwitch.checked = true;
-}
-
-// Toggle manuale
-if (themeSwitch) {
-    themeSwitch.addEventListener("change", () => {
-        if (themeSwitch.checked) {
-            document.body.classList.add("dark");
-            localStorage.setItem("theme", "dark");
-        } else {
-            document.body.classList.remove("dark");
-            localStorage.setItem("theme", "light");
-        }
-    });
-}
-*/
 loadData();
