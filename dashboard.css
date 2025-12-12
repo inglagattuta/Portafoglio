@@ -4,6 +4,11 @@
  * -----------------------------------------------------
  */
 
+/* Utile per risolvere alcuni problemi di Flexbox/Grid in Chrome */
+.charts-grid, .chart-card {
+    min-width: 0; /* Impedisce che gli elementi superino il contenitore Flex/Grid */
+}
+
 /* 4. MINI CARDS CATEGORIE */
 .mini-cards {
     display: flex;
@@ -12,7 +17,7 @@
     margin-bottom: 30px;
 }
 .mini-card {
-    /* ... stili mini-card (non modificano il layout globale) ... */
+    /* ... (Stili delle mini-card, non modificano il layout globale) ... */
     background: var(--bg-container);
     padding: 15px 20px;
     border-radius: var(--radius);
@@ -22,15 +27,29 @@
     min-width: 150px;
     text-align: center;
 }
-/* ... (regole h3 e p) ... */
+.mini-card h3 {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+}
+.mini-card p {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0;
+    color: var(--accent-color);
+}
 
 
 /* 5. GRID GRAFICI */
 .charts-grid {
     display: grid;
+    /* Due colonne, si adattano */
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
     gap: 20px;
-    align-items: stretch; 
+    align-items: stretch; /* Assicura che le card siano allineate */
 }
 
 .chart-card {
@@ -42,35 +61,55 @@
     position: relative; 
     min-height: 400px; 
     
-    /* Layout interno Flexbox per gestire Canvas/Toggle */
+    /* CHIAVE: Layout interno Flexbox per gestire Canvas/Toggle */
     display: flex;
     flex-direction: column; 
+    
+    /* Aggiungiamo un'ombreggiatura per le card attive/hover (opzionale) */
+    transition: box-shadow 0.3s;
+}
+.chart-card:hover {
+    box-shadow: var(--shadow-md);
 }
 
 .chart-card h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
     margin: 0 0 15px 0;
-    /* ... */
+    color: var(--text-primary);
 }
 
-/* Stili specifici per Chart.js: REGOLA CHIAVE */
-.chart-card canvas { 
+/* Stili specifici per Chart.js: REGOLA CHIAVE per l'espansione */
+.charts-grid .chart-card canvas { /* Specificità aumentata */
     max-width: 100%;
-    /* Il canvas deve riempire lo spazio restante nella chart-card */
+    /* Questo è essenziale per far riempire lo spazio al canvas in un container flex-direction: column */
     flex-grow: 1; 
     height: auto; 
 }
 
 
 /* 6. TOGGLE BUTTONS (Top 5 / Top 10) */
-/* ... (rimane invariato) ... */
-
-/* 6. TOGGLE BUTTONS (Top 5 / Top 10) */
 .toggle-wrapper {
     display: flex;
     justify-content: flex-end; 
     gap: 5px;
-    /* Margine in alto per separare dal titolo, margine in basso zero */
     margin: 0 0 15px 0; 
 }
 
-/* ... (il resto degli stili rimane invariato) ... */
+.toggle-button {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-page);
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.toggle-button.active {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
