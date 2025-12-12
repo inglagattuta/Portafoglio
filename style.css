@@ -1,168 +1,25 @@
 /*
  * -----------------------------------------------------
- * style.css (o index.css) - STILI GLOBALI E STRUTTURA BASE
- * Questo file deve essere linkato in TUTTE le pagine.
+ * style.css - SEZIONE DI RESET (Aggiungi alla fine)
  * -----------------------------------------------------
  */
 
-/* 1. VARIABILI GLOBALI (LIGHT & DARK MODE) */
-:root {
-    --font-family: 'Inter', system-ui, sans-serif;
-    --radius: 12px;
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 6px 15px rgba(0, 0, 0, 0.1);
-
-    /* LIGHT THEME */
-    --bg-page: #F3F5F9;         /* Sfondo generale pagina (molto chiaro) */
-    --bg-container: #FFFFFF;    /* Sfondo card/box (bianco) */
-    --text-primary: #1E293B;
-    --text-secondary: #64748B;
-    --border-color: #E2E8F0;
-    --accent-color: #3B82F6; 
-    --accent-hover: #2563EB;
-    --success-color: #10B981; 
-    --danger-color: #EF4444; 
-    --accent-color-rgb: 59, 130, 246;
-}
-
-body[data-theme='dark'] {
-    --bg-page: #1F2937;         /* Sfondo generale pagina DARK (grigio scuro) */
-    --bg-container: #374151;    /* Sfondo card/box DARK */
-    --text-primary: #F3F4F6;
-    --text-secondary: #9CA3AF;
-    --border-color: #4B5563;
-    --accent-color: #60A5FA;
-    --accent-hover: #3B82F6;
-    --success-color: #34D399;
-    --danger-color: #F87171;
-    --accent-color-rgb: 96, 165, 250; 
-}
-
-/* 2. BASE E LAYOUT */
-* {
-    box-sizing: border-box;
-}
-
 body {
-    margin: 0;
-    padding: 0;
-    /* CHIAVE: Applica lo sfondo in base al tema */
-    background-color: var(--bg-page); 
-    color: var(--text-primary);
-    font-family: var(--font-family);
-    line-height: 1.6;
-    transition: background-color 0.3s, color 0.3s;
+    /* Rimuove qualsiasi ereditarietà Flex/Grid non voluta */
+    display: block !important;
+    height: auto !important;
 }
 
 .container {
-    max-width: 1280px;
+    /* Assicura che il contenitore principale non stia forzando l'altezza o il Flex */
+    display: block !important;
+    max-width: 1280px; /* Mantieni il max-width originale */
     margin: 0 auto;
     padding: 24px;
 }
 
-header {
-    margin-bottom: 25px;
-}
-
-header h1 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin: 0;
-}
-
-.subtitle {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-}
-
-/* 3. CONTROLLI E PULSANTI (Per navigazione Index, Dashboard, etc.) */
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    margin-top: 25px;
-    margin-bottom: 25px;
-}
-
-.controls button, .controls a {
-    font-weight: 600;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 8px; 
-    cursor: pointer;
-    transition: background-color 0.2s, opacity 0.2s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-/* Stile neutro per i pulsanti Home/Dividendi */
-.controls button, 
-.dashboard-btn {
-    background-color: var(--bg-container);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.controls button:hover, 
-.dashboard-btn:hover {
-    background-color: var(--bg-page);
-    border-color: var(--accent-color);
-}
-
-/* Stili colorati per i link di navigazione */
-a[href="andamento.html"] { 
-    color: white !important; 
-    background-color: #0984e3 !important; 
-    border: none !important;
-}
-a[href="calendario.html"] { 
-    color: white !important; 
-    background-color: #6c5ce7 !important; 
-    border: none !important;
-}
-a[href="score.html"] { 
-    color: white !important; 
-    background-color: #0984e3 !important; 
-    border: none !important;
-}
-
-/* 4. UTILITY (Colori dinamici) */
-td.positive { color: var(--success-color); font-weight: 600; }
-td.negative { color: var(--danger-color); font-weight: 600; }
-
-/* 5. STILI TABELLA (per Index e Dividendi) */
-.table-container {
-    margin-top: 30px;
-    background: var(--bg-container);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-th {
-    text-align: left;
-    padding: 15px 20px;
-    color: var(--text-secondary);
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    border-bottom: 2px solid var(--border-color);
-    background-color: var(--bg-page); 
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-td {
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color);
+/* Questa è una misura di sicurezza per le immagini e i video, nel caso fossero loro a causare l'espansione */
+img, video, canvas {
+    max-width: 100%;
+    height: auto;
 }
