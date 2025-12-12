@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Score Titoli</title>
+
+  <link rel="stylesheet" href="style.css?v=4">
+</head>
+
+<body>
+  <script>
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.body.dataset.theme = savedTheme;
+    if (savedTheme === "dark") document.body.classList.add("dark");
+    else document.body.classList.remove("dark");
+  </script>
+
+  <div class="container">
+
+    <header>
+      <h1>📊 Portfolio Manager — Score Titoli</h1>
+      <p class="subtitle">Francesco La Gattuta</p>
+    </header>
+
+    <!-- NAVIGAZIONE -->
+    <div class="controls">
+      <button onclick="window.location.href='index.html'">🏠 Home</button>
+      <button onclick="window.location.href='dividendi.html'">💰 Dividendi</button>
+      <button onclick="window.location.href='andamento.html'">📈 Andamento</button>
+      <button onclick="window.location.href='calendario.html'">📅 Calendario</button>
+
+      <!-- questa pagina -->
+      <a class="dashboard-btn" href="score.html" style="background:#00b894;">⭐ Score</a>
+    </div>
+
+    <!-- TABELLA SCORE -->
+    <div class="table-card">
+      <h2>Lista Titoli con Score</h2>
+
+      <table id="scoreTable">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>% 12 mesi</th>
+            <th>Rendimento %</th>
+            <th>Payback</th>
+            <th>%</th>
+            <th>Score</th>
+            <th>Esito</th>
+            <th>Tipologia</th>
+            <th>Incremento</th>
+            <th>€</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script type="module" src="score.js?v=1"></script>
+</body>
+</html>
