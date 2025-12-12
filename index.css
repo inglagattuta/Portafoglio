@@ -128,13 +128,15 @@ input:checked + .slider:before {
     transform: translateX(20px);
 }
 
-/* 4. CARD DELLE STATISTICHE (CORREZIONE FINALE DI ALLINEAMENTO) */
+/* 4. CARD DELLE STATISTICHE (CORREZIONE FINALE DI ALLINEAMENTO GRIGLIA) */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
     margin-top: 18px;
-    align-items: stretch;
+    /* MODIFICA CHIAVE: Centra le righe di contenuto nell'area Grid */
+    align-items: center; 
+    align-content: center; 
 }
 
 .stat-card {
@@ -145,7 +147,6 @@ input:checked + .slider:before {
     border: 1px solid var(--border-color);
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
     
-    /* FLEXBOX CRUCIALE */
     display: flex; 
     flex-direction: column;
     justify-content: space-between; 
@@ -165,15 +166,13 @@ input:checked + .slider:before {
     margin-bottom: 8px;
 }
 
-/* NUOVA CLASSE: Contenitore Flex extra per le card a 2 elementi */
+/* Contenitore Flex extra per le card a 2 elementi (dall'HTML precedente) */
 .stat-value-container {
-    /* Questo elemento assorbe lo spazio extra, 
-       simulando lo spazio che il .stat-subvalue occupa nelle altre card */
     display: flex;
     flex-direction: column;
-    justify-content: flex-end; /* Allinea il valore al fondo */
-    flex-grow: 1; /* Permette al container di espandersi completamente nello spazio restante */
-    margin-top: auto; /* Garantisce l'allineamento al fondo della card */
+    justify-content: flex-end; 
+    flex-grow: 1; 
+    margin-top: auto; 
 }
 
 .stat-value {
@@ -182,6 +181,11 @@ input:checked + .slider:before {
     line-height: 1.1;
     /* Rimuoviamo margin-top: auto dal value se usiamo stat-value-container */
     margin-top: 0; 
+}
+
+/* Se la card ha solo 2 elementi (Label e Value), il Value deve spingere in basso */
+.stat-card > .stat-value:only-child {
+    margin-top: auto;
 }
 
 /* Classi dinamiche per il Profitto (Box e Percentuale) */
