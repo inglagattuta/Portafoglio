@@ -1,6 +1,6 @@
 /*
  * -----------------------------------------------------
- * STYLE.CSS - Tema SaaS Moderno per Portfolio Manager
+ * INDEX.CSS - Tema SaaS Moderno per Portfolio Manager
  * -----------------------------------------------------
  */
 
@@ -22,6 +22,7 @@
     --accent-hover: #2563EB;
     --success-color: #10B981; /* Verde smeraldo */
     --danger-color: #EF4444; /* Rosso */
+    --accent-color-rgb: 59, 130, 246; /* Versione RGB per effetti trasparenza (usata in hover tabella) */
 }
 
 body[data-theme='dark'] {
@@ -34,9 +35,14 @@ body[data-theme='dark'] {
     --accent-hover: #3B82F6;
     --success-color: #34D399;
     --danger-color: #F87171;
+    --accent-color-rgb: 96, 165, 250; 
 }
 
 /* 2. BASE E LAYOUT */
+* {
+    box-sizing: border-box; /* Assicura che padding e border siano inclusi nella larghezza/altezza */
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -77,7 +83,6 @@ header h1 {
     font-weight: 600;
 }
 
-/* Base switch CSS per coerenza visiva */
 .switch {
     position: relative;
     display: inline-block;
@@ -124,7 +129,7 @@ input:checked + .slider:before {
     transform: translateX(20px);
 }
 
-/* 4. CARD DELLE STATISTICHE */
+/* 4. CARD DELLE STATISTICHE (Allineamento OK) */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -139,6 +144,12 @@ input:checked + .slider:before {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
+    
+    /* MODIFICHE CHIAVE PER ALLINEAMENTO PERFETTO */
+    display: flex; 
+    flex-direction: column;
+    justify-content: space-between; 
+    min-height: 100px;
 }
 
 .stat-card:hover {
@@ -160,20 +171,21 @@ input:checked + .slider:before {
     line-height: 1.1;
 }
 
-/* Classi dinamiche per il Profitto */
-.stat-subvalue {
-    font-size: 0.95rem !important;
-    font-weight: 700;
-    margin-top: 6px !important;
-    opacity: 1 !important;
-}
-
-.positive {
+/* Classi dinamiche per il Profitto (Box e Percentuale) */
+.stat-card.positive .stat-value, 
+.stat-subvalue.positive {
     color: var(--success-color);
 }
-
-.negative {
+.stat-card.negative .stat-value, 
+.stat-subvalue.negative {
     color: var(--danger-color);
+}
+
+.stat-subvalue {
+    font-size: 0.95rem; 
+    font-weight: 700;
+    margin-top: 6px; 
+    opacity: 1;
 }
 
 /* 5. CONTROLLI E PULSANTI */
@@ -182,7 +194,7 @@ input:checked + .slider:before {
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-    margin-top: 25px !important;
+    margin-top: 25px;
 }
 
 /* Stile comune a tutti i bottoni/link di controllo */
@@ -203,12 +215,12 @@ input:checked + .slider:before {
 .file-label, .export-btn {
     background-color: var(--accent-color);
     color: white;
-    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 6px rgba(var(--accent-color-rgb), 0.3);
 }
 
 .file-label:hover, .export-btn:hover {
     background-color: var(--accent-hover);
-    box-shadow: 0 6px 10px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 6px 10px rgba(var(--accent-color-rgb), 0.4);
 }
 
 .file-label input[type="file"] {
@@ -220,7 +232,7 @@ input:checked + .slider:before {
     background-color: var(--bg-container);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    border-radius: 8px; /* Formato rettangolare con angoli */
+    border-radius: 8px;
     padding: 10px 15px;
     font-size: 0.9rem;
 }
@@ -230,16 +242,20 @@ input:checked + .slider:before {
     border-color: var(--accent-color);
 }
 
-/* Sovrascrivi i colori inline solo per un effetto visivo distintivo sui link */
+/* Sovrascrivi i colori per un effetto visivo distintivo */
 a[href="dividendi.html"] { color: white !important; background-color: #9b59b6 !important; border: none !important;}
+a[href="dividendi.html"]:hover { opacity: 0.8;}
 a[href="andamento.html"] { color: white !important; background-color: #3498db !important; border: none !important;}
+a[href="andamento.html"]:hover { opacity: 0.8;}
 a[href="calendario.html"] { color: black !important; background-color: #f1c40f !important; border: none !important;}
+a[href="calendario.html"]:hover { opacity: 0.9;}
 a[href="score.html"] { color: white !important; background-color: #e74c3c !important; border: none !important;}
+a[href="score.html"]:hover { opacity: 0.8;}
 
 
 /* 6. TABELLA ASSET */
 .table-container {
-    margin-top: 30px !important;
+    margin-top: 30px;
     background: var(--bg-container);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
@@ -261,11 +277,21 @@ th {
     font-size: 0.75rem;
     border-bottom: 2px solid var(--border-color);
     background-color: var(--bg-page); /* Header leggermente staccato */
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 td {
     padding: 15px 20px;
     border-bottom: 1px solid var(--border-color);
+    /* Forziamo la colonna profitto e le colonne numeriche ad allinearsi a destra per leggibilità */
+    text-align: right !important; 
+}
+
+/* Allineamento a sinistra per Tipologia e Titolo */
+td:first-child, td:nth-child(2) {
+    text-align: left !important;
 }
 
 tbody tr:last-child td {
@@ -273,29 +299,33 @@ tbody tr:last-child td {
 }
 
 tbody tr:hover {
-    background-color: rgba(var(--accent-color-rgb, 59, 130, 246), 0.05); /* Lieve ombra di colore al passaggio */
+    background-color: rgba(var(--accent-color-rgb), 0.05); /* Lieve ombra di colore al passaggio */
 }
-/* --- Stili Aggiuntivi per Tabella e Modal --- */
 
-/* Colori Profitto/Perdita per singola riga (riutilizzo delle classi globali) */
-.positive {
+
+/* 7. COLORAZIONE DINAMICA E AZIONI */
+
+/* Colori Profitto/Perdita per singola riga */
+td.positive {
     color: var(--success-color);
+    font-weight: 600;
 }
-.negative {
+td.negative {
     color: var(--danger-color);
+    font-weight: 600;
 }
 
-/* Colorazione Score (aggiungi queste) */
-.score-high {
-    color: var(--success-color); /* >= 12 */
+/* Colorazione Score */
+td.score-high {
+    color: var(--success-color); 
     font-weight: 700;
 }
-.score-medium {
-    color: #f1c40f; /* Giallo, da definire nel tema scuro se necessario */
+td.score-medium {
+    color: #f1c40f; 
     font-weight: 700;
 }
-.score-low {
-    color: var(--danger-color); /* < 8 */
+td.score-low {
+    color: var(--danger-color); 
     font-weight: 700;
 }
 
@@ -303,7 +333,7 @@ tbody tr:hover {
 .action-buttons {
     display: flex;
     gap: 8px;
-    justify-content: center;
+    justify-content: flex-end; /* Allinea a destra nella colonna Azioni */
 }
 
 .action-buttons button {
@@ -313,6 +343,7 @@ tbody tr:hover {
     font-weight: 600;
     transition: opacity 0.2s, background-color 0.2s;
     border: none;
+    min-width: 80px;
 }
 
 .btn-edit {
@@ -333,12 +364,66 @@ tbody tr:hover {
     opacity: 0.8;
 }
 
-/* Modal Buttons (per coerenza) */
+/* 8. MODAL STYLES (Utilizzati da main.js) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-card {
+    background: var(--bg-container);
+    padding: 30px;
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-card h3 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+#modalFields label {
+    display: block;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+#modalFields input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    transition: border-color 0.2s;
+}
+
+#modalFields input:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 
 .modal-buttons button {
