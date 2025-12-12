@@ -6,9 +6,9 @@
   <title>Portafoglio Investimenti</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="index.css?v=11">    
+    <link rel="stylesheet" href="index.css?v=12">    
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script type="module" src="main.js?v=4"></script>
+    <script type="module" src="main.js?v=5"></script>
 </head>
 <body data-theme="light">
 
@@ -28,13 +28,10 @@
   </label>
   <span id="themeLabel"></span>
 </div>
-
-
-
       </div>
     </header>
 
-        <div class="stats-grid" style="margin-top:18px;">
+        <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Totale Investito</div>
         <div class="stat-value" id="totInvestito">0.00 €</div>
@@ -53,11 +50,11 @@
      <div class="stat-card">
   <div class="stat-label">Profitto Totale</div>
   <div class="stat-value" id="totProfitto">0.00 €</div>
-  <div class="stat-subvalue" id="totProfittoPerc" style="font-size:14px; opacity:0.75; margin-top:4px;">0%</div>
+    <div class="stat-subvalue" id="totProfittoPerc">0%</div>
 </div>
     </div>
 
-       <div class="controls" style="margin-top:16px;">
+        <div class="controls">
   <label class="file-label">
     📥 Importa Excel
     <input type="file" accept=".xlsx,.xls" onchange="importExcel(event)">
@@ -66,16 +63,13 @@
   <button class="export-btn" onclick="exportExcel()">📤 Esporta Excel</button>
 
   <a class="dashboard-btn" href="dashboard.html">📊 Dashboard</a>  
-  <a class="dashboard-btn" href="dividendi.html" style="background:#6c5ce7;">💵 Dividendi</a>
-  <a class="dashboard-btn" href="andamento.html" style="background:#0984e3;">📈 Andamento</a>
-  <a class="dashboard-btn" href="calendario.html" style="background:#f1c40f; color:#000;">
-    🗓️ Calendario
-  </a>
-   <a class="dashboard-btn" href="score.html" style="background:#0984e3;">⭐ Score</a>
+  <a class="dashboard-btn" href="dividendi.html">💵 Dividendi</a>
+  <a class="dashboard-btn" href="andamento.html">📈 Andamento</a>
+  <a class="dashboard-btn" href="calendario.html">🗓️ Calendario</a>
+  <a class="dashboard-btn" href="score.html">⭐ Score</a>
 </div>
 
-
-        <div class="table-container" style="margin-top:18px;">
+        <div class="table-container">
       <table>
         <thead>
           <tr id="headerRow"></tr>
