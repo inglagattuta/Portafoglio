@@ -17,10 +17,10 @@
     --text-primary: #1E293B;
     --text-secondary: #64748B;
     --border-color: #E2E8F0;
-    --accent-color: #3B82F6; /* Blu principale */
+    --accent-color: #3B82F6; 
     --accent-hover: #2563EB;
-    --success-color: #10B981; /* Verde smeraldo */
-    --danger-color: #EF4444; /* Rosso */
+    --success-color: #10B981; 
+    --danger-color: #EF4444; 
     --accent-color-rgb: 59, 130, 246;
 }
 
@@ -73,7 +73,7 @@ header h1 {
     color: var(--text-secondary);
 }
 
-/* 3. TOGGLE TEMA (Design a interruttore) */
+/* 3. TOGGLE TEMA */
 .theme-toggle {
     display: flex;
     align-items: center;
@@ -128,13 +128,13 @@ input:checked + .slider:before {
     transform: translateX(20px);
 }
 
-/* 4. CARD DELLE STATISTICHE (Allineamento OK) */
+/* 4. CARD DELLE STATISTICHE (CORREZIONE FINALE DI ALLINEAMENTO) */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
     margin-top: 18px;
-    align-items: stretch; /* Assicura che le celle della griglia abbiano la stessa altezza */
+    align-items: stretch;
 }
 
 .stat-card {
@@ -145,11 +145,11 @@ input:checked + .slider:before {
     border: 1px solid var(--border-color);
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
     
-    /* MODIFICHE CHIAVE PER ALLINEAMENTO PERFETTO (Flexbox per il contenuto verticale) */
+    /* FLEXBOX CRUCIALE */
     display: flex; 
     flex-direction: column;
     justify-content: space-between; 
-    min-height: 110px; /* Altezza minima per garantire spazio */
+    min-height: 110px; 
 }
 
 .stat-card:hover {
@@ -169,8 +169,7 @@ input:checked + .slider:before {
     font-size: 1.8rem;
     font-weight: 800;
     line-height: 1.1;
-    /* Aggiunto per spingere il valore in basso nelle card con meno contenuto,
-       allineandolo con la card profitto. */
+    /* Forza il valore ad allinearsi in basso, garantendo uniformità */
     margin-top: auto; 
 }
 
@@ -187,7 +186,7 @@ input:checked + .slider:before {
 .stat-subvalue {
     font-size: 0.95rem; 
     font-weight: 700;
-    margin-top: 6px; 
+    margin-top: 6px; /* Spazio sotto il valore principale */
     opacity: 1;
 }
 
@@ -200,7 +199,6 @@ input:checked + .slider:before {
     margin-top: 25px;
 }
 
-/* Stile comune a tutti i bottoni/link di controllo */
 .controls button, .controls a {
     font-weight: 600;
     border: none;
@@ -214,7 +212,6 @@ input:checked + .slider:before {
     gap: 5px;
 }
 
-/* Pulsanti Primari (Importa/Esporta) */
 .file-label, .export-btn {
     background-color: var(--accent-color);
     color: white;
@@ -230,7 +227,6 @@ input:checked + .slider:before {
     display: none;
 }
 
-/* Pulsanti di Navigazione (Dashboard, Dividendi, ecc.) */
 .dashboard-btn {
     background-color: var(--bg-container);
     color: var(--text-primary);
@@ -245,7 +241,7 @@ input:checked + .slider:before {
     border-color: var(--accent-color);
 }
 
-/* Sovrascrivi i colori per un effetto visivo distintivo */
+/* Stili specifici dei bottoni di navigazione (per sostituire stili inline) */
 a[href="dividendi.html"] { color: white !important; background-color: #9b5ce7 !important; border: none !important;}
 a[href="dividendi.html"]:hover { opacity: 0.8;}
 a[href="andamento.html"] { color: white !important; background-color: #3498db !important; border: none !important;}
@@ -291,7 +287,6 @@ td {
     text-align: right !important; 
 }
 
-/* Allineamento a sinistra per Tipologia e Titolo */
 td:first-child, td:nth-child(2) {
     text-align: left !important;
 }
@@ -307,31 +302,13 @@ tbody tr:hover {
 
 /* 7. COLORAZIONE DINAMICA E AZIONI */
 
-/* Colori Profitto/Perdita per singola riga */
-td.positive {
-    color: var(--success-color);
-    font-weight: 600;
-}
-td.negative {
-    color: var(--danger-color);
-    font-weight: 600;
-}
+td.positive { color: var(--success-color); font-weight: 600; }
+td.negative { color: var(--danger-color); font-weight: 600; }
 
-/* Colorazione Score */
-td.score-high {
-    color: var(--success-color); 
-    font-weight: 700;
-}
-td.score-medium {
-    color: #f1c40f; 
-    font-weight: 700;
-}
-td.score-low {
-    color: var(--danger-color); 
-    font-weight: 700;
-}
+td.score-high { color: var(--success-color); font-weight: 700; }
+td.score-medium { color: #f1c40f; font-weight: 700; }
+td.score-low { color: var(--danger-color); font-weight: 700; }
 
-/* Bottoni di Azione (Modifica/Cancella) nella Tabella */
 .action-buttons {
     display: flex;
     gap: 8px;
@@ -348,25 +325,12 @@ td.score-low {
     min-width: 80px;
 }
 
-.btn-edit {
-    background-color: var(--accent-color);
-    color: white;
-}
+.btn-edit { background-color: var(--accent-color); color: white; }
+.btn-edit:hover { opacity: 0.8; }
+.btn-delete { background-color: var(--danger-color); color: white; }
+.btn-delete:hover { opacity: 0.8; }
 
-.btn-edit:hover {
-    opacity: 0.8;
-}
-
-.btn-delete {
-    background-color: var(--danger-color);
-    color: white;
-}
-
-.btn-delete:hover {
-    opacity: 0.8;
-}
-
-/* 8. MODAL STYLES (Utilizzati da main.js) */
+/* 8. MODAL STYLES */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -436,13 +400,5 @@ td.score-low {
     border: none;
 }
 
-#modalSave.btn-save {
-    background-color: var(--success-color);
-    color: white;
-}
-
-#modalClose.btn-cancel {
-    background-color: var(--bg-page);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
+#modalSave.btn-save { background-color: var(--success-color); color: white; }
+#modalClose.btn-cancel { background-color: var(--bg-page); color: var(--text-primary); border: 1px solid var(--border-color); }
