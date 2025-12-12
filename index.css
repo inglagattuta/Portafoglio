@@ -5,7 +5,6 @@
  */
 
 /* 1. VARIABILI GLOBALI (LIGHT & DARK MODE) */
-/* Assicurati che il font 'Inter' sia caricato nell'HTML */
 :root {
     --font-family: 'Inter', system-ui, sans-serif;
     --radius: 12px;
@@ -22,7 +21,7 @@
     --accent-hover: #2563EB;
     --success-color: #10B981; /* Verde smeraldo */
     --danger-color: #EF4444; /* Rosso */
-    --accent-color-rgb: 59, 130, 246; /* Versione RGB per effetti trasparenza (usata in hover tabella) */
+    --accent-color-rgb: 59, 130, 246;
 }
 
 body[data-theme='dark'] {
@@ -40,7 +39,7 @@ body[data-theme='dark'] {
 
 /* 2. BASE E LAYOUT */
 * {
-    box-sizing: border-box; /* Assicura che padding e border siano inclusi nella larghezza/altezza */
+    box-sizing: border-box;
 }
 
 body {
@@ -135,6 +134,7 @@ input:checked + .slider:before {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
     margin-top: 18px;
+    align-items: stretch; /* Assicura che le celle della griglia abbiano la stessa altezza */
 }
 
 .stat-card {
@@ -145,11 +145,11 @@ input:checked + .slider:before {
     border: 1px solid var(--border-color);
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
     
-    /* MODIFICHE CHIAVE PER ALLINEAMENTO PERFETTO */
+    /* MODIFICHE CHIAVE PER ALLINEAMENTO PERFETTO (Flexbox per il contenuto verticale) */
     display: flex; 
     flex-direction: column;
     justify-content: space-between; 
-    min-height: 100px;
+    min-height: 110px; /* Altezza minima per garantire spazio */
 }
 
 .stat-card:hover {
@@ -169,6 +169,9 @@ input:checked + .slider:before {
     font-size: 1.8rem;
     font-weight: 800;
     line-height: 1.1;
+    /* Aggiunto per spingere il valore in basso nelle card con meno contenuto,
+       allineandolo con la card profitto. */
+    margin-top: auto; 
 }
 
 /* Classi dinamiche per il Profitto (Box e Percentuale) */
@@ -243,7 +246,7 @@ input:checked + .slider:before {
 }
 
 /* Sovrascrivi i colori per un effetto visivo distintivo */
-a[href="dividendi.html"] { color: white !important; background-color: #9b59b6 !important; border: none !important;}
+a[href="dividendi.html"] { color: white !important; background-color: #9b5ce7 !important; border: none !important;}
 a[href="dividendi.html"]:hover { opacity: 0.8;}
 a[href="andamento.html"] { color: white !important; background-color: #3498db !important; border: none !important;}
 a[href="andamento.html"]:hover { opacity: 0.8;}
@@ -276,7 +279,7 @@ th {
     text-transform: uppercase;
     font-size: 0.75rem;
     border-bottom: 2px solid var(--border-color);
-    background-color: var(--bg-page); /* Header leggermente staccato */
+    background-color: var(--bg-page); 
     position: sticky;
     top: 0;
     z-index: 10;
@@ -285,7 +288,6 @@ th {
 td {
     padding: 15px 20px;
     border-bottom: 1px solid var(--border-color);
-    /* Forziamo la colonna profitto e le colonne numeriche ad allinearsi a destra per leggibilità */
     text-align: right !important; 
 }
 
@@ -299,7 +301,7 @@ tbody tr:last-child td {
 }
 
 tbody tr:hover {
-    background-color: rgba(var(--accent-color-rgb), 0.05); /* Lieve ombra di colore al passaggio */
+    background-color: rgba(var(--accent-color-rgb), 0.05);
 }
 
 
@@ -333,7 +335,7 @@ td.score-low {
 .action-buttons {
     display: flex;
     gap: 8px;
-    justify-content: flex-end; /* Allinea a destra nella colonna Azioni */
+    justify-content: flex-end;
 }
 
 .action-buttons button {
