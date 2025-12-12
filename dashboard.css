@@ -11,17 +11,25 @@
     gap: 16px;
     margin-bottom: 30px;
 }
-/* ... (il resto delle mini-card rimane invariato) ... */
+.mini-card {
+    /* ... stili mini-card (non modificano il layout globale) ... */
+    background: var(--bg-container);
+    padding: 15px 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    flex: 1;
+    min-width: 150px;
+    text-align: center;
+}
+/* ... (regole h3 e p) ... */
 
 
 /* 5. GRID GRAFICI */
 .charts-grid {
     display: grid;
-    /* Due colonne, si adattano */
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
     gap: 20px;
-    
-    /* MODIFICA CHIAVE: Assicura che tutte le card nella riga abbiano la stessa altezza */
     align-items: stretch; 
 }
 
@@ -32,31 +40,29 @@
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
     position: relative; 
-    
-    /* Altezza minima per le card grafiche */
     min-height: 400px; 
     
-    /* CHIAVE: Layout interno Flexbox per gestire Canvas/Toggle */
+    /* Layout interno Flexbox per gestire Canvas/Toggle */
     display: flex;
     flex-direction: column; 
 }
 
 .chart-card h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    /* Assicuriamo che il titolo non abbia margini eccessivi */
-    margin: 0 0 15px 0; 
-    color: var(--text-primary);
+    margin: 0 0 15px 0;
+    /* ... */
 }
 
-/* Stili specifici per Chart.js */
-canvas {
+/* Stili specifici per Chart.js: REGOLA CHIAVE */
+.chart-card canvas { 
     max-width: 100%;
     /* Il canvas deve riempire lo spazio restante nella chart-card */
     flex-grow: 1; 
     height: auto; 
 }
 
+
+/* 6. TOGGLE BUTTONS (Top 5 / Top 10) */
+/* ... (rimane invariato) ... */
 
 /* 6. TOGGLE BUTTONS (Top 5 / Top 10) */
 .toggle-wrapper {
