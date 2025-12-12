@@ -92,18 +92,21 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td>${r.ticker}</td>
-      <td>${colorValue(r.perf_12m)}</td>
-      <td>${colorValue(r.rendimento)}</td>
-      <td>${r.payback || "-"}</td>
-      <td>${colorValue(r.perc)}</td>
-      <td>${colorValue(r.score)}</td>
-      <td>${r.esito || "-"}</td>
-      <td>${r.tipologia || "-"}</td>
-      <td>${colorValue(r.incremento)}</td>
-      <td>${colorValue(r.valore_euro)}</td>
-    `;
+    // funzione helper per formattare %
+function toPerc(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  return (value * 100).toFixed(2) + "%";
+}
+
+row.innerHTML = `
+  <td>${data.ticker}</td>
+  <td>${toPerc(data.m12)}</td>
+  <td>${toPerc(data.rendimento)}</td>
+  <td>${toPerc(data.payback)}</td>
+  <td>${toPerc(data.percentuale)}</td>
+  <td>${data.score}</td>
+`;
+
 
     tableBody.appendChild(tr);
   });
