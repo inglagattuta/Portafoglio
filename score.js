@@ -125,7 +125,10 @@ function renderTable(rows) {
     const rendimento = colorPercInline(r.rendimento);
     const payback = colorPercInline(r.payback);
     const perc = colorPercInline(r.perc);
-    const score = (r.score === null || r.score === undefined) ? "-" : colorValueInline(r.score);
+    const score = (r.score === null || r.score === undefined)
+  ? "-"
+  : colorValueInline(Number(r.score).toFixed(2));
+
     const esito = r.esito || "-";
     const tipologia = r.tipologia || "-";
     const incremento = (r.incremento === null || r.incremento === undefined) ? "-" : colorValueInline(r.incremento);
