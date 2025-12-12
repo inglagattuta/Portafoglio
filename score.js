@@ -98,19 +98,27 @@ function toPerc(value) {
   return (value * 100).toFixed(2) + "%";
 }
 
-row.innerHTML = `
-  <td>${data.ticker}</td>
-  <td>${toPerc(data.m12)}</td>
-  <td>${toPerc(data.rendimento)}</td>
-  <td>${toPerc(data.payback)}</td>
-  <td>${toPerc(data.percentuale)}</td>
-  <td>${data.score}</td>
-`;
+records.forEach(data => {
+  const row = document.createElement("tr");
 
+  // funzione helper per formattare %
+  function toPerc(value) {
+    if (value === null || value === undefined || value === "") return "-";
+    return (value * 100).toFixed(2) + "%";
+  }
 
-    tableBody.appendChild(tr);
-  });
-}
+  row.innerHTML = `
+    <td>${data.ticker}</td>
+    <td>${toPerc(data.m12)}</td>
+    <td>${toPerc(data.rendimento)}</td>
+    <td>${toPerc(data.payback)}</td>
+    <td>${toPerc(data.percentuale)}</td>
+    <td>${data.score}</td>
+  `;
+
+  tableBody.appendChild(row);
+});
+
 
 // ===============================
 // BOX RIEPILOGATIVI
