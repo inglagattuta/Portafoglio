@@ -5,25 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Calendario Dividendi</title>
 
-  <!-- Stile generale -->
   <link rel="stylesheet" href="style.css?v=10">
-
-  <!-- Stile dedicato al calendario -->
-  <link rel="stylesheet" href="calendario.css?v=3">
-
-  <!-- Script -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script type="module" src="calendario.js?v=6"></script>
+  <link rel="stylesheet" href="calendario.css?v=3">
 </head>
 
 <body>
 
 <script>
-  // Tema dark/light
   const savedTheme = localStorage.getItem("theme") || "light";
   document.body.dataset.theme = savedTheme;
   if (savedTheme === "dark") document.body.classList.add("dark");
-  else document.body.classList.remove("dark");
 </script>
 
 <div class="container">
@@ -78,46 +71,23 @@
     </select>
   </div>
 
-  <!-- CONTENITORE DOPPIA TABELLA -->
-  <div class="dual-table-wrapper">
-
-    <!-- TABELLA EVENTI MENSILI -->
-    <div class="table-container">
-      <h2 class="table-title">📆 Eventi Mensili</h2>
-      <table>
-        <thead id="calHead">
-          <tr>
-            <th>Ticker</th>
-            <th>Data pagamento</th>
-            <th>Importo</th>
-            <th>Yield</th>
-            <th>Yield annuale</th>
-          </tr>
-        </thead>
-        <tbody id="calBody"></tbody>
-      </table>
-    </div>
-
-    <!-- DETTAGLIO TITOLI -->
-    <div class="table-container">
-      <h2 class="table-title">📘 Dettaglio Titoli</h2>
-      <table>
-        <thead id="dettaglioHead">
-          <tr>
-            <th>Ticker</th>
-            <th>Prezzo acquisto</th>
-            <th>Ultimo dividendo</th>
-            <th>Dividendo annuale</th>
-            <th>Prossima data dividendo</th>
-            <th data-col="tipo">Tipo</th>
-            <th>Yield annuale</th>
-          </tr>
-        </thead>
-        <tbody id="dettaglioTitoliBody"></tbody>
-      </table>
-    </div>
-
-  </div> <!-- fine dual-table-wrapper -->
+  <!-- 🔥 TABELLA UNICA AGGIORNATA -->
+  <div class="table-container" style="margin-top:20px;">
+    <table>
+      <thead id="calHead">
+        <tr>
+          <th>Ticker</th>
+          <th>Data pagamento</th>
+          <th>Importo</th>
+          <th>Dividendo annuale</th>
+          <th>Tipo</th>
+          <th>Yield</th>
+          <th>Yield annuale</th>
+        </tr>
+      </thead>
+      <tbody id="calBody"></tbody>
+    </table>
+  </div>
 
 </div>
 
