@@ -1,0 +1,106 @@
+/*
+ * -----------------------------------------------------
+ * dashboard.css - Stili specifici per la pagina Dashboard
+ * -----------------------------------------------------
+ */
+
+/* Assumiamo che le variabili globali (colori, font, ombre) siano definite in style.css */
+
+
+/* 4. MINI CARDS CATEGORIE */
+.mini-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.mini-card {
+    background: var(--bg-container);
+    padding: 15px 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    flex: 1;
+    min-width: 150px;
+    text-align: center;
+}
+
+.mini-card h3 {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+}
+
+.mini-card p {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0;
+    color: var(--accent-color);
+}
+
+
+/* 5. GRID GRAFICI */
+.charts-grid {
+    display: grid;
+    /* Due colonne, si adattano */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    gap: 20px;
+}
+
+.chart-card {
+    background: var(--bg-container);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    /* Assicura che i canvas non rompano il contenitore */
+    position: relative; 
+}
+
+.chart-card h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 15px 0;
+    color: var(--text-primary);
+}
+
+/* Stili specifici per Chart.js */
+canvas {
+    max-width: 100%;
+    height: auto; 
+}
+
+
+/* 6. TOGGLE BUTTONS (Top 5 / Top 10) */
+.toggle-wrapper {
+    display: flex;
+    justify-content: flex-end; /* Allinea a destra del titolo */
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.toggle-button {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-page);
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.toggle-button:hover {
+    background-color: var(--border-color);
+}
+
+.toggle-button.active {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
