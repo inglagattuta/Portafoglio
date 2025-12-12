@@ -1,0 +1,277 @@
+/*
+ * -----------------------------------------------------
+ * STYLE.CSS - Tema SaaS Moderno per Portfolio Manager
+ * -----------------------------------------------------
+ */
+
+/* 1. VARIABILI GLOBALI (LIGHT & DARK MODE) */
+/* Assicurati che il font 'Inter' sia caricato nell'HTML */
+:root {
+    --font-family: 'Inter', system-ui, sans-serif;
+    --radius: 12px;
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 6px 15px rgba(0, 0, 0, 0.1);
+
+    /* LIGHT THEME */
+    --bg-page: #F3F5F9;
+    --bg-container: #FFFFFF;
+    --text-primary: #1E293B;
+    --text-secondary: #64748B;
+    --border-color: #E2E8F0;
+    --accent-color: #3B82F6; /* Blu principale */
+    --accent-hover: #2563EB;
+    --success-color: #10B981; /* Verde smeraldo */
+    --danger-color: #EF4444; /* Rosso */
+}
+
+body[data-theme='dark'] {
+    --bg-page: #1F2937;
+    --bg-container: #374151;
+    --text-primary: #F3F4F6;
+    --text-secondary: #9CA3AF;
+    --border-color: #4B5563;
+    --accent-color: #60A5FA;
+    --accent-hover: #3B82F6;
+    --success-color: #34D399;
+    --danger-color: #F87171;
+}
+
+/* 2. BASE E LAYOUT */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    line-height: 1.6;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+header {
+    margin-bottom: 25px;
+}
+
+header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+/* 3. TOGGLE TEMA (Design a interruttore) */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Base switch CSS per coerenza visiva */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 45px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+}
+
+input:checked + .slider {
+    background-color: var(--accent-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* 4. CARD DELLE STATISTICHE */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.stat-card {
+    background: var(--bg-container);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+/* Classi dinamiche per il Profitto */
+.stat-subvalue {
+    font-size: 0.95rem !important;
+    font-weight: 700;
+    margin-top: 6px !important;
+    opacity: 1 !important;
+}
+
+.positive {
+    color: var(--success-color);
+}
+
+.negative {
+    color: var(--danger-color);
+}
+
+/* 5. CONTROLLI E PULSANTI */
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 25px !important;
+}
+
+/* Stile comune a tutti i bottoni/link di controllo */
+.controls button, .controls a {
+    font-weight: 600;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Pulsanti Primari (Importa/Esporta) */
+.file-label, .export-btn {
+    background-color: var(--accent-color);
+    color: white;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+.file-label:hover, .export-btn:hover {
+    background-color: var(--accent-hover);
+    box-shadow: 0 6px 10px rgba(59, 130, 246, 0.4);
+}
+
+.file-label input[type="file"] {
+    display: none;
+}
+
+/* Pulsanti di Navigazione (Dashboard, Dividendi, ecc.) */
+.dashboard-btn {
+    background-color: var(--bg-container);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px; /* Formato rettangolare con angoli */
+    padding: 10px 15px;
+    font-size: 0.9rem;
+}
+
+.dashboard-btn:hover {
+    background-color: var(--bg-page);
+    border-color: var(--accent-color);
+}
+
+/* Sovrascrivi i colori inline solo per un effetto visivo distintivo sui link */
+a[href="dividendi.html"] { color: white !important; background-color: #9b59b6 !important; border: none !important;}
+a[href="andamento.html"] { color: white !important; background-color: #3498db !important; border: none !important;}
+a[href="calendario.html"] { color: black !important; background-color: #f1c40f !important; border: none !important;}
+a[href="score.html"] { color: white !important; background-color: #e74c3c !important; border: none !important;}
+
+
+/* 6. TABELLA ASSET */
+.table-container {
+    margin-top: 30px !important;
+    background: var(--bg-container);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+th {
+    text-align: left;
+    padding: 15px 20px;
+    color: var(--text-secondary);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--bg-page); /* Header leggermente staccato */
+}
+
+td {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tbody tr:hover {
+    background-color: rgba(var(--accent-color-rgb, 59, 130, 246), 0.05); /* Lieve ombra di colore al passaggio */
+}
