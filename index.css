@@ -165,12 +165,23 @@ input:checked + .slider:before {
     margin-bottom: 8px;
 }
 
+/* NUOVA CLASSE: Contenitore Flex extra per le card a 2 elementi */
+.stat-value-container {
+    /* Questo elemento assorbe lo spazio extra, 
+       simulando lo spazio che il .stat-subvalue occupa nelle altre card */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Allinea il valore al fondo */
+    flex-grow: 1; /* Permette al container di espandersi completamente nello spazio restante */
+    margin-top: auto; /* Garantisce l'allineamento al fondo della card */
+}
+
 .stat-value {
     font-size: 1.8rem;
     font-weight: 800;
     line-height: 1.1;
-    /* Forza il valore ad allinearsi in basso, garantendo uniformità */
-    margin-top: auto; 
+    /* Rimuoviamo margin-top: auto dal value se usiamo stat-value-container */
+    margin-top: 0; 
 }
 
 /* Classi dinamiche per il Profitto (Box e Percentuale) */
@@ -186,7 +197,7 @@ input:checked + .slider:before {
 .stat-subvalue {
     font-size: 0.95rem; 
     font-weight: 700;
-    margin-top: 6px; /* Spazio sotto il valore principale */
+    margin-top: 6px; 
     opacity: 1;
 }
 
@@ -241,7 +252,6 @@ input:checked + .slider:before {
     border-color: var(--accent-color);
 }
 
-/* Stili specifici dei bottoni di navigazione (per sostituire stili inline) */
 a[href="dividendi.html"] { color: white !important; background-color: #9b5ce7 !important; border: none !important;}
 a[href="dividendi.html"]:hover { opacity: 0.8;}
 a[href="andamento.html"] { color: white !important; background-color: #3498db !important; border: none !important;}
