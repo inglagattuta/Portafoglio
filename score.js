@@ -34,9 +34,10 @@ function toPerc(value) {
 }
 
 function colorValueInline(value) {
-  if (value === null || value === undefined || value === "") return "-";
+  if (value === null || value === undefined) return "-";
   const num = Number(value);
   if (isNaN(num)) return value;
+
   if (num > 0) return `<span style="color:#00b894;font-weight:600;">${num}</span>`;
   if (num < 0) return `<span style="color:#d63031;font-weight:600;">${num}</span>`;
   return `${num}`;
@@ -47,9 +48,24 @@ function colorPercInline(value) {
   const num = Number(value);
   if (isNaN(num)) return "-";
   const text = (num * 100).toFixed(2) + "%";
+
   if (num > 0) return `<span style="color:#00b894;font-weight:600;">${text}</span>`;
   if (num < 0) return `<span style="color:#d63031;font-weight:600;">${text}</span>`;
   return text;
+}
+
+// 🎯 COLORE PERSONALIZZATO PER SCORE
+function colorScore(value) {
+  if (value === null || value === undefined || value === "-") return "-";
+
+  const num = Number(value);
+  if (isNaN(num)) return value;
+
+  let color = "#d63031"; // rosso < 8
+  if (num >= 12) color = "#00b894"; // verde
+  else if (num >= 8) color = "#b59d00"; // giallo scuro
+
+  return `<span style="color:${color};font-weight:700;">${num.toFixed(2)}</span>`;
 }
 
 // ===============================
@@ -66,7 +82,6 @@ function sortData(data, column) {
     sortDirection = "desc";
   }
 
-  // copy before sort to avoid mutating original array elsewhere
   const copy = [...data];
 
   copy.sort((a, b) => {
@@ -76,14 +91,12 @@ function sortData(data, column) {
     const nA = Number(vA);
     const nB = Number(vB);
 
-    // if both are numbers -> numeric sort
     if (!isNaN(nA) && !isNaN(nB)) {
       return sortDirection === "asc" ? nA - nB : nB - nA;
     }
 
-    // fallback string compare
-    const sA = (vA === null || vA === undefined) ? "" : String(vA);
-    const sB = (vB === null || vB === undefined) ? "" : String(vB);
+    const sA = vA == null ? "" : String(vA);
+    const sB = vB == null ? "" : String(vB);
     return sortDirection === "asc" ? sA.localeCompare(sB) : sB.localeCompare(sA);
   });
 
@@ -99,12 +112,12 @@ async function loadScoreData() {
     let rows = [];
     snap.forEach(doc => rows.push(doc.data()));
 
-    // iniziale: ordina per score desc (se presente)
-    rows = sortData(rows, "score");
+    rows = sortData(rows, "score"); // ordinamento iniziale
 
     renderTable(rows);
     computeSummary(rows);
     enableSorting(rows);
+
   } catch (err) {
     console.error("Errore caricamento score:", err);
   }
@@ -119,20 +132,19 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
-    // usiamo i campi esatti presenti in Firestore:
-    // perf_12m, rendimento, payback, perc, score, esito, tipologia, incremento, valore_euro
     const perf12 = colorPercInline(r.perf_12m);
     const rendimento = colorPercInline(r.rendimento);
     const payback = colorPercInline(r.payback);
     const perc = colorPercInline(r.perc);
-    const score = (r.score === null || r.score === undefined)
-  ? "-"
-  : colorValueInline(Number(r.score).toFixed(2));
+
+    const score = (r.score == null)
+      ? "-"
+      : colorScore(Number(r.score));
 
     const esito = r.esito || "-";
     const tipologia = r.tipologia || "-";
-    const incremento = (r.incremento === null || r.incremento === undefined) ? "-" : colorValueInline(r.incremento);
-    const valore_euro = (r.valore_euro === null || r.valore_euro === undefined) ? "-" : colorValueInline(r.valore_euro);
+    const incremento = r.incremento == null ? "-" : colorValueInline(r.incremento);
+    const valore_euro = r.valore_euro == null ? "-" : colorValueInline(r.valore_euro);
 
     tr.innerHTML = `
       <td>${r.ticker || "-"}</td>
@@ -173,8 +185,8 @@ function computeSummary(rows) {
 
   document.querySelector("#mediaScore").innerText = avgScore.toFixed(2);
   document.querySelector("#mediaRend").innerText = avgRend.toFixed(2) + "%";
-  document.querySelector("#topTicker").innerText = (sorted[0] && sorted[0].ticker) || "-";
-  document.querySelector("#worstTicker").innerText = (sorted[sorted.length - 1] && sorted[sorted.length - 1].ticker) || "-";
+  document.querySelector("#topTicker").innerText = sorted[0]?.ticker || "-";
+  document.querySelector("#worstTicker").innerText = sorted[sorted.length - 1]?.ticker || "-";
 }
 
 // ===============================
@@ -187,7 +199,6 @@ function enableSorting(rows) {
     th.style.cursor = "pointer";
 
     th.addEventListener("click", () => {
-      // mapping index -> field name in Firestore
       const columns = [
         "ticker",
         "perf_12m",
