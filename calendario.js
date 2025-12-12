@@ -24,13 +24,11 @@ async function loadCalendario() {
 
   const meseCorrente = new Date().getMonth() + 1;
   renderTable(rows, meseCorrente);
-  aggiornaDettaglioTitoli(rows);
 
   document.getElementById("selectMese").addEventListener("change", e => {
     renderTable(rows, Number(e.target.value));
   });
 
-  // Attiva click ordinamento per entrambe le tabelle
   setupSorting();
 }
 
@@ -59,7 +57,7 @@ function updateStats(rows) {
 }
 
 // ===============================
-// RENDER TABELLA MENSILE
+// RENDER TABELLA PRINCIPALE
 // ===============================
 function renderTable(rows, meseFiltrato) {
   const body = document.getElementById("calBody");
@@ -73,6 +71,10 @@ function renderTable(rows, meseFiltrato) {
     const arrDate = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
 
     const mensilita = arrDate.length > 0 ? arrDate.length : 1;
+
+    const divAnnuale = importo * mensilita;
+
+    const tipo = calcolaTipoFrequenza(mensilita);
 
     const yieldSingolo = prezzo > 0 ? (importo / prezzo) * 100 : 0;
     const yieldAnnuale = yieldSingolo * mensilita;
@@ -94,6 +96,8 @@ function renderTable(rows, meseFiltrato) {
           ticker: r.ticker,
           data: dataDisplay,
           importo,
+          divAnnuale,
+          tipo,
           yieldSingolo,
           yieldAnnuale,
           dataOrd: dataString ? new Date(dataString) : new Date("2100-01-01")
@@ -102,10 +106,10 @@ function renderTable(rows, meseFiltrato) {
     });
   });
 
-  // Ordina per data di default
+  // Ordina per data default
   righe.sort((a, b) => a.dataOrd - b.dataOrd);
 
-  // RENDER
+  // Render
   righe.forEach(r => {
     const tr = document.createElement("tr");
 
@@ -113,6 +117,8 @@ function renderTable(rows, meseFiltrato) {
       <td>${r.ticker}</td>
       <td>${r.data}</td>
       <td>${r.importo.toFixed(4)} €</td>
+      <td>${r.divAnnuale.toFixed(4)} €</td>
+      <td>${r.tipo}</td>
       <td>${r.yieldSingolo.toFixed(2)}%</td>
       <td class="yieldCell">${r.yieldAnnuale.toFixed(2)}%</td>
     `;
@@ -120,58 +126,12 @@ function renderTable(rows, meseFiltrato) {
     body.appendChild(tr);
   });
 
-  aplicaColoriYield(body, 4);
+  aplicaColoriYield(body, 6);
 }
 
 // ===============================
-// 🔥 DETTAGLIO TITOLI
+// CALCOLA FREQUENZA
 // ===============================
-function aggiornaDettaglioTitoli(rows) {
-  const body = document.getElementById("dettaglioTitoliBody");
-  if (!body) return;
-  body.innerHTML = "";
-
-  rows.forEach(r => {
-    const prezzo = Number(r.prezzo_acquisto || 0);
-    const ultimo = Number(r.ultimo_dividendo || 0);
-    const arr = Array.isArray(r.date_pagamento) ? r.date_pagamento : [];
-
-    const mensilita = arr.length > 0 ? arr.length : 1;
-    const divAnnuale = ultimo * mensilita;
-
-    const oggi = new Date();
-    let prossima = arr
-      .map(d => new Date(d))
-      .filter(d => d >= oggi)
-      .sort((a, b) => a - b)[0];
-
-    const prossimaData = prossima
-      ? prossima.toISOString().substring(0, 10)
-      : "—";
-
-    const yieldAnnuale =
-      prezzo > 0 ? ((divAnnuale / prezzo) * 100).toFixed(2) : "0.00";
-
-    const tr = document.createElement("tr");
-
-    const tipo = calcolaTipoFrequenza(arr.length);
-
-tr.innerHTML = `
-  <td>${r.ticker}</td>
-  <td>${prezzo ? prezzo.toFixed(2) + " €" : "-"}</td>
-  <td>${ultimo.toFixed(4)} €</td>
-  <td>${divAnnuale.toFixed(4)} €</td>
-  <td>${prossimaData}</td>
-  <td>${tipo}</td>  <!-- ⭐ NUOVA CELLA -->
-  <td class="yieldCell">${yieldAnnuale}%</td>
-`;
-
-    body.appendChild(tr);
-  });
-
-  aplicaColoriYield(body, 5);
-}
-
 function calcolaTipoFrequenza(count) {
   if (count >= 12) return "Mensile";
   if (count === 4) return "Trimestrale";
@@ -180,9 +140,8 @@ function calcolaTipoFrequenza(count) {
   return "—";
 }
 
-
 // ===============================
-// 🎨 SCALA COLORE YIELD (verde → rosso)
+// 🎨 SCALA COLORE YIELD
 // ===============================
 function aplicaColoriYield(body, colIndex) {
   const cells = [...body.querySelectorAll(`td:nth-child(${colIndex + 1})`)];
@@ -208,25 +167,16 @@ function aplicaColoriYield(body, colIndex) {
 }
 
 // ===============================
-// 📌 ORDINAMENTO CLICK PER OGNI TABELLA
+// ORDINAMENTO CLICK COLONNE
 // ===============================
 function setupSorting() {
-  const tables = [
-    { head: "#calHead", body: "#calBody" },
-    { head: "#dettaglioHead", body: "#dettaglioTitoliBody" }
-  ];
+  const thead = document.querySelector("#calHead");
+  const tbody = document.querySelector("#calBody");
 
-  tables.forEach(tbl => {
-    const thead = document.querySelector(tbl.head);
-    const tbody = document.querySelector(tbl.body);
-
-    if (!thead || !tbody) return;
-
-    [...thead.querySelectorAll("th")].forEach((th, colIndex) => {
-      th.style.cursor = "pointer";
-      th.addEventListener("click", () => {
-        ordinaTabella(tbody, colIndex);
-      });
+  [...thead.querySelectorAll("th")].forEach((th, colIndex) => {
+    th.style.cursor = "pointer";
+    th.addEventListener("click", () => {
+      ordinaTabella(tbody, colIndex);
     });
   });
 }
