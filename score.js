@@ -9,7 +9,7 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/f
 // ===============================
 const tableBody = document.querySelector("#scoreTable tbody");
 
-// BOX RIEPILOGATIVI (li creeremo noi in append)
+// BOX RIEPILOGATIVI
 const container = document.querySelector(".container");
 
 const summaryBox = document.createElement("div");
@@ -23,25 +23,10 @@ summaryBox.innerHTML = `
 container.insertBefore(summaryBox, container.children[2]);
 
 // ===============================
-// FUNZIONE COLORI DINAMICI
+// ORDINAMENTO
 // ===============================
-function colorValue(value) {
-  if (value === null || value === undefined || value === "") return "";
-
-  const num = parseFloat(value);
-
-  if (isNaN(num)) return value;
-
-  if (num > 0) return `<span style="color:#00b894;font-weight:bold;">${num}</span>`;
-  if (num < 0) return `<span style="color:#d63031;font-weight:bold;">${num}</span>`;
-  return num;
-}
-
-// ===============================
-// ORDINAMENTO TABELLA
-// ===============================
-let sortDirection = "desc";  
-let sortColumn = "score";  
+let sortDirection = "desc";
+let sortColumn = "score";
 
 function sortData(data, column) {
   if (sortColumn === column) {
@@ -65,22 +50,28 @@ function sortData(data, column) {
 }
 
 // ===============================
-// CARICA DATI DA FIREBASE
+// CARICA DATI
 // ===============================
 async function loadScoreData() {
   const snap = await getDocs(collection(db, "score"));
   let rows = [];
 
-  snap.forEach(doc => {
-    rows.push(doc.data());
-  });
+  snap.forEach(doc => rows.push(doc.data()));
 
-  // Ordina iniziale → SCORE DESC
+  // ordinamento iniziale
   rows = sortData(rows, "score");
 
   renderTable(rows);
   computeSummary(rows);
   enableSorting(rows);
+}
+
+// ===============================
+// FORMATTAZIONE %
+–===============================
+function toPerc(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  return (value * 100).toFixed(2) + "%";
 }
 
 // ===============================
@@ -92,33 +83,18 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
-    // funzione helper per formattare %
-function toPerc(value) {
-  if (value === null || value === undefined || value === "") return "-";
-  return (value * 100).toFixed(2) + "%";
+    tr.innerHTML = `
+      <td>${r.ticker}</td>
+      <td>${toPerc(r.m12)}</td>
+      <td>${toPerc(r.rendimento)}</td>
+      <td>${toPerc(r.payback)}</td>
+      <td>${toPerc(r.percentuale)}</td>
+      <td>${r.score}</td>
+    `;
+
+    tableBody.appendChild(tr);
+  });
 }
-
-records.forEach(data => {
-  const row = document.createElement("tr");
-
-  // funzione helper per formattare %
-  function toPerc(value) {
-    if (value === null || value === undefined || value === "") return "-";
-    return (value * 100).toFixed(2) + "%";
-  }
-
-  row.innerHTML = `
-    <td>${data.ticker}</td>
-    <td>${toPerc(data.m12)}</td>
-    <td>${toPerc(data.rendimento)}</td>
-    <td>${toPerc(data.payback)}</td>
-    <td>${toPerc(data.percentuale)}</td>
-    <td>${data.score}</td>
-  `;
-
-  tableBody.appendChild(row);
-});
-
 
 // ===============================
 // BOX RIEPILOGATIVI
@@ -142,7 +118,7 @@ function computeSummary(rows) {
 }
 
 // ===============================
-// ABILITA ORDINAMENTO CLIK COLONNE
+// ORDINAMENTO CLIC COLONNE
 // ===============================
 function enableSorting(rows) {
   const headers = document.querySelectorAll("#scoreTable th");
@@ -151,18 +127,7 @@ function enableSorting(rows) {
     th.style.cursor = "pointer";
 
     th.addEventListener("click", () => {
-      const columnName = [
-        "ticker",
-        "perf_12m",
-        "rendimento",
-        "payback",
-        "perc",
-        "score",
-        "esito",
-        "tipologia",
-        "incremento",
-        "valore_euro"
-      ][index];
+      const columnName = ["ticker", "m12", "rendimento", "payback", "percentuale", "score"][index];
 
       const sorted = sortData(rows, columnName);
       renderTable(sorted);
