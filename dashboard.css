@@ -46,47 +46,23 @@
 /* 5. GRID GRAFICI */
 .charts-grid {
     display: grid;
-    /* Due colonne, si adattano */
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
     gap: 20px;
-    align-items: stretch; /* Assicura che le card siano allineate */
+    align-items: stretch;
+    /* Aggiungi questa regola: assicura che il contenitore non si allunghi a dismisura */
+    max-height: fit-content; 
 }
 
 .chart-card {
-    background: var(--bg-container);
-    padding: 20px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-color);
-    position: relative; 
+    /* ... (altri stili) ... */
     min-height: 400px; 
     
-    /* CHIAVE: Layout interno Flexbox per gestire Canvas/Toggle */
+    /* Aggiungi questa regola: garantisce che la card non possa essere infinita */
+    height: 100%; 
+    
     display: flex;
     flex-direction: column; 
-    
-    /* Aggiungiamo un'ombreggiatura per le card attive/hover (opzionale) */
-    transition: box-shadow 0.3s;
 }
-.chart-card:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.chart-card h2 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0 0 15px 0;
-    color: var(--text-primary);
-}
-
-/* Stili specifici per Chart.js: REGOLA CHIAVE per l'espansione */
-.charts-grid .chart-card canvas { /* Specificità aumentata */
-    max-width: 100%;
-    /* Questo è essenziale per far riempire lo spazio al canvas in un container flex-direction: column */
-    flex-grow: 1; 
-    height: auto; 
-}
-
 
 /* 6. TOGGLE BUTTONS (Top 5 / Top 10) */
 .toggle-wrapper {
