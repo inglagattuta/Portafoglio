@@ -128,18 +128,28 @@ input:checked + .slider:before {
     transform: translateX(20px);
 }
 
-/* 4. CARD DELLE STATISTICHE (CORREZIONE FINALE DI ALLINEAMENTO GRIGLIA) */
+/* 4. CARD DELLE STATISTICHE (SOLUZIONE CON FLEXBOX PER FORZARE L'AFFIANCAMENTO) */
+
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    /* Passiamo da Grid a Flex per controllo più stretto dell'affiancamento */
+    display: flex; 
+    flex-wrap: nowrap; /* Impedisce di andare a capo */
     gap: 16px;
     margin-top: 18px;
-    /* MODIFICA CHIAVE: Centra le righe di contenuto nell'area Grid */
-    align-items: center; 
-    align-content: center; 
+    
+    /* Centra gli elementi verticalmente, essenziale per l'allineamento */
+    align-items: flex-start; /* Allinea gli elementi dall'alto verso il basso del contenitore */
+    
+    /* Assicuriamo che la griglia possa scorrere se lo schermo è troppo piccolo */
+    overflow-x: auto; 
+    padding-bottom: 8px; /* Spazio per la scrollbar */
 }
 
 .stat-card {
+    /* Larghezza fissa minima per assicurare che 4 box stiano su una riga */
+    flex: 0 0 250px; /* Non crescere, non decrescere, larghezza base 250px */
+    min-width: 250px; /* Larghezza minima esplicita */
+    
     background: var(--bg-container);
     padding: 20px;
     border-radius: var(--radius);
@@ -147,6 +157,7 @@ input:checked + .slider:before {
     border: 1px solid var(--border-color);
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
     
+    /* Flexbox interno per allineamento Label/Valore */
     display: flex; 
     flex-direction: column;
     justify-content: space-between; 
@@ -166,7 +177,7 @@ input:checked + .slider:before {
     margin-bottom: 8px;
 }
 
-/* Contenitore Flex extra per le card a 2 elementi (dall'HTML precedente) */
+/* Contenitore Flex extra per le card a 2 elementi (usato nel tuo HTML) */
 .stat-value-container {
     display: flex;
     flex-direction: column;
@@ -179,7 +190,6 @@ input:checked + .slider:before {
     font-size: 1.8rem;
     font-weight: 800;
     line-height: 1.1;
-    /* Rimuoviamo margin-top: auto dal value se usiamo stat-value-container */
     margin-top: 0; 
 }
 
@@ -204,7 +214,6 @@ input:checked + .slider:before {
     margin-top: 6px; 
     opacity: 1;
 }
-
 /* 5. CONTROLLI E PULSANTI */
 .controls {
     display: flex;
