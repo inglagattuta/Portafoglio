@@ -155,7 +155,7 @@ function renderTable(raw){
 document.querySelector("#tabella-mensile tbody")
 .addEventListener("click", async e => {
 
-  const del = e.target.closest(".btn-delete");
+  const del = e.target.closest(".icon-btn.delete");
   if (del) {
     if (!confirm("Eliminare questo record?")) return;
     await deleteDoc(doc(db,"andamento",del.dataset.id));
@@ -163,7 +163,7 @@ document.querySelector("#tabella-mensile tbody")
     return;
   }
 
-  const edit = e.target.closest(".btn-edit");
+  const edit = e.target.closest(".icon-btn.edit");
   if (edit) {
     const tr = edit.closest("tr");
     const inv = parseFloat(tr.children[1].textContent);
