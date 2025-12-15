@@ -141,8 +141,13 @@ function renderTable(raw){
         <td>${pf.toFixed(2)} €</td>
         <td>${(pf/r.INVESTITO*100||0).toFixed(2)}%</td>
         <td>
-          <button class="btn-edit" data-id="${r.id}">✏️</button>
-          <button class="btn-delete" data-id="${r.id}">🗑️</button>
+         <button class="icon-btn edit" title="Modifica" data-id="...">
+  ✏️
+</button>
+<button class="icon-btn delete" title="Elimina" data-id="...">
+  🗑️
+</button>
+
         </td>
       </tr>
     `);
