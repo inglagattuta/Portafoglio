@@ -486,3 +486,18 @@ body.dark .table-container::-webkit-scrollbar-track {
   font-weight: 700;
   color: #fff;
 }
+
+
+.btn-delete {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 6px;
+}
+
+.btn-delete:hover {
+  background: #c0392b;
+}
