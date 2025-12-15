@@ -318,16 +318,136 @@
       detRow.appendChild(td);
       tbody.appendChild(detRow);
     });
-const deleteBtn = e.target.closest(".btn-delete");
-if (deleteBtn) {
-  const docid = deleteBtn.dataset.docid;
+tbody.addEventListener("click", async (e) => {
 
-  const ok = confirm(
-    "⚠️ Sei sicuro di voler eliminare questo record?\n\nL'operazione è irreversibile."
-  );
-  if (!ok) return;
+  // =====================
+  // 🗑️ ELIMINA
+  // =====================
+  const deleteBtn = e.target.closest(".btn-delete");
+  if (deleteBtn) {
+    const docid = deleteBtn.dataset.docid;
 
-  deleteBtn.disabled = true;
+    const ok = confirm(
+      "⚠️ Sei sicuro di voler eliminare questo record?\n\nL'operazione è irreversibile."
+    );
+    if (!ok) return;
+
+    deleteBtn.disabled = true;
+
+    try {
+      const docRef = doc(db, "andamento", docid);
+      await deleteDoc(docRef);
+      await loadAndamento();
+    } catch (err) {
+      console.error("Errore deleteDoc:", err);
+      alert("Errore durante l'eliminazione.");
+      deleteBtn.disabled = false;
+    }
+    return;
+  }
+
+  // =====================
+  // ▶️ DETTAGLI
+  // =====================
+  const toggle = e.target.closest(".btn-toggle");
+  if (toggle) {
+    const mese = toggle.dataset.mese;
+    const detRow = tbody.querySelector(`tr.details-row[data-mese="${mese}"]`);
+    const container = detRow.querySelector(".details-inner");
+
+    if (detRow.style.display === "table-row") {
+      detRow.style.display = "none";
+      toggle.textContent = "Dettagli ▸";
+      return;
+    }
+
+    const records = rawRecords
+      .filter(rr => rr.id.startsWith(mese))
+      .sort((a,b) => new Date(a.id) - new Date(b.id));
+
+    container.innerHTML = `
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Data</th><th>Investito</th><th>Valore</th>
+            <th>Profitto</th><th>%</th><th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${records.map(r => {
+            const inv = Number(r.INVESTITO || 0);
+            const val = Number(r.GIORNALIERO || 0);
+            const pf = val - inv;
+            const pct = inv > 0 ? ((pf/inv)*100).toFixed(2) : "0.00";
+            return `
+              <tr data-docid="${r.id}">
+                <td>${formatFull(r.id)}</td>
+                <td class="right">${inv.toFixed(2)} €</td>
+                <td class="right">${val.toFixed(2)} €</td>
+                <td class="right ${pf>=0?'positivo':'negativo'}">${pf.toFixed(2)} €</td>
+                <td class="right ${pf>=0?'positivo':'negativo'}">${pct}%</td>
+                <td class="center">
+                  <button class="btn-edit" data-docid="${r.id}">✏️ Modifica</button>
+                  <button class="btn-delete" data-docid="${r.id}">🗑️ Elimina</button>
+                </td>
+              </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+
+    detRow.style.display = "table-row";
+    toggle.textContent = "Chiudi ▾";
+    return;
+  }
+
+  // =====================
+  // ✏️ MODIFICA
+  // =====================
+  const editBtn = e.target.closest(".btn-edit");
+  if (editBtn) {
+    const tr = editBtn.closest("tr");
+    const tds = tr.querySelectorAll("td");
+    const curInv = parseFloat(tds[1].textContent);
+    const curVal = parseFloat(tds[2].textContent);
+
+    tds[1].innerHTML = `<input class="input-invest" type="number" step="0.01" value="${curInv}">`;
+    tds[2].innerHTML = `<input class="input-val" type="number" step="0.01" value="${curVal}">`;
+    tds[3].textContent = "-";
+    tds[4].textContent = "-";
+    tds[5].innerHTML = `
+      <button class="btn-save" data-docid="${editBtn.dataset.docid}">💾 Salva</button>
+      <button class="btn-cancel">✖</button>
+    `;
+    return;
+  }
+
+  // =====================
+  // 💾 SALVA
+  // =====================
+  const save = e.target.closest(".btn-save");
+  if (save) {
+    const tr = save.closest("tr");
+    const newInv = Number(tr.querySelector(".input-invest").value);
+    const newVal = Number(tr.querySelector(".input-val").value);
+
+    await updateDoc(doc(db, "andamento", save.dataset.docid), {
+      INVESTITO: newInv,
+      GIORNALIERO: newVal
+    });
+
+    await loadAndamento();
+    return;
+  }
+
+  // =====================
+  // ❌ ANNULLA
+  // =====================
+  if (e.target.closest(".btn-cancel")) {
+    await loadAndamento();
+  }
+});
+
 
   try {
     const docRef = doc(db, "andamento", docid);
