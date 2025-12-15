@@ -347,7 +347,11 @@
                   <td class="right">${val.toFixed(2)} €</td>
                   <td class="right ${pf>=0?'positivo':'negativo'}">${pf.toFixed(2)} €</td>
                   <td class="right ${pf>=0?'positivo':'negativo'}">${pct}%</td>
-                  <td class="center"><button class="btn-edit" data-docid="${r.id}">✏️ Modifica</button></td>
+                  <td class="center">
+  <button class="btn-edit" data-docid="${r.id}">✏️ Modifica</button>
+  <button class="btn-delete" data-docid="${r.id}">🗑️ Elimina</button>
+</td>
+
                 </tr>`;
               }).join('')}
             </tbody>
