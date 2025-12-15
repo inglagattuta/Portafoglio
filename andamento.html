@@ -318,6 +318,28 @@
       detRow.appendChild(td);
       tbody.appendChild(detRow);
     });
+const deleteBtn = e.target.closest(".btn-delete");
+if (deleteBtn) {
+  const docid = deleteBtn.dataset.docid;
+
+  const ok = confirm(
+    "⚠️ Sei sicuro di voler eliminare questo record?\n\nL'operazione è irreversibile."
+  );
+  if (!ok) return;
+
+  deleteBtn.disabled = true;
+
+  try {
+    const docRef = doc(db, "andamento", docid);
+    await deleteDoc(docRef);
+    await loadAndamento(); // refresh totale (grafico, box, tabelle)
+  } catch (err) {
+    console.error("Errore deleteDoc:", err);
+    alert("Errore durante l'eliminazione. Controlla la console.");
+    deleteBtn.disabled = false;
+  }
+  return;
+}
 
     tbody.addEventListener("click", async (e) => {
       const toggle = e.target.closest(".btn-toggle");
