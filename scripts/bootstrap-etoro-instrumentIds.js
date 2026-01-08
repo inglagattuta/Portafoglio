@@ -37,10 +37,13 @@ function initFirestore() {
 
 // 🔍 SEARCH
 async function resolveInstrumentId(ticker) {
-  const url = `${ETORO_BASE}/market-data/search?query=${ticker}`;
+  const url = `${ETORO_BASE}/market-data/search?internalSymbolFull=${ticker}`;
+
   const resp = await axios.get(url, { headers: etoroHeaders() });
 
-  const items = resp.data?.items || [];
+  const items = resp.data?.items;
+  if (!Array.isArray(items)) return null;
+
   const exact = items.find(
     (i) => i.internalSymbolFull?.toUpperCase() === ticker
   );
