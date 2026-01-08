@@ -3,7 +3,7 @@ name: Aggiorna prezzi eToro su Firestore
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'   # ogni ora
+    - cron: '0 * * * *'   # ogni ora 
 
 jobs:
   update-portfolio:
