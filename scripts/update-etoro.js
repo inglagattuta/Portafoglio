@@ -63,7 +63,11 @@ async function getDefaultWatchlist() {
     headers: etoroHeaders(),
   });
 
-  const list = resp.data.find((w) => w.isDefault === true);
+  if (!resp.data.items || !Array.isArray(resp.data.items)) {
+    throw new Error("Formato risposta watchlists non valido");
+  }
+
+  const list = resp.data.items.find((w) => w.isDefault === true);
 
   if (!list) {
     throw new Error("Watchlist Default non trovata");
@@ -72,6 +76,7 @@ async function getDefaultWatchlist() {
   console.log(`📌 Watchlist Default trovata (ID: ${list.watchlistId})`);
   return list.watchlistId;
 }
+
 
 // ===============================
 // GET WATCHLIST ITEMS
