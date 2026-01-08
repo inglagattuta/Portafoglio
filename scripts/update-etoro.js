@@ -1,27 +1,34 @@
 /**
- * update-etoro.js — eToro Live API
- * Aggiorna prezzi strumenti eToro in Firestore
+ * update-etoro.js — eToro Public API (versione definitiva)
  */
 
 const axios = require("axios");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 
-// ENDPOINT LIVE ETORO
-const ETORO_LIVE = "https://api.etoro.com/Live";
+const ETORO_BASE = "https://public-api.etoro.com/api/v1";
+
+// HEADERS
+function etoroHeaders() {
+  return {
+    "x-api-key": process.env.ETORO_PUBLIC_API_KEY,
+    "x-user-key": process.env.ETORO_USER_KEY,
+    "x-request-id": crypto.randomUUID(),
+    Accept: "application/json",
+  };
+}
 
 // FIREBASE INIT
 function initFirestore() {
-  let serviceAccount;
-
-  if (process.env.FIREBASE_KEY_BASE64) {
-    serviceAccount = JSON.parse(
-      Buffer.from(process.env.FIREBASE_KEY_BASE64, "base64").toString("utf8")
-    );
-  } else if (process.env.FIREBASE_KEY_JSON) {
-    serviceAccount = JSON.parse(process.env.FIREBASE_KEY_JSON);
-  } else {
+  if (!process.env.FIREBASE_KEY_JSON && !process.env.FIREBASE_KEY_BASE64) {
     throw new Error("❌ Nessuna chiave Firebase trovata");
   }
+
+  const serviceAccount = process.env.FIREBASE_KEY_BASE64
+    ? JSON.parse(
+        Buffer.from(process.env.FIREBASE_KEY_BASE64, "base64").toString("utf8")
+      )
+    : JSON.parse(process.env.FIREBASE_KEY_JSON);
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -30,21 +37,33 @@ function initFirestore() {
   return admin.firestore();
 }
 
-// CARICA PREZZI LIVE
-async function loadLivePrices(instrumentIds) {
-  const resp = await axios.post(ETORO_LIVE, {
-    InstrumentIDs: instrumentIds,
-    IsGroup: false,
-  });
+// 🔍 RISOLVI TICKER → instrumentId
+async function resolveInstrumentId(ticker) {
+  const url = `${ETORO_BASE}/market-data/search?internalSymbolFull=${ticker}`;
 
-  const prices = {};
-  for (const item of resp.data?.Rates || []) {
-    if (item.InstrumentID && item.Ask && item.Bid) {
-      prices[item.InstrumentID] = (item.Ask + item.Bid) / 2;
-    }
+  const resp = await axios.get(url, { headers: etoroHeaders() });
+
+  if (!Array.isArray(resp.data) || resp.data.length === 0) return null;
+
+  const exact = resp.data.find(
+    (i) => i.internalSymbolFull?.toUpperCase() === ticker
+  );
+
+  return exact?.instrumentId || null;
+}
+
+// 📡 PREZZI LIVE
+async function loadLivePrices(ids) {
+  const url = `${ETORO_BASE}/Live?InstrumentIds=${ids.join(",")}`;
+
+  const resp = await axios.get(url, { headers: etoroHeaders() });
+
+  const map = {};
+  for (const r of resp.data) {
+    map[r.instrumentId] = (r.bid + r.ask) / 2;
   }
 
-  return prices;
+  return map;
 }
 
 // MAIN
@@ -60,11 +79,22 @@ async function run() {
   const docById = {};
 
   for (const doc of snap.docs) {
-    const { nome, instrumentId } = doc.data();
+    const data = doc.data();
+    const ticker = (data.nome || "").toUpperCase();
+
+    let instrumentId = data.instrumentId;
 
     if (!instrumentId) {
-      console.log(`⚠️ Nessun instrumentId per ${nome}`);
-      continue;
+      console.log(`🔍 Risolvo ${ticker}...`);
+      instrumentId = await resolveInstrumentId(ticker);
+
+      if (!instrumentId) {
+        console.log(`⚠️ InstrumentId non trovato per ${ticker}`);
+        continue;
+      }
+
+      await doc.ref.update({ instrumentId });
+      console.log(`✅ ${ticker} → ${instrumentId}`);
     }
 
     ids.push(instrumentId);
@@ -72,7 +102,7 @@ async function run() {
   }
 
   if (!ids.length) {
-    console.log("❌ Nessun instrumentId valido, uscita");
+    console.log("⚠️ Nessun instrumentId valido");
     return;
   }
 
@@ -92,7 +122,7 @@ async function run() {
     });
   }
 
-  console.log("✅ Aggiornamento completato con successo!");
+  console.log("✅ Aggiornamento completato!");
 }
 
 run().catch((err) => {
