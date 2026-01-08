@@ -39,24 +39,25 @@ function initFirestore() {
 
 // 🔍 RISOLVI TICKER → instrumentId
 async function resolveInstrumentId(ticker) {
-  const resp = await axios.get(
-    `${ETORO_BASE}/market-data/search`,
-    {
-      params: { internalSymbolFull: ticker },
-      headers: etoroHeaders(),
-    }
+  const url = `${ETORO_BASE}/market-data/search?query=${ticker}`;
+
+  const resp = await axios.get(url, { headers: etoroHeaders() });
+
+  if (!Array.isArray(resp.data) || resp.data.length === 0) return null;
+
+  // 1️⃣ match esatto sul simbolo
+  let found = resp.data.find(
+    (i) =>
+      i.symbol?.toUpperCase() === ticker ||
+      i.internalSymbol?.toUpperCase() === ticker
   );
 
-  const results = resp.data?.data;
+  // 2️⃣ fallback: primo risultato
+  if (!found) found = resp.data[0];
 
-  if (!Array.isArray(results) || results.length === 0) return null;
-
-  const exact = results.find(
-    (r) => r.internalSymbolFull?.toUpperCase() === ticker
-  );
-
-  return exact?.instrumentId ?? null;
+  return found?.instrumentId || null;
 }
+
 
 // 📡 PREZZI LIVE
 async function loadLivePrices(ids) {
