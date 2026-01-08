@@ -3,7 +3,7 @@ name: Aggiorna prezzi eToro su Firestore
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'   # ogni ora 
+    - cron: '0 * * * *'   # ogni ora
 
 jobs:
   update-portfolio:
@@ -23,11 +23,7 @@ jobs:
 
       - name: Run update-etoro script
         env:
-          # eToro Public API
           ETORO_PUBLIC_API_KEY: ${{ secrets.ETORO_PUBLIC_API_KEY }}
           ETORO_USER_KEY: ${{ secrets.ETORO_USER_KEY }}
-
-          # Firebase (usa UNA sola chiave)
-         FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_KEY_JSON }}
-        run: |
-          node scripts/update-etoro.js
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_KEY_JSON }}
+        run: node scripts/update-etoro.js
