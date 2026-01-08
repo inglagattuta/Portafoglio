@@ -21,13 +21,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-
       - name: Run update-etoro script
         env:
-          ETORO_SUBSCRIPTION_KEY: ${{ secrets.ETORO_SUBSCRIPTION_KEY }}
+          # eToro Public API
+          ETORO_PUBLIC_API_KEY: ${{ secrets.ETORO_PUBLIC_API_KEY }}
+          ETORO_USER_KEY: ${{ secrets.ETORO_USER_KEY }}
 
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_KEY_JSON }}
-
-          FIRESTORE_PROJECT_ID: ${{ secrets.FIRESTORE_PROJECT_ID }}
+          # Firebase (usa UNA sola chiave)
+          FIREBASE_KEY_BASE64: ${{ secrets.FIREBASE_KEY_BASE64 }}
         run: |
           node scripts/update-etoro.js
