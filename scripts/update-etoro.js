@@ -1,85 +1,61 @@
 /**
- * update-etoro.js — eToro Public API (versione corretta)
+ * update-etoro.js — versione finale PRODUZIONE
+ * Aggiorna prezzo_corrente su Firestore usando eToro /Live
+ * Collection: portafoglio
  */
 
 const axios = require("axios");
 const admin = require("firebase-admin");
-const crypto = require("crypto");
 
-const ETORO_BASE = "https://public-api.etoro.com/api/v1";
+// ================= CONFIG =================
+const ETORO_BASE = "https://api.etoro.com";
+const LIVE_ENDPOINT = (ids) =>
+  `${ETORO_BASE}/Live?InstrumentIds=${ids.join(",")}`;
 
-// HEADERS
-function etoroHeaders() {
-  return {
-    "x-api-key": process.env.ETORO_PUBLIC_API_KEY,
-    "x-user-key": process.env.ETORO_USER_KEY,
-    "x-request-id": crypto.randomUUID(),
-    Accept: "application/json",
-  };
-}
-
-// FIREBASE INIT
+// ================= FIREBASE =================
 function initFirestore() {
-  if (!process.env.FIREBASE_KEY_JSON && !process.env.FIREBASE_KEY_BASE64) {
-    throw new Error("❌ Nessuna chiave Firebase trovata");
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+    throw new Error("❌ FIREBASE_SERVICE_ACCOUNT mancante");
   }
 
-  const serviceAccount = process.env.FIREBASE_KEY_BASE64
-    ? JSON.parse(
-        Buffer.from(process.env.FIREBASE_KEY_BASE64, "base64").toString("utf8")
-      )
-    : JSON.parse(process.env.FIREBASE_KEY_JSON);
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
+    projectId: process.env.FIRESTORE_PROJECT_ID || serviceAccount.project_id,
   });
 
   return admin.firestore();
 }
 
-// 🔍 RISOLVI TICKER → instrumentId
-async function resolveInstrumentId(ticker) {
-  const url = `${ETORO_BASE}/market-data/search?query=${ticker}`;
-
-  const resp = await axios.get(url, { headers: etoroHeaders() });
-
-  if (!Array.isArray(resp.data) || resp.data.length === 0) return null;
-
-  // 1️⃣ match esatto sul simbolo
-  let found = resp.data.find(
-    (i) =>
-      i.symbol?.toUpperCase() === ticker ||
-      i.internalSymbol?.toUpperCase() === ticker
-  );
-
-  // 2️⃣ fallback: primo risultato
-  if (!found) found = resp.data[0];
-
-  return found?.instrumentId || null;
-}
-
-
-// 📡 PREZZI LIVE
-async function loadLivePrices(ids) {
-  const resp = await axios.get(
-    `${ETORO_BASE}/live`,
-    {
-      params: { instrumentIds: ids.join(",") },
-      headers: etoroHeaders(),
-    }
-  );
-
-  const map = {};
-  for (const r of resp.data) {
-    if (r.instrumentId && r.bid && r.ask) {
-      map[r.instrumentId] = (r.bid + r.ask) / 2;
-    }
+// ================= ETORO =================
+function etoroHeaders() {
+  if (!process.env.ETORO_SUBSCRIPTION_KEY) {
+    throw new Error("❌ ETORO_SUBSCRIPTION_KEY mancante");
   }
 
-  return map;
+  return {
+    "Ocp-Apim-Subscription-Key": process.env.ETORO_SUBSCRIPTION_KEY,
+    Accept: "application/json",
+  };
 }
 
-// MAIN
+// ================= LIVE PRICES =================
+async function loadLivePrices(instrumentIds) {
+  const resp = await axios.get(LIVE_ENDPOINT(instrumentIds), {
+    headers: etoroHeaders(),
+    timeout: 20000,
+  });
+
+  const prices = {};
+  for (const r of resp.data) {
+    prices[r.instrumentId] = (r.bid + r.ask) / 2;
+  }
+
+  return prices;
+}
+
+// ================= MAIN =================
 async function run() {
   console.log("🚀 Avvio aggiornamento portafoglio eToro");
 
@@ -88,43 +64,36 @@ async function run() {
 
   console.log(`📊 ${snap.size} strumenti in portafoglio`);
 
-  const ids = [];
+  const instrumentIds = [];
   const docById = {};
 
   for (const doc of snap.docs) {
     const data = doc.data();
-    const ticker = (data.nome || "").toUpperCase();
+    const id = data.instrumentId;
 
-    let instrumentId = data.instrumentId;
-
-    if (!instrumentId) {
-      console.log(`🔍 Risolvo ${ticker}...`);
-      instrumentId = await resolveInstrumentId(ticker);
-
-      if (!instrumentId) {
-        console.log(`⚠️ InstrumentId non trovato per ${ticker}`);
-        continue;
-      }
-
-      await doc.ref.update({ instrumentId });
-      console.log(`✅ ${ticker} → ${instrumentId}`);
+    if (!id) {
+      console.log(`⚠️ Nessun instrumentId per ${data.nome}`);
+      continue;
     }
 
-    ids.push(instrumentId);
-    docById[instrumentId] = doc;
+    instrumentIds.push(id);
+    docById[id] = doc;
   }
 
-  if (!ids.length) {
-    console.log("⚠️ Nessun instrumentId valido");
+  if (!instrumentIds.length) {
+    console.log("⚠️ Nessun instrumentId valido, uscita");
     return;
   }
 
-  console.log(`📡 Carico prezzi live (${ids.length})`);
-  const prices = await loadLivePrices(ids);
+  console.log(`📡 Carico prezzi live (${instrumentIds.length})`);
+  const prices = await loadLivePrices(instrumentIds);
 
-  for (const id of ids) {
+  for (const id of instrumentIds) {
     const price = prices[id];
-    if (!price) continue;
+    if (!price) {
+      console.log(`⚠️ Prezzo non disponibile per ${id}`);
+      continue;
+    }
 
     const doc = docById[id];
     console.log(`💰 ${doc.data().nome}: ${price}`);
