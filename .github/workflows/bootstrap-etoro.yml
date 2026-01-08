@@ -1,0 +1,30 @@
+name: Bootstrap eToro instrumentId
+
+on:
+  workflow_dispatch:   # solo manuale (sicuro)
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Bootstrap instrumentId eToro
+        env:
+          ETORO_PUBLIC_API_KEY: ${{ secrets.ETORO_PUBLIC_API_KEY }}
+          ETORO_USER_KEY: ${{ secrets.ETORO_USER_KEY }}
+
+          FIREBASE_KEY_JSON: ${{ secrets.FIREBASE_KEY_JSON }}
+        run: |
+          node scripts/bootstrap-etoro-instrumentIds.js
+
