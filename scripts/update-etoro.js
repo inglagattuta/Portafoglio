@@ -1,30 +1,15 @@
 /**
- * update-etoro.js — versione DEFINITIVA
- * Usa la Watchlist Default eToro
- * Aggiorna prezzi strumenti in Firestore
+ * update-etoro.js — eToro Live API
+ * Aggiorna prezzi strumenti eToro in Firestore
  */
 
 const axios = require("axios");
 const admin = require("firebase-admin");
-const crypto = require("crypto");
 
-// ===== eToro Public API =====
-const ETORO_BASE = "https://public-api.etoro.com/api/v1";
-const WATCHLISTS_ENDPOINT = `${ETORO_BASE}/watchlists`;
-const QUOTES_ENDPOINT = (ids) =>
-  `${ETORO_BASE}/quotes?instrumentIds=${ids.join(",")}`;
+// ENDPOINT LIVE ETORO
+const ETORO_LIVE = "https://api.etoro.com/Live";
 
-// ===== HEADERS =====
-function etoroHeaders() {
-  return {
-    "x-api-key": process.env.ETORO_PUBLIC_API_KEY,
-    "x-user-key": process.env.ETORO_USER_KEY,
-    "x-request-id": crypto.randomUUID(),
-    Accept: "application/json",
-  };
-}
-
-// ===== FIREBASE INIT =====
+// FIREBASE INIT
 function initFirestore() {
   let serviceAccount;
 
@@ -40,77 +25,74 @@ function initFirestore() {
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id,
   });
 
   return admin.firestore();
 }
 
-// ===== DEFAULT WATCHLIST =====
-async function getDefaultWatchlistInstrumentIds() {
-  const resp = await axios.get(WATCHLISTS_ENDPOINT, {
-    headers: etoroHeaders(),
+// CARICA PREZZI LIVE
+async function loadLivePrices(instrumentIds) {
+  const resp = await axios.post(ETORO_LIVE, {
+    InstrumentIDs: instrumentIds,
+    IsGroup: false,
   });
 
-  if (!resp.data?.watchlists) {
-    throw new Error("❌ Formato watchlists non valido");
+  const prices = {};
+  for (const item of resp.data?.Rates || []) {
+    if (item.InstrumentID && item.Ask && item.Bid) {
+      prices[item.InstrumentID] = (item.Ask + item.Bid) / 2;
+    }
   }
 
-  const defaultList = resp.data.watchlists.find((w) => w.isDefault === true);
-  if (!defaultList) {
-    throw new Error("❌ Watchlist Default non trovata");
-  }
-
-  const instrumentIds = defaultList.items
-    .filter((i) => i.itemType === "Instrument")
-    .map((i) => i.itemId);
-
-  if (!instrumentIds.length) {
-    throw new Error("❌ Nessuno strumento nella watchlist Default");
-  }
-
-  console.log(`📌 ${instrumentIds.length} strumenti dalla watchlist Default`);
-  return instrumentIds;
+  return prices;
 }
 
-// ===== QUOTES =====
-async function loadQuotes(instrumentIds) {
-  const resp = await axios.get(QUOTES_ENDPOINT(instrumentIds), {
-    headers: etoroHeaders(),
-  });
-
-  const map = {};
-  for (const q of resp.data) {
-    map[q.instrumentId] = (q.bid + q.ask) / 2;
-  }
-  return map;
-}
-
-// ===== MAIN =====
+// MAIN
 async function run() {
   console.log("🚀 Avvio aggiornamento portafoglio eToro");
 
   const db = initFirestore();
-
-  const instrumentIds = await getDefaultWatchlistInstrumentIds();
-  const prices = await loadQuotes(instrumentIds);
-
   const snap = await db.collection("portafoglio").get();
-  console.log(`📊 ${snap.size} documenti Firestore`);
+
+  console.log(`📊 ${snap.size} strumenti in portafoglio`);
+
+  const ids = [];
+  const docById = {};
 
   for (const doc of snap.docs) {
-    const id = doc.data().instrumentId;
-    if (!id || !prices[id]) continue;
+    const { nome, instrumentId } = doc.data();
 
-    console.log(`💰 ${doc.data().nome} → ${prices[id]}`);
+    if (!instrumentId) {
+      console.log(`⚠️ Nessun instrumentId per ${nome}`);
+      continue;
+    }
+
+    ids.push(instrumentId);
+    docById[instrumentId] = doc;
+  }
+
+  if (!ids.length) {
+    console.log("❌ Nessun instrumentId valido, uscita");
+    return;
+  }
+
+  console.log(`📡 Carico prezzi live (${ids.length})`);
+  const prices = await loadLivePrices(ids);
+
+  for (const id of ids) {
+    const price = prices[id];
+    if (!price) continue;
+
+    const doc = docById[id];
+    console.log(`💰 ${doc.data().nome}: ${price}`);
 
     await doc.ref.update({
-      prezzo_corrente: prices[id],
+      prezzo_corrente: price,
       lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
     });
   }
 
-  console.log("✅ Aggiornamento completato!");
+  console.log("✅ Aggiornamento completato con successo!");
 }
 
 run().catch((err) => {
