@@ -28,6 +28,6 @@ jobs:
           ETORO_USER_KEY: ${{ secrets.ETORO_USER_KEY }}
 
           # Firebase (usa UNA sola chiave)
-          FIREBASE_KEY_BASE64: ${{ secrets.FIREBASE_KEY_BASE64 }}
+         FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_KEY_JSON }}
         run: |
           node scripts/update-etoro.js
