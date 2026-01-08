@@ -24,7 +24,7 @@ jobs:
       - name: Run update-etoro script
         env:
           ETORO_PUBLIC_API_KEY: ${{ secrets.ETORO_PUBLIC_API_KEY }}
-          ETORO_SUBSCRIPTION_KEY: ${{ secrets.ETORO_PUBLIC_API_KEY }}
+          ETORO_SUBSCRIPTION_KEY: ${{ secrets.ETORO_SUBSCRIPTION_KEY }}
           ETORO_USER_KEY: ${{ secrets.ETORO_USER_KEY }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_KEY_JSON }}
         run: node scripts/update-etoro.js
