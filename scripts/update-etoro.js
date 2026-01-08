@@ -1,7 +1,7 @@
 /**
- * update-etoro.js — eToro Public API
+ * update-etoro.js — eToro Public API (watchlist Default)
  * Aggiorna prezzo_corrente nella collection "portafoglio"
- * Campo ticker: nome
+ * Match su campo: nome (ticker)
  */
 
 const axios = require("axios");
@@ -12,16 +12,13 @@ const crypto = require("crypto");
 // CONFIG
 // ===============================
 const ETORO_BASE = "https://public-api.etoro.com/api/v1";
-const ENDPOINT_INSTRUMENTS = `${ETORO_BASE}/instruments`;
-const ENDPOINT_LIVE = (ids) =>
-  `${ETORO_BASE}/live/prices?instrumentIds=${ids.join(",")}`;
 
 // ===============================
 // HEADER BUILDER
 // ===============================
 function etoroHeaders() {
   if (!process.env.ETORO_PUBLIC_API_KEY || !process.env.ETORO_USER_KEY) {
-    throw new Error("❌ ETORO_PUBLIC_API_KEY o ETORO_USER_KEY mancanti");
+    throw new Error("ETORO_PUBLIC_API_KEY o ETORO_USER_KEY mancanti");
   }
 
   return {
@@ -45,7 +42,7 @@ function initFirestore() {
   } else if (process.env.FIREBASE_KEY_JSON) {
     serviceAccount = JSON.parse(process.env.FIREBASE_KEY_JSON);
   } else {
-    throw new Error("❌ Nessuna chiave Firebase trovata");
+    throw new Error("Nessuna chiave Firebase trovata");
   }
 
   if (!admin.apps.length) {
@@ -59,35 +56,43 @@ function initFirestore() {
 }
 
 // ===============================
-// LOAD INSTRUMENTS
+// GET DEFAULT WATCHLIST
 // ===============================
-async function loadInstruments() {
-  console.log("📥 Scarico strumenti eToro...");
-
-  const resp = await axios.get(ENDPOINT_INSTRUMENTS, {
+async function getDefaultWatchlist() {
+  const resp = await axios.get(`${ETORO_BASE}/watchlists`, {
     headers: etoroHeaders(),
-    timeout: 20000,
   });
 
-  const map = {};
-  for (const it of resp.data) {
-    if (it.ticker) {
-      map[it.ticker.toUpperCase()] = it.instrumentId;
-    }
+  const list = resp.data.find((w) => w.isDefault === true);
+
+  if (!list) {
+    throw new Error("Watchlist Default non trovata");
   }
 
-  console.log(`📦 ${Object.keys(map).length} strumenti caricati`);
-  return map;
+  console.log(`📌 Watchlist Default trovata (ID: ${list.watchlistId})`);
+  return list.watchlistId;
 }
 
 // ===============================
-// LOAD LIVE PRICES
+// GET WATCHLIST ITEMS
 // ===============================
-async function loadLivePrices(instrumentIds) {
-  const resp = await axios.get(ENDPOINT_LIVE(instrumentIds), {
-    headers: etoroHeaders(),
-    timeout: 20000,
-  });
+async function getWatchlistItems(watchlistId) {
+  const resp = await axios.get(
+    `${ETORO_BASE}/watchlists/${watchlistId}`,
+    { headers: etoroHeaders() }
+  );
+
+  return resp.data.items || [];
+}
+
+// ===============================
+// GET LIVE PRICES
+// ===============================
+async function getLivePrices(instrumentIds) {
+  const resp = await axios.get(
+    `${ETORO_BASE}/live/prices?instrumentIds=${instrumentIds.join(",")}`,
+    { headers: etoroHeaders() }
+  );
 
   const map = {};
   for (const r of resp.data) {
@@ -104,41 +109,52 @@ async function run() {
   console.log("🚀 Avvio aggiornamento portafoglio eToro");
 
   const db = initFirestore();
-  const instruments = await loadInstruments();
 
-  const snap = await db.collection("portafoglio").get();
-  console.log(`📊 ${snap.size} strumenti in portafoglio`);
+  // 1. Watchlist Default
+  const watchlistId = await getDefaultWatchlist();
 
-  const ids = [];
-  const docById = {};
+  // 2. Items watchlist
+  const items = await getWatchlistItems(watchlistId);
+  console.log(`📋 ${items.length} strumenti nella watchlist Default`);
 
-  for (const doc of snap.docs) {
-    const ticker = (doc.data().nome || "").toUpperCase();
-    const instrumentId = instruments[ticker];
-
-    if (!instrumentId) {
-      console.log(`⚠️ InstrumentId non trovato per ${ticker}`);
-      continue;
-    }
-
-    ids.push(instrumentId);
-    docById[instrumentId] = doc;
-  }
-
-  if (!ids.length) {
-    console.log("⚠️ Nessun instrumentId valido, uscita");
+  if (!items.length) {
+    console.log("⚠️ Watchlist vuota");
     return;
   }
 
-  console.log(`📡 Carico prezzi live (${ids.length})`);
-  const prices = await loadLivePrices(ids);
+  // 3. Mappa ticker -> instrumentId
+  const instrumentByTicker = {};
+  const instrumentIds = [];
 
-  for (const id of ids) {
-    const price = prices[id];
+  for (const it of items) {
+    if (it.symbol && it.instrumentId) {
+      const ticker = it.symbol.toUpperCase();
+      instrumentByTicker[ticker] = it.instrumentId;
+      instrumentIds.push(it.instrumentId);
+    }
+  }
+
+  // 4. Prezzi live
+  console.log(`📡 Carico prezzi live (${instrumentIds.length})`);
+  const prices = await getLivePrices(instrumentIds);
+
+  // 5. Firestore
+  const snap = await db.collection("portafoglio").get();
+  console.log(`📊 ${snap.size} strumenti in Firestore`);
+
+  for (const doc of snap.docs) {
+    const ticker = (doc.data().nome || "").toUpperCase();
+    const instrumentId = instrumentByTicker[ticker];
+
+    if (!instrumentId) {
+      console.log(`⚠️ ${ticker} non presente nella watchlist`);
+      continue;
+    }
+
+    const price = prices[instrumentId];
     if (!price) continue;
 
-    const doc = docById[id];
-    console.log(`💰 ${doc.data().nome}: ${price}`);
+    console.log(`💰 ${ticker}: ${price}`);
 
     await doc.ref.update({
       prezzo_corrente: price,
