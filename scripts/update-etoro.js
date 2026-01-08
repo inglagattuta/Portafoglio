@@ -1,132 +1,153 @@
 /**
- * update-etoro.js — versione finale per Francesco
+ * update-etoro.js — versione finale corretta
  * Collection: portafoglio
- * Ticker nel campo: nome
+ * Ticker nel campo: nome (es. AAPL)
  */
 
 const axios = require("axios");
 const admin = require("firebase-admin");
 
+// =======================
+// CONFIG ETORO
+// =======================
 const ETORO_BASE = "https://api.etoro.com";
 const ENDPOINT_INSTRUMENTS = `${ETORO_BASE}/Metadata/V1/Instruments`;
-const ENDPOINT_LIVE = (ids) => `${ETORO_BASE}/Live?InstrumentIds=${ids}`;
+const ENDPOINT_LIVE = (ids) =>
+  `${ETORO_BASE}/Live?InstrumentIds=${ids}`;
 
+const ETORO_SUBSCRIPTION_KEY = process.env.ETORO_SUBSCRIPTION_KEY;
+
+// =======================
 // FIREBASE INIT
+// =======================
 function initFirestore() {
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT mancante");
+  }
+
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: process.env.FIRESTORE_PROJECT_ID || serviceAccount.project_id,
-  });
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      projectId:
+        process.env.FIRESTORE_PROJECT_ID || serviceAccount.project_id,
+    });
+  }
 
   return admin.firestore();
 }
 
-// TOKEN
-async function getAccessToken() {
-  if (process.env.ETORO_ACCESS_TOKEN) return process.env.ETORO_ACCESS_TOKEN;
-
-  const params = new URLSearchParams();
-  params.append("grant_type", "refresh_token");
-  params.append("refresh_token", process.env.ETORO_REFRESH_TOKEN);
-  params.append("client_id", process.env.ETORO_CLIENT_ID);
-  params.append("client_secret", process.env.ETORO_CLIENT_SECRET);
-
-  const resp = await axios.post(
-    `${ETORO_BASE}/oauth/token`,
-    params.toString(),
-    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-  );
-
-  return resp.data.access_token;
-}
-
-// SCARICA TUTTI GLI STRUMENTI
-async function loadInstruments(token) {
-  console.log("📥 Scarico lista strumenti eToro...");
-
-  const resp = await axios.get(ENDPOINT_INSTRUMENTS, {
-    headers: { Authorization: `Bearer ${token}` },
+// =======================
+// ETORO FETCH
+// =======================
+async function etoroGet(url) {
+  const resp = await axios.get(url, {
+    headers: {
+      "Ocp-Apim-Subscription-Key": ETORO_SUBSCRIPTION_KEY,
+    },
     timeout: 20000,
   });
 
-  const instruments = resp.data;
+  return resp.data;
+}
+
+// =======================
+// LOAD INSTRUMENTS
+// =======================
+async function loadInstruments() {
+  console.log("📥 Scarico lista strumenti eToro...");
+
+  const instruments = await etoroGet(ENDPOINT_INSTRUMENTS);
   console.log(`📦 ${instruments.length} strumenti ricevuti.`);
 
   const map = {};
   for (const it of instruments) {
-    if (it.ticker) map[it.ticker.toUpperCase()] = it.instrumentId;
+    if (it.ticker) {
+      map[it.ticker.toUpperCase()] = it.instrumentId;
+    }
   }
 
   return map;
 }
 
-// PREZZI LIVE (batch)
-async function loadLivePrices(token, instrumentIds) {
-  const resp = await axios.get(ENDPOINT_LIVE(instrumentIds.join(",")), {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  const live = resp.data;
+// =======================
+// LOAD LIVE PRICES
+// =======================
+async function loadLivePrices(instrumentIds) {
+  const live = await etoroGet(
+    ENDPOINT_LIVE(instrumentIds.join(","))
+  );
 
   const map = {};
   for (const r of live) {
-    const price = (r.bid + r.ask) / 2; // media bid/ask
-    map[r.instrumentId] = price;
+    // media bid / ask
+    map[r.instrumentId] = (r.bid + r.ask) / 2;
   }
 
   return map;
 }
 
+// =======================
 // MAIN
+// =======================
 async function run() {
+  console.log("🚀 Avvio aggiornamento portafoglio eToro");
+
+  if (!ETORO_SUBSCRIPTION_KEY) {
+    throw new Error("ETORO_SUBSCRIPTION_KEY mancante");
+  }
+
   const db = initFirestore();
-  const token = await getAccessToken();
 
-  const instrumentsMap = await loadInstruments(token);
+  // 1️⃣ Strumenti
+  const instrumentsMap = await loadInstruments();
 
+  // 2️⃣ Leggi portafoglio
   const snap = await db.collection("portafoglio").get();
   console.log(`📊 ${snap.size} documenti trovati.`);
 
-  const docs = snap.docs;
+  if (snap.empty) {
+    console.log("⚠️ Portafoglio vuoto");
+    return;
+  }
 
-  // Prepara lista instrumentId
   const idList = [];
-  const docByTicker = {};
+  const docByInstrumentId = {};
 
-  for (const doc of docs) {
+  for (const doc of snap.docs) {
     const ticker = (doc.data().nome || "").toUpperCase();
-
     const instrumentId = instrumentsMap[ticker];
+
     if (!instrumentId) {
-      console.log(`❌ Nessun instrumentId trovato per ${ticker}`);
+      console.log(`❌ InstrumentId non trovato per ${ticker}`);
       continue;
     }
 
     idList.push(instrumentId);
-    docByTicker[instrumentId] = doc;
+    docByInstrumentId[instrumentId] = doc;
   }
 
   if (idList.length === 0) {
-    console.log("⚠️ Nessun instrumentId trovato, uscita.");
+    console.log("⚠️ Nessun instrumentId valido, uscita.");
     return;
   }
 
+  // 3️⃣ Prezzi live
   console.log(`📡 Carico prezzi live (${idList.length} strumenti)...`);
-  const livePrices = await loadLivePrices(token, idList);
+  const livePrices = await loadLivePrices(idList);
 
-  // Aggiorna Firestore
+  // 4️⃣ Aggiorna Firestore
   for (const instrumentId of idList) {
-    const doc = docByTicker[instrumentId];
+    const doc = docByInstrumentId[instrumentId];
     const price = livePrices[instrumentId];
 
     if (!price) {
-      console.log(`⚠️ Nessun prezzo per instrumentId ${instrumentId}`);
+      console.log(`⚠️ Prezzo mancante per instrumentId ${instrumentId}`);
       continue;
     }
 
-    console.log(`💰 Aggiorno ${doc.data().nome}: ${price}`);
+    console.log(`💰 ${doc.data().nome} → ${price}`);
 
     await doc.ref.update({
       prezzo_corrente: price,
@@ -137,7 +158,7 @@ async function run() {
   console.log("✅ Aggiornamento completato!");
 }
 
-run().catch((e) => {
-  console.error(e);
+run().catch((err) => {
+  console.error("❌ ERRORE:", err.message);
   process.exit(1);
 });
