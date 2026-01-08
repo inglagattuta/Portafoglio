@@ -1,5 +1,5 @@
 /**
- * update-etoro.js — eToro Public API (versione definitiva)
+ * update-etoro.js — eToro Public API (versione corretta)
  */
 
 const axios = require("axios");
@@ -39,28 +39,40 @@ function initFirestore() {
 
 // 🔍 RISOLVI TICKER → instrumentId
 async function resolveInstrumentId(ticker) {
-  const url = `${ETORO_BASE}/market-data/search?internalSymbolFull=${ticker}`;
-
-  const resp = await axios.get(url, { headers: etoroHeaders() });
-
-  if (!Array.isArray(resp.data) || resp.data.length === 0) return null;
-
-  const exact = resp.data.find(
-    (i) => i.internalSymbolFull?.toUpperCase() === ticker
+  const resp = await axios.get(
+    `${ETORO_BASE}/market-data/search`,
+    {
+      params: { internalSymbolFull: ticker },
+      headers: etoroHeaders(),
+    }
   );
 
-  return exact?.instrumentId || null;
+  const results = resp.data?.data;
+
+  if (!Array.isArray(results) || results.length === 0) return null;
+
+  const exact = results.find(
+    (r) => r.internalSymbolFull?.toUpperCase() === ticker
+  );
+
+  return exact?.instrumentId ?? null;
 }
 
 // 📡 PREZZI LIVE
 async function loadLivePrices(ids) {
-  const url = `${ETORO_BASE}/Live?InstrumentIds=${ids.join(",")}`;
-
-  const resp = await axios.get(url, { headers: etoroHeaders() });
+  const resp = await axios.get(
+    `${ETORO_BASE}/live`,
+    {
+      params: { instrumentIds: ids.join(",") },
+      headers: etoroHeaders(),
+    }
+  );
 
   const map = {};
   for (const r of resp.data) {
-    map[r.instrumentId] = (r.bid + r.ask) / 2;
+    if (r.instrumentId && r.bid && r.ask) {
+      map[r.instrumentId] = (r.bid + r.ask) / 2;
+    }
   }
 
   return map;
