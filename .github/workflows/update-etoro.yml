@@ -2,8 +2,6 @@ name: Aggiorna prezzi azioni su Firestore
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 * * * *'   # ogni ora
 
 jobs:
   update-portfolio:
