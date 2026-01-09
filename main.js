@@ -40,40 +40,14 @@ btnRealtime.className = "dashboard-btn";
 btnRealtime.onclick = async () => {
   if (!confirm("Aggiornare i prezzi in tempo reale?")) return;
 
-  btnRealtime.disabled = true;
-  btnRealtime.textContent = "⏳ Aggiornamento in corso...";
+  await fetch(
+    "https://workflowinglagattuta.ing-lagattuta.workers.dev/",
+    { method: "POST" }
+  );
 
-  try {
-    await fetch(
-      "https://api.github.com/repos/inglagattuta/Portafoglio/actions/workflows/update-etoro.yml/dispatches",
-      {
-        method: "POST",
-        headers: {
-          "Accept": "application/vnd.github+json",
-          "Authorization": "Bearer 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",
-          "X-GitHub-Api-Version": "2022-11-28",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ ref: "master" })
-      }
-    );
-
-    // tempo per completare GitHub Action
-    setTimeout(() => {
-      loadData();
-      btnRealtime.textContent = "✅ Aggiornato";
-      setTimeout(() => {
-        btnRealtime.textContent = "🔄 Aggiorna Tempo Reale";
-        btnRealtime.disabled = false;
-      }, 2000);
-    }, 20000);
-
-  } catch (e) {
-    alert("Errore durante l'aggiornamento");
-    btnRealtime.textContent = "🔄 Aggiorna Tempo Reale";
-    btnRealtime.disabled = false;
-  }
+  alert("Aggiornamento avviato!");
 };
+
 
 
 controls.appendChild(btnRealtime);
