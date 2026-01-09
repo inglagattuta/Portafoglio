@@ -5,7 +5,6 @@ import { db } from "./firebase-config.js";
 import {
   collection,
   getDocs,
-  getDoc,
   updateDoc,
   deleteDoc,
   doc
@@ -47,8 +46,6 @@ btnRealtime.onclick = async () => {
 
   alert("Aggiornamento avviato!");
 };
-
-
 
 controls.appendChild(btnRealtime);
 
@@ -174,6 +171,46 @@ function sortRows() {
 }
 
 // -------------------------------------------------------------
+// COPIA TEMPO REALE → CORRENTE
+// -------------------------------------------------------------
+async function copiaTempoRealeInCorrente(riga) {
+  try {
+    const snapAzioni = await getDocs(collection(db, "azioni"));
+    let azione = null;
+
+    snapAzioni.forEach(a => {
+      const d = a.data();
+      if (
+        d.ticker &&
+        d.ticker.toUpperCase() === (riga.nome || "").toUpperCase()
+      ) {
+        azione = d;
+      }
+    });
+
+    if (!azione || !azione.investito || !azione.prezzo_medio) {
+      alert("❌ Dati azione non disponibili");
+      return;
+    }
+
+    const qty = azione.investito / azione.prezzo_medio;
+    if (qty <= 0) return;
+
+    const nuovoPrezzoCorrente = riga.tempo_reale / qty;
+
+    await updateDoc(doc(db, "portafoglio", riga.id), {
+      prezzo_corrente: Number(nuovoPrezzoCorrente.toFixed(4))
+    });
+
+    await loadData();
+    alert("✅ Corrente aggiornato");
+  } catch (e) {
+    console.error(e);
+    alert("❌ Errore durante la copia");
+  }
+}
+
+// -------------------------------------------------------------
 // RENDER TABLE
 // -------------------------------------------------------------
 function renderTable() {
@@ -224,8 +261,17 @@ function renderTable() {
       tr.appendChild(td);
     });
 
+    // ------------------ AZIONI ------------------
     const tdA = document.createElement("td");
     tdA.className = "action-buttons";
+
+    const btC = document.createElement("button");
+    btC.textContent = "📋 Copia";
+    btC.className = "btn-copy";
+    btC.onclick = () => {
+      if (!confirm("Copiare Tempo Reale in Corrente?")) return;
+      copiaTempoRealeInCorrente(d);
+    };
 
     const btE = document.createElement("button");
     btE.textContent = "Modifica";
@@ -241,7 +287,7 @@ function renderTable() {
       loadData();
     };
 
-    tdA.append(btE, btD);
+    tdA.append(btC, btE, btD);
     tr.appendChild(tdA);
     tableBody.appendChild(tr);
   });
