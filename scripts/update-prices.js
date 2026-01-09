@@ -1,8 +1,8 @@
 /**
- * update-prices.js — PRODUZIONE
- * Prezzi azioni con fallback automatico:
- * - Twelve Data (primary)
- * - Yahoo Finance (fallback)
+ * update-prices.js — PRODUZIONE DEFINITIVA
+ * Provider:
+ *  - Twelve Data (primary)
+ *  - Yahoo Finance (fallback)
  */
 
 const axios = require("axios");
@@ -20,18 +20,27 @@ function initFirestore() {
   return admin.firestore();
 }
 
-// ================= SYMBOL NORMALIZATION =================
+// ================= OVERRIDES =================
+const YAHOO_OVERRIDES = {
+  GOOG: "GOOGL",
+};
 
-// Twelve Data NON vuole NASDAQ:
-function normalizeForTwelve(symbol) {
-  if (!symbol) return null;
-  return symbol.includes(":") ? symbol.split(":")[1] : symbol;
+// ================= SYMBOL NORMALIZATION =================
+function symbolForTwelve(raw) {
+  if (!raw) return null;
+  return raw.includes(":") ? raw.split(":")[1] : raw;
 }
 
-// Yahoo VUOLE ticker realistico (OL, -A, ecc.)
-function normalizeForYahoo(symbol) {
-  if (!symbol) return null;
-  return symbol.replace(/^NASDAQ:|^NYSE:|^OSE:/, "");
+function symbolForYahoo(raw) {
+  if (!raw) return null;
+
+  let sym = raw.replace(/^NASDAQ:|^NYSE:|^OSE:/, "");
+
+  if (YAHOO_OVERRIDES[sym]) {
+    return YAHOO_OVERRIDES[sym];
+  }
+
+  return sym;
 }
 
 // ================= TWELVE DATA =================
@@ -86,14 +95,14 @@ async function run() {
     const data = doc.data();
     const rawSymbol = data.symbol_api || doc.id;
 
-    const symbolTwelve = normalizeForTwelve(rawSymbol);
-    const symbolYahoo = normalizeForYahoo(rawSymbol);
+    const twelveSymbol = symbolForTwelve(rawSymbol);
+    const yahooSymbol = symbolForYahoo(rawSymbol);
 
-    let price = await getPriceFromTwelve(symbolTwelve);
+    let price = await getPriceFromTwelve(twelveSymbol);
     let source = "TwelveData";
 
     if (!price) {
-      price = await getPriceFromYahoo(symbolYahoo);
+      price = await getPriceFromYahoo(yahooSymbol);
       source = "Yahoo";
     }
 
