@@ -1,7 +1,7 @@
 /**
  * update-prices.js — PRODUZIONE
  * Aggiorna prezzo_corrente su Firestore (collezione: azioni)
- * Fonte ticker: azioni (symbol_api || doc.id)
+ * Fonte ticker: campo symbol_api (obbligatorio) oppure doc.id
  * Provider prezzi: Twelve Data
  */
 
@@ -16,24 +16,26 @@ function initFirestore() {
 
   const serviceAccount = JSON.parse(process.env.FIREBASE_KEY_JSON);
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: serviceAccount.project_id,
-  });
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      projectId: serviceAccount.project_id,
+    });
+  }
 
   return admin.firestore();
 }
 
 // ================= UTILS =================
 function normalizeSymbol(symbol) {
-  if (!symbol) return null;
+  if (!symbol || typeof symbol !== "string") return null;
 
-  // NASDAQ:AAPL → AAPL
+  // NASDAQ:MSFT → MSFT
   if (symbol.includes(":")) {
-    return symbol.split(":")[1];
+    return symbol.split(":")[1].trim().toUpperCase();
   }
 
-  return symbol;
+  return symbol.trim().toUpperCase();
 }
 
 // ================= TWELVE DATA =================
@@ -54,13 +56,16 @@ async function loadPrices(symbols) {
         timeout: 15000,
       });
 
-      if (resp.data?.price) {
+      if (resp.data && resp.data.price) {
         prices[symbol] = parseFloat(resp.data.price);
       } else {
         console.log(`⚠️ Prezzo non disponibile per ${symbol}`);
       }
     } catch (err) {
-      console.log(`❌ Errore API per ${symbol}`);
+      console.log(
+        `❌ Errore Twelve Data per ${symbol}`,
+        err.response?.data || err.message
+      );
     }
   }
 
@@ -81,16 +86,17 @@ async function run() {
     return;
   }
 
-  // Mappa: docId ↔ symbol API normalizzato
+  // Mappa docId → symbol Twelve Data
   const symbolMap = [];
 
   for (const doc of snap.docs) {
     const data = doc.data();
+
     const rawSymbol = data.symbol_api || doc.id;
     const apiSymbol = normalizeSymbol(rawSymbol);
 
     if (!apiSymbol) {
-      console.log(`⚠️ Symbol non valido per ${doc.id}`);
+      console.log(`⚠️ Symbol API non valido per ${doc.id}`);
       continue;
     }
 
@@ -100,9 +106,15 @@ async function run() {
     });
   }
 
-  const apiSymbols = symbolMap.map((s) => s.apiSymbol);
+  if (!symbolMap.length) {
+    console.log("⚠️ Nessun symbol valido da interrogare");
+    return;
+  }
+
+  const apiSymbols = [...new Set(symbolMap.map(s => s.apiSymbol))];
 
   console.log(`📡 Carico prezzi (${apiSymbols.join(", ")})`);
+
   const prices = await loadPrices(apiSymbols);
 
   for (const { docId, apiSymbol } of symbolMap) {
@@ -127,6 +139,6 @@ async function run() {
 }
 
 run().catch((err) => {
-  console.error("❌ ERRORE:", err.response?.data || err.message);
+  console.error("❌ ERRORE FATALE:", err.message);
   process.exit(1);
 });
