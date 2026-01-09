@@ -41,7 +41,7 @@ btnRealtime.onclick = () => {
   if (!confirm("Aggiornare i prezzi in tempo reale?")) return;
 
   window.open(
-    "https://github.com/TUO_USERNAME/Portafoglio/actions/workflows/update-etoro.yml",
+    "https://github.com/inglagattuta/Portafoglio/actions/workflows/update-etoro.yml",
     "_blank"
   );
 };
