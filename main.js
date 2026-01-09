@@ -50,7 +50,7 @@ btnRealtime.onclick = async () => {
         method: "POST",
         headers: {
           "Accept": "application/vnd.github+json",
-          "Authorization": "Bearer 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",
+          "Authorization": "Bearer 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",
           "X-GitHub-Api-Version": "2022-11-28",
           "Content-Type": "application/json"
         },
