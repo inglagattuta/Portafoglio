@@ -1,7 +1,7 @@
 /**
- * update-prices.js — PRODUZIONE
+ * update-prices.js — PRODUZIONE (FIX DEFINITIVO)
  * Aggiorna prezzo_corrente su Firestore (collezione: azioni)
- * Fonte ticker: campo symbol_api (obbligatorio) oppure doc.id
+ * Fonte ticker: symbol_api (PRIORITÀ ASSOLUTA) oppure doc.id
  * Provider prezzi: Twelve Data
  */
 
@@ -26,18 +26,6 @@ function initFirestore() {
   return admin.firestore();
 }
 
-// ================= UTILS =================
-function normalizeSymbol(symbol) {
-  if (!symbol || typeof symbol !== "string") return null;
-
-  // NASDAQ:MSFT → MSFT
-  if (symbol.includes(":")) {
-    return symbol.split(":")[1].trim().toUpperCase();
-  }
-
-  return symbol.trim().toUpperCase();
-}
-
 // ================= TWELVE DATA =================
 async function loadPrices(symbols) {
   if (!process.env.TWELVE_DATA_API_KEY) {
@@ -56,7 +44,7 @@ async function loadPrices(symbols) {
         timeout: 15000,
       });
 
-      if (resp.data && resp.data.price) {
+      if (resp.data?.price) {
         prices[symbol] = parseFloat(resp.data.price);
       } else {
         console.log(`⚠️ Prezzo non disponibile per ${symbol}`);
@@ -86,29 +74,23 @@ async function run() {
     return;
   }
 
-  // Mappa docId → symbol Twelve Data
+  // docId ↔ symbol Twelve Data (SENZA NORMALIZZARE)
   const symbolMap = [];
 
   for (const doc of snap.docs) {
     const data = doc.data();
 
-    const rawSymbol = data.symbol_api || doc.id;
-    const apiSymbol = normalizeSymbol(rawSymbol);
+    const apiSymbol = data.symbol_api || doc.id;
 
     if (!apiSymbol) {
-      console.log(`⚠️ Symbol API non valido per ${doc.id}`);
+      console.log(`⚠️ Symbol mancante per ${doc.id}`);
       continue;
     }
 
     symbolMap.push({
       docId: doc.id,
-      apiSymbol,
+      apiSymbol: apiSymbol.trim(),
     });
-  }
-
-  if (!symbolMap.length) {
-    console.log("⚠️ Nessun symbol valido da interrogare");
-    return;
   }
 
   const apiSymbols = [...new Set(symbolMap.map(s => s.apiSymbol))];
