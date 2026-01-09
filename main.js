@@ -24,10 +24,10 @@ const bxProfitto = document.getElementById("totProfitto");
 const bxProfittoPerc = document.getElementById("totProfittoPerc");
 
 // -------------------------------------------------------------
-// SORT
+// STATO
 // -------------------------------------------------------------
-let sortColumn = null;
-let sortDirection = 1; // 1 asc, -1 desc
+let rowsData = [];
+let sortState = { column: null, dir: 1 };
 
 // -------------------------------------------------------------
 // BOTTONE REALTIME
@@ -42,7 +42,6 @@ btnRealtime.onclick = async () => {
   await fetch("/api/update-realtime-prices", { method: "POST" });
   await loadData();
 };
-
 controls.appendChild(btnRealtime);
 
 // -------------------------------------------------------------
@@ -80,34 +79,25 @@ const euroCols = new Set([
   "tempo_reale"
 ]);
 
-// -------------------------------------------------------------
-// FORMAT
-// -------------------------------------------------------------
 const fmtEuro = v => Number(v || 0).toFixed(2) + " €";
 
 // -------------------------------------------------------------
-// HEADER (ORDINABILE)
+// HEADER CON SORT STABILE
 // -------------------------------------------------------------
 function renderHeader() {
   headerRow.innerHTML = "";
 
   columns.forEach(col => {
     const th = document.createElement("th");
+    th.textContent = labelMap[col];
     th.style.cursor = "pointer";
-    th.textContent = labelMap[col] || col;
-
-    if (sortColumn === col) {
-      th.textContent += sortDirection === 1 ? " ▲" : " ▼";
-    }
 
     th.onclick = () => {
-      if (sortColumn === col) {
-        sortDirection = -sortDirection;
-      } else {
-        sortColumn = col;
-        sortDirection = 1;
-      }
-      loadData();
+      sortState.dir =
+        sortState.column === col ? -sortState.dir : 1;
+      sortState.column = col;
+      sortRows();
+      renderTable();
     };
 
     headerRow.appendChild(th);
@@ -122,7 +112,7 @@ function renderHeader() {
 // LOAD DATA
 // -------------------------------------------------------------
 async function loadData() {
-  tableBody.innerHTML = "";
+  rowsData = [];
   renderHeader();
 
   const snap = await getDocs(collection(db, "portafoglio"));
@@ -134,74 +124,91 @@ async function loadData() {
     if (d.ticker) azioniMap.set(d.ticker.toUpperCase(), d);
   });
 
-  let rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  snap.docs.forEach(docSnap => {
+    const d = docSnap.data();
+    const az = azioniMap.get((d.nome || "").toUpperCase());
 
-  if (sortColumn) {
-    rows.sort((a, b) => {
-      const va = a[sortColumn] ?? 0;
-      const vb = b[sortColumn] ?? 0;
+    let tempoReale = 0;
+    if (az && az.investito && az.prezzo_medio && az.prezzo_corrente) {
+      const qty = az.investito / az.prezzo_medio;
+      tempoReale = qty * az.prezzo_corrente;
+    }
 
-      if (!isNaN(va) && !isNaN(vb)) {
-        return (va - vb) * sortDirection;
-      }
-      return String(va).localeCompare(String(vb)) * sortDirection;
+    rowsData.push({
+      id: docSnap.id,
+      ...d,
+      tempo_reale: tempoReale
     });
-  }
+  });
+
+  sortRows();
+  renderTable();
+}
+
+// -------------------------------------------------------------
+// SORT STABILE
+// -------------------------------------------------------------
+function sortRows() {
+  if (!sortState.column) return;
+
+  const col = sortState.column;
+  const dir = sortState.dir;
+
+  rowsData.sort((a, b) => {
+    const va = a[col] ?? 0;
+    const vb = b[col] ?? 0;
+
+    if (typeof va === "string") {
+      return va.localeCompare(vb) * dir;
+    }
+    return (va - vb) * dir;
+  });
+}
+
+// -------------------------------------------------------------
+// RENDER TABLE
+// -------------------------------------------------------------
+function renderTable() {
+  tableBody.innerHTML = "";
 
   let totInvestito = 0;
   let totValore = 0;
   let totDividendi = 0;
   let totProfitto = 0;
 
-  rows.forEach(d => {
+  rowsData.forEach(d => {
     const tr = document.createElement("tr");
-    const az = azioniMap.get((d.nome || "").toUpperCase());
 
     columns.forEach(col => {
       const td = document.createElement("td");
       td.style.textAlign = "center";
 
-      // TEMPO REALE
-      if (col === "tempo_reale") {
-        let valore = 0;
-        if (az && az.investito && az.prezzo_medio && az.prezzo_corrente) {
-          const qty = az.investito / az.prezzo_medio;
-          valore = qty * az.prezzo_corrente;
-        }
-        td.textContent = fmtEuro(valore);
-        totValore += valore;
+      if (col === "score") {
+        const v = Number(d.score || 0);
+        td.textContent = v.toFixed(2);
+        td.className =
+          v >= 12 ? "score-high" :
+          v >= 8 ? "score-medium" :
+          "score-low";
       }
+      else if (euroCols.has(col)) {
+        const v = Number(d[col] || 0);
+        td.textContent = fmtEuro(v);
 
-      // PROFITTO
+        if (col === "prezzo_acquisto") totInvestito += v;
+        if (col === "dividendi") totDividendi += v;
+        if (col === "tempo_reale") totValore += v;
+      }
       else if (col === "profitto") {
         const p =
           (d.prezzo_corrente || 0) -
           (d.prezzo_acquisto || 0) +
           (d.dividendi || 0) +
           (d.prelevato || 0);
+
         td.textContent = fmtEuro(p);
         totProfitto += p;
       }
-
-      // SCORE
-      else if (col === "score") {
-        const v = Number(d.score || 0);
-        td.textContent = v.toFixed(2);
-        td.classList.remove("score-high", "score-medium", "score-low");
-
-        if (v >= 12) td.classList.add("score-high");
-        else if (v >= 8) td.classList.add("score-medium");
-        else td.classList.add("score-low");
-      }
-
-      // EURO
-      else if (euroCols.has(col)) {
-        const v = Number(d[col] || 0);
-        td.textContent = fmtEuro(v);
-        if (col === "prezzo_acquisto") totInvestito += v;
-        if (col === "dividendi") totDividendi += v;
-      }
-
       else {
         td.textContent = d[col] ?? "";
       }
@@ -209,7 +216,6 @@ async function loadData() {
       tr.appendChild(td);
     });
 
-    // AZIONI
     const tdA = document.createElement("td");
     tdA.className = "action-buttons";
 
@@ -240,76 +246,6 @@ async function loadData() {
     totInvestito > 0
       ? ((totProfitto / totInvestito) * 100).toFixed(2) + " %"
       : "0 %";
-}
-
-// -------------------------------------------------------------
-// MODAL
-// -------------------------------------------------------------
-let modalEl = null;
-
-function ensureModal() {
-  if (modalEl) return modalEl;
-
-  modalEl = document.createElement("div");
-  modalEl.id = "editModal";
-  modalEl.className = "modal-overlay";
-  modalEl.style.display = "none";
-
-  modalEl.innerHTML = `
-    <div class="modal-card">
-      <h3>Modifica Titolo</h3>
-      <div id="modalFields"></div>
-      <div class="modal-buttons">
-        <button id="modalSave" class="btn-save">Salva</button>
-        <button id="modalClose" class="btn-cancel">Annulla</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modalEl);
-  modalEl.querySelector("#modalClose").onclick = () => modalEl.style.display = "none";
-  return modalEl;
-}
-
-async function openEditModal(id) {
-  const ref = doc(db, "portafoglio", id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return alert("Record non trovato");
-
-  const data = snap.data();
-  const modal = ensureModal();
-  const fields = modal.querySelector("#modalFields");
-  fields.innerHTML = "";
-
-  ["prezzo_acquisto","prezzo_corrente","dividendi","prelevato","score"].forEach(f => {
-    const label = document.createElement("label");
-    label.textContent = f.replaceAll("_"," ").toUpperCase();
-    const input = document.createElement("input");
-    input.type = "number";
-    input.step = "0.01";
-    input.id = "fld_" + f;
-    input.value = data[f] ?? "";
-    fields.append(label, input);
-  });
-
-  modal.style.display = "flex";
-
-  modal.querySelector("#modalSave").onclick = async () => {
-    const updated = { ...data };
-    ["prezzo_acquisto","prezzo_corrente","dividendi","prelevato","score"].forEach(f => {
-      updated[f] = Number(document.getElementById("fld_" + f).value || 0);
-    });
-
-    updated.profitto =
-      updated.prezzo_corrente -
-      updated.prezzo_acquisto +
-      updated.dividendi +
-      updated.prelevato;
-
-    await updateDoc(ref, updated);
-    modal.style.display = "none";
-    loadData();
-  };
 }
 
 // -------------------------------------------------------------
