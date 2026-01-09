@@ -174,26 +174,18 @@ function sortRows() {
 }
 
 // -------------------------------------------------------------
-// COPIA TEMPO REALE → PREZZO CORRENTE (CORRETTA)
+// COPIA TEMPO REALE → CORRENTE (VALORE TOTALE)
 // -------------------------------------------------------------
 async function copiaTempoRealeInCorrente(riga) {
-  if (!riga.quantita || riga.quantita <= 0) {
-    alert("❌ Quantità non disponibile");
-    return;
-  }
-
-  const nuovoPrezzoCorrente =
-    riga.tempo_reale / riga.quantita;
-
-  if (!isFinite(nuovoPrezzoCorrente)) {
-    alert("❌ Prezzo non valido");
+  if (!isFinite(riga.tempo_reale)) {
+    alert("❌ Tempo reale non valido");
     return;
   }
 
   await updateDoc(
     doc(db, "portafoglio", riga.id),
     {
-      prezzo_corrente: Number(nuovoPrezzoCorrente.toFixed(4))
+      prezzo_corrente: Number(riga.tempo_reale.toFixed(2))
     }
   );
 
