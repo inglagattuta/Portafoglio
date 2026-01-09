@@ -290,6 +290,25 @@ async function openEditModal(id) {
   };
 }
 
+// ---------------- SCORE ----------------
+else if (col === "score") {
+  const v = Number(d[col] || 0);
+
+  td.textContent = v.toFixed(2);
+  td.dataset.raw = v;
+
+  // reset classi
+  td.classList.remove("score-high", "score-medium", "score-low");
+
+  if (v >= 12) {
+    td.classList.add("score-high");      // verde
+  } else if (v >= 8) {
+    td.classList.add("score-medium");    // giallo scuro
+  } else {
+    td.classList.add("score-low");       // rosso scuro
+  }
+}
+
 
 // -------------------------------------------------------------
 loadData();
