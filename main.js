@@ -37,14 +37,44 @@ const controls = document.querySelector(".controls");
 const btnRealtime = document.createElement("button");
 btnRealtime.textContent = "🔄 Aggiorna Tempo Reale";
 btnRealtime.className = "dashboard-btn";
-btnRealtime.onclick = () => {
+btnRealtime.onclick = async () => {
   if (!confirm("Aggiornare i prezzi in tempo reale?")) return;
 
-  window.open(
-    "https://github.com/inglagattuta/Portafoglio/actions/workflows/update-etoro.yml",
-    "_blank"
-  );
+  btnRealtime.disabled = true;
+  btnRealtime.textContent = "⏳ Aggiornamento in corso...";
+
+  try {
+    await fetch(
+      "https://api.github.com/repos/inglagattuta/Portafoglio/actions/workflows/update-etoro.yml/dispatches",
+      {
+        method: "POST",
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "Authorization": "Bearer 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",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ ref: "main" })
+      }
+    );
+
+    // tempo per completare GitHub Action
+    setTimeout(() => {
+      loadData();
+      btnRealtime.textContent = "✅ Aggiornato";
+      setTimeout(() => {
+        btnRealtime.textContent = "🔄 Aggiorna Tempo Reale";
+        btnRealtime.disabled = false;
+      }, 2000);
+    }, 20000);
+
+  } catch (e) {
+    alert("Errore durante l'aggiornamento");
+    btnRealtime.textContent = "🔄 Aggiorna Tempo Reale";
+    btnRealtime.disabled = false;
+  }
 };
+
 
 controls.appendChild(btnRealtime);
 
