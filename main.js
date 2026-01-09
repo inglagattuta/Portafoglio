@@ -37,11 +37,15 @@ const controls = document.querySelector(".controls");
 const btnRealtime = document.createElement("button");
 btnRealtime.textContent = "🔄 Aggiorna Tempo Reale";
 btnRealtime.className = "dashboard-btn";
-btnRealtime.onclick = async () => {
+btnRealtime.onclick = () => {
   if (!confirm("Aggiornare i prezzi in tempo reale?")) return;
-  await fetch("/api/update-realtime-prices", { method: "POST" });
-  await loadData();
+
+  window.open(
+    "https://github.com/TUO_USERNAME/Portafoglio/actions/workflows/update-etoro.yml",
+    "_blank"
+  );
 };
+
 controls.appendChild(btnRealtime);
 
 // -------------------------------------------------------------
