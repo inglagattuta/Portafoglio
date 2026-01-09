@@ -136,7 +136,6 @@ async function run() {
   console.log("✅ Aggiornamento completato!");
 }
 
-run().catch((err) => {
-  console.error("❌ ERRORE:", err.message);
-  process.exit(1);
+module.exports = { run };
+
 });
