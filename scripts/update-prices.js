@@ -1,9 +1,8 @@
 /**
  * update-prices.js — PRODUZIONE
- * Aggiorna prezzo_corrente su Firestore (collezione: azioni)
- * Provider:
- *  - Primary: Twelve Data
- *  - Fallback: Yahoo Finance
+ * Prezzi azioni con fallback automatico:
+ * - Twelve Data (primary)
+ * - Yahoo Finance (fallback)
  */
 
 const axios = require("axios");
@@ -11,10 +10,6 @@ const admin = require("firebase-admin");
 
 // ================= FIREBASE =================
 function initFirestore() {
-  if (!process.env.FIREBASE_KEY_JSON) {
-    throw new Error("❌ FIREBASE_KEY_JSON mancante");
-  }
-
   const serviceAccount = JSON.parse(process.env.FIREBASE_KEY_JSON);
 
   admin.initializeApp({
@@ -25,16 +20,18 @@ function initFirestore() {
   return admin.firestore();
 }
 
-// ================= UTILS =================
-function normalizeSymbol(symbol) {
+// ================= SYMBOL NORMALIZATION =================
+
+// Twelve Data NON vuole NASDAQ:
+function normalizeForTwelve(symbol) {
   if (!symbol) return null;
+  return symbol.includes(":") ? symbol.split(":")[1] : symbol;
+}
 
-  // NASDAQ:AAPL → AAPL
-  if (symbol.includes(":")) {
-    return symbol.split(":")[1];
-  }
-
-  return symbol;
+// Yahoo VUOLE ticker realistico (OL, -A, ecc.)
+function normalizeForYahoo(symbol) {
+  if (!symbol) return null;
+  return symbol.replace(/^NASDAQ:|^NYSE:|^OSE:/, "");
 }
 
 // ================= TWELVE DATA =================
@@ -51,31 +48,27 @@ async function getPriceFromTwelve(symbol) {
     if (resp.data?.price) {
       return parseFloat(resp.data.price);
     }
-  } catch (err) {
-    // silenzioso → fallback
-  }
+  } catch (_) {}
 
   return null;
 }
 
-// ================= YAHOO FINANCE =================
+// ================= YAHOO =================
 async function getPriceFromYahoo(symbol) {
   try {
     const resp = await axios.get(
-      `https://query1.finance.yahoo.com/v7/finance/quote`,
+      "https://query1.finance.yahoo.com/v7/finance/quote",
       {
         params: { symbols: symbol },
         timeout: 15000,
       }
     );
 
-    const result = resp.data?.quoteResponse?.result?.[0];
-    if (result?.regularMarketPrice != null) {
-      return parseFloat(result.regularMarketPrice);
+    const q = resp.data?.quoteResponse?.result?.[0];
+    if (q?.regularMarketPrice != null) {
+      return parseFloat(q.regularMarketPrice);
     }
-  } catch (err) {
-    // silenzioso
-  }
+  } catch (_) {}
 
   return null;
 }
@@ -89,26 +82,18 @@ async function run() {
 
   console.log(`📊 ${snap.size} azioni trovate`);
 
-  if (snap.empty) {
-    console.log("⚠️ Nessuna azione trovata");
-    return;
-  }
-
   for (const doc of snap.docs) {
     const data = doc.data();
     const rawSymbol = data.symbol_api || doc.id;
-    const symbol = normalizeSymbol(rawSymbol);
 
-    if (!symbol) {
-      console.log(`⚠️ Symbol non valido per ${doc.id}`);
-      continue;
-    }
+    const symbolTwelve = normalizeForTwelve(rawSymbol);
+    const symbolYahoo = normalizeForYahoo(rawSymbol);
 
-    let price = await getPriceFromTwelve(symbol);
+    let price = await getPriceFromTwelve(symbolTwelve);
     let source = "TwelveData";
 
     if (!price) {
-      price = await getPriceFromYahoo(symbol);
+      price = await getPriceFromYahoo(symbolYahoo);
       source = "Yahoo";
     }
 
