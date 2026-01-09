@@ -6,7 +6,6 @@ import { db } from "./firebase-config.js";
 import {
   collection,
   getDocs,
-  getDoc,
   updateDoc,
   deleteDoc,
   doc
@@ -24,17 +23,20 @@ const bxDividendi = document.getElementById("totDividendi");
 const bxProfitto  = document.getElementById("totProfitto");
 
 // -------------------------------------------------------------
-// REALE BUTTON
+// REALTIME BUTTON
 // -------------------------------------------------------------
 const btnRealtime = document.createElement("button");
 btnRealtime.textContent = "🔄 Aggiorna Tempo Reale";
-btnRealtime.classList.add("btn-primary");
+btnRealtime.className = "dashboard-btn";
+btnRealtime.style.background = "#00b894";
+
 btnRealtime.onclick = async () => {
   if (!confirm("Aggiornare i prezzi in tempo reale?")) return;
   await aggiornaPrezziRealtime();
   await loadData();
 };
-document.body.prepend(btnRealtime);
+
+document.querySelector(".controls")?.appendChild(btnRealtime);
 
 // -------------------------------------------------------------
 // COLUMNS
@@ -43,15 +45,11 @@ const columns = [
   "tipologia",
   "nome",
   "prezzo_acquisto",
-  "tempo_reale",
   "prezzo_corrente",
+  "tempo_reale",
   "dividendi",
   "prelevato",
   "profitto",
-  "percentuale_12_mesi",
-  "rendimento_percentuale",
-  "payback",
-  "percentuale_portafoglio",
   "score"
 ];
 
@@ -59,45 +57,27 @@ const labelMap = {
   tipologia: "Tipologia",
   nome: "Titolo",
   prezzo_acquisto: "Investito",
-  tempo_reale: "Tempo Reale",
   prezzo_corrente: "Corrente",
+  tempo_reale: "Tempo Reale",
   dividendi: "Dividendi",
   prelevato: "Prelevato",
   profitto: "Profitto",
-  percentuale_12_mesi: "% 12 mesi",
-  rendimento_percentuale: "Rend %",
-  payback: "Payback",
-  percentuale_portafoglio: "% Portafoglio",
   score: "Score"
 };
-
-const hiddenCols = new Set([
-  "percentuale_12_mesi",
-  "rendimento_percentuale",
-  "payback",
-  "percentuale_portafoglio"
-]);
 
 const euroCols = new Set([
   "prezzo_acquisto",
   "prezzo_corrente",
   "dividendi",
   "prelevato",
-  "tempo_reale"
-]);
-
-const percCols = new Set([
-  "percentuale_12_mesi",
-  "rendimento_percentuale",
-  "payback",
-  "percentuale_portafoglio"
+  "tempo_reale",
+  "profitto"
 ]);
 
 // -------------------------------------------------------------
 // FORMATTERS
 // -------------------------------------------------------------
 const fmtEuro  = n => Number(n || 0).toFixed(2) + " €";
-const fmtPerc  = n => Number(n || 0).toFixed(2) + " %";
 const fmtScore = n => Number(n || 0).toFixed(2);
 
 // -------------------------------------------------------------
@@ -109,7 +89,6 @@ function renderHeader() {
   columns.forEach(col => {
     const th = document.createElement("th");
     th.textContent = labelMap[col] || col;
-    if (hiddenCols.has(col)) th.style.display = "none";
     headerRow.appendChild(th);
   });
 
@@ -119,26 +98,24 @@ function renderHeader() {
 }
 
 // -------------------------------------------------------------
-// LOAD DATA + TEMPO REALE
+// LOAD DATA
 // -------------------------------------------------------------
 async function loadData() {
   tableBody.innerHTML = "";
   renderHeader();
 
   try {
-    const snap = await getDocs(collection(db, "portafoglio"));
-    const snapAzioni = await getDocs(collection(db, "azioni"));
+    const snapPort = await getDocs(collection(db, "portafoglio"));
+    const snapAz   = await getDocs(collection(db, "azioni"));
 
-    // 🔑 MAPPA PER TICKER
+    // 🔑 MAPPA AZIONI PER TICKER
     const azioniMap = new Map();
-    snapAzioni.docs.forEach(a => {
-      const d = a.data();
-      if (d.ticker) {
-        azioniMap.set(d.ticker.toUpperCase(), d);
-      }
+    snapAz.docs.forEach(d => {
+      const a = d.data();
+      if (a.ticker) azioniMap.set(a.ticker.toUpperCase(), a);
     });
 
-    snap.docs.forEach(docSnap => {
+    snapPort.docs.forEach(docSnap => {
       const d = docSnap.data();
       const id = docSnap.id;
       const tr = document.createElement("tr");
@@ -149,25 +126,23 @@ async function loadData() {
       columns.forEach(col => {
         const td = document.createElement("td");
         td.style.textAlign = "center";
-        td.style.display = hiddenCols.has(col) ? "none" : "table-cell";
 
         // ---------------- TEMPO REALE ----------------
         if (col === "tempo_reale") {
           let valore = 0;
 
           if (az) {
-            const investito      = Number(az.investito || 0);
-            const prezzoMedio    = Number(az.prezzo_medio || 0);
-            const prezzoCorrente = Number(az.prezzo_corrente || 0);
+            const investito   = Number(az.investito || 0);
+            const prezzoMed  = Number(az.prezzo_medio || 0);
+            const prezzoCorr = Number(az.prezzo_corrente || 0);
 
-            if (investito > 0 && prezzoMedio > 0 && prezzoCorrente > 0) {
-              const quantita = investito / prezzoMedio;
-              valore = quantita * prezzoCorrente;
+            if (investito > 0 && prezzoMed > 0 && prezzoCorr > 0) {
+              const quantita = investito / prezzoMed;
+              valore = quantita * prezzoCorr;
             }
           }
 
           td.textContent = fmtEuro(valore);
-          td.dataset.raw = valore;
         }
 
         // ---------------- PROFITTO ----------------
@@ -179,34 +154,21 @@ async function loadData() {
             (Number(d.prelevato) || 0);
 
           td.textContent = fmtEuro(p);
-          td.dataset.raw = p;
         }
 
         // ---------------- EURO ----------------
         else if (euroCols.has(col)) {
-          const v = Number(d[col] || 0);
-          td.textContent = fmtEuro(v);
-          td.dataset.raw = v;
-        }
-
-        // ---------------- PERCENTUALI ----------------
-        else if (percCols.has(col)) {
-          const v = Number(d[col] || 0);
-          td.textContent = fmtPerc(v);
-          td.dataset.raw = v;
+          td.textContent = fmtEuro(d[col]);
         }
 
         // ---------------- SCORE ----------------
         else if (col === "score") {
-          const v = Number(d[col] || 0);
-          td.textContent = fmtScore(v);
-          td.dataset.raw = v;
+          td.textContent = fmtScore(d[col]);
         }
 
         // ---------------- DEFAULT ----------------
         else {
           td.textContent = d[col] ?? "";
-          td.dataset.raw = d[col] ?? "";
         }
 
         tr.appendChild(td);
@@ -215,27 +177,57 @@ async function loadData() {
       // ---------------- ACTIONS ----------------
       const tdA = document.createElement("td");
 
-      const btE = document.createElement("button");
-      btE.textContent = "Modifica";
-      btE.onclick = () => openEditModal(id);
-
       const btD = document.createElement("button");
-      btD.textContent = "Cancella";
+      btD.textContent = "❌";
       btD.onclick = async () => {
-        if (!confirm("Confermi?")) return;
+        if (!confirm("Confermi cancellazione?")) return;
         await deleteDoc(doc(db, "portafoglio", id));
         await loadData();
       };
 
-      tdA.append(btE, btD);
+      tdA.appendChild(btD);
       tr.appendChild(tdA);
-
       tableBody.appendChild(tr);
     });
+
+    // 🔥 BOX STATS
+    updateStats(snapPort.docs);
 
   } catch (e) {
     console.error("Errore loadData:", e);
   }
+}
+
+// -------------------------------------------------------------
+// STATS BOX (SOLO PORTAFOGLIO)
+// -------------------------------------------------------------
+function updateStats(docs) {
+  let investito = 0;
+  let valore = 0;
+  let dividendi = 0;
+  let prelevato = 0;
+
+  docs.forEach(d => {
+    const x = d.data();
+    investito += Number(x.prezzo_acquisto || 0);
+    valore    += Number(x.prezzo_corrente || 0);
+    dividendi += Number(x.dividendi || 0);
+    prelevato += Number(x.prelevato || 0);
+  });
+
+  const profitto =
+    valore - investito + dividendi + prelevato;
+
+  const perc =
+    investito > 0 ? (profitto / investito) * 100 : 0;
+
+  bxInvestito.textContent = fmtEuro(investito);
+  bxValore.textContent    = fmtEuro(valore);
+  bxDividendi.textContent = fmtEuro(dividendi);
+  bxProfitto.textContent  = fmtEuro(profitto);
+
+  const elPerc = document.getElementById("totProfittoPerc");
+  if (elPerc) elPerc.textContent = perc.toFixed(2) + " %";
 }
 
 // -------------------------------------------------------------
