@@ -241,7 +241,7 @@ async function openEditModal(docId) {
     });
 
     updated.profitto =
-      (updated.prezzo_corrente || 0) -
+      (updated.prezzo_corrente || 0) - 
       (updated.prezzo_acquisto || 0) +
       (updated.dividendi || 0) +
       (updated.prelevato || 0);
@@ -329,10 +329,10 @@ async function loadData() {
         } else if (col === "tempo_reale") {
           let valore = 0;
           if (az) {
-            const investito = Number(d.prezzo_acquisto || 0);
-            const prezzoMedio = Number(az.prezzo_medio || 0);
-            const prezzoCorrente = Number(az.prezzo_corrente || 0);
-            if (investito>0 && prezzoMedio>0 && prezzoCorrente>0){
+            const investito = Number(az.investito || 0);         // ← DA AZIONI
+            const prezzoMedio = Number(az.prezzo_medio || 0);    // ← DA AZIONI
+            const prezzoCorrente = Number(az.prezzo_corrente || 0); // ← DA AZIONI
+            if (investito > 0 && prezzoMedio > 0 && prezzoCorrente > 0) {
               const quantita = investito / prezzoMedio;
               valore = quantita * prezzoCorrente;
             }
