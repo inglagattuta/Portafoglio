@@ -202,9 +202,94 @@ async function loadData() {
 // -------------------------------------------------------------
 // MODAL (rimane invariato)
 // -------------------------------------------------------------
-async function openEditModal(id) {
-  alert("Modal già funzionante – riusiamo il tuo codice esistente");
+let modalEl = null;
+
+function ensureModal() {
+  if (modalEl) return modalEl;
+
+  modalEl = document.createElement("div");
+  modalEl.id = "editModal";
+  modalEl.className = "modal-overlay";
+  modalEl.style.display = "none";
+
+  modalEl.innerHTML = `
+    <div class="modal-card">
+      <h3>Modifica Titolo</h3>
+      <div id="modalFields"></div>
+      <div class="modal-buttons">
+        <button id="modalSave" class="btn-save">Salva</button>
+        <button id="modalClose" class="btn-cancel">Annulla</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalEl);
+
+  modalEl.querySelector("#modalClose").onclick = () => {
+    modalEl.style.display = "none";
+  };
+
+  return modalEl;
 }
+
+async function openEditModal(id) {
+  const ref = doc(db, "portafoglio", id);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    alert("Record non trovato");
+    return;
+  }
+
+  const data = snap.data();
+  const modal = ensureModal();
+  const fields = modal.querySelector("#modalFields");
+  fields.innerHTML = "";
+
+  const editableFields = [
+    "prezzo_acquisto",
+    "prezzo_corrente",
+    "dividendi",
+    "prelevato",
+    "score"
+  ];
+
+  editableFields.forEach(f => {
+    const label = document.createElement("label");
+    label.textContent = f.replaceAll("_", " ").toUpperCase();
+
+    const input = document.createElement("input");
+    input.type = "number";
+    input.step = "0.01";
+    input.id = "fld_" + f;
+    input.value = data[f] ?? "";
+
+    fields.appendChild(label);
+    fields.appendChild(input);
+  });
+
+  modal.style.display = "flex";
+
+  modal.querySelector("#modalSave").onclick = async () => {
+    const updated = { ...data };
+
+    editableFields.forEach(f => {
+      const v = document.getElementById("fld_" + f).value;
+      updated[f] = v === "" ? 0 : Number(v);
+    });
+
+    updated.profitto =
+      (updated.prezzo_corrente || 0) -
+      (updated.prezzo_acquisto || 0) +
+      (updated.dividendi || 0) +
+      (updated.prelevato || 0);
+
+    await updateDoc(ref, updated);
+    modal.style.display = "none";
+    loadData();
+  };
+}
+
 
 // -------------------------------------------------------------
 loadData();
