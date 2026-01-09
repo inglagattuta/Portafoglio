@@ -284,6 +284,7 @@ async function loadData() {
     const snap = await getDocs(collection(db, "portafoglio"));
     const snapAzioni = await getDocs(collection(db, "azioni"));
 
+    // Mappa ticker → dati azioni
     const azioniMap = new Map();
     snapAzioni.docs.forEach(a => {
       const data = a.data();
@@ -328,9 +329,9 @@ async function loadData() {
         } else if (col === "tempo_reale") {
           let valore = 0;
           if (az) {
-            const investito = Number(d.prezzo_acquisto||0);
-            const prezzoMedio = Number(az.prezzo_medio||0);
-            const prezzoCorrente = Number(az.prezzo_corrente||0);
+            const investito = Number(d.prezzo_acquisto || 0);
+            const prezzoMedio = Number(az.prezzo_medio || 0);
+            const prezzoCorrente = Number(az.prezzo_corrente || 0);
             if (investito>0 && prezzoMedio>0 && prezzoCorrente>0){
               const quantita = investito / prezzoMedio;
               valore = quantita * prezzoCorrente;
