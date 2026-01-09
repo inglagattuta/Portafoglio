@@ -65,31 +65,32 @@ async function getPriceFromTwelve(symbol) {
 // ================= YAHOO =================
 async function getPriceFromYahoo(symbol) {
   try {
-    const resp = await axios.get(
-      "https://query1.finance.yahoo.com/v7/finance/quote",
-      {
-        params: { symbols: symbol },
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          Accept: "application/json",
-        },
-        timeout: 15000,
-      }
-    );
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+    const resp = await axios.get(url, {
+      params: {
+        interval: "1d",
+        range: "1d",
+      },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+      timeout: 15000,
+    });
 
-    const q = resp.data?.quoteResponse?.result?.[0];
-    if (q?.regularMarketPrice != null) {
-      return parseFloat(q.regularMarketPrice);
+    const result = resp.data?.chart?.result?.[0];
+    const price = result?.meta?.regularMarketPrice;
+
+    if (price != null) {
+      return parseFloat(price);
     }
   } catch (err) {
-    console.error(`❌ Yahoo error ${symbol}:`, err.message);
+    console.error(`❌ Yahoo chart error ${symbol}:`, err.message);
   }
 
   return null;
 }
-
 
 // ================= MAIN =================
 async function run() {
