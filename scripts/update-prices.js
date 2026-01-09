@@ -1,7 +1,7 @@
 /**
  * update-prices.js — PRODUZIONE
  * Aggiorna prezzo_corrente su Firestore (collezione: azioni)
- * Fonte ticker: azioni (doc.id)
+ * Fonte ticker: azioni (symbol_api || doc.id)
  */
 
 const axios = require("axios");
@@ -32,18 +32,22 @@ async function loadPrices(symbols) {
   const prices = {};
 
   for (const symbol of symbols) {
-    const resp = await axios.get("https://api.twelvedata.com/price", {
-      params: {
-        symbol,
-        apikey: process.env.TWELVE_DATA_API_KEY,
-      },
-      timeout: 15000,
-    });
+    try {
+      const resp = await axios.get("https://api.twelvedata.com/price", {
+        params: {
+          symbol,
+          apikey: process.env.TWELVE_DATA_API_KEY,
+        },
+        timeout: 15000,
+      });
 
-    if (resp.data?.price) {
-      prices[symbol] = parseFloat(resp.data.price);
-    } else {
-      console.log(`⚠️ Prezzo non disponibile per ${symbol}`);
+      if (resp.data?.price) {
+        prices[symbol] = parseFloat(resp.data.price);
+      } else {
+        console.log(`⚠️ Prezzo non disponibile per ${symbol}`);
+      }
+    } catch (err) {
+      console.log(`❌ Errore API per ${symbol}`);
     }
   }
 
@@ -59,33 +63,38 @@ async function run() {
 
   console.log(`📊 ${snap.size} azioni trovate`);
 
-  const symbols = snap.docs.map((doc) => doc.id);
-
-  if (!symbols.length) {
-    console.log("⚠️ Nessun ticker trovato, uscita");
+  if (snap.empty) {
+    console.log("⚠️ Nessuna azione trovata, uscita");
     return;
   }
 
-  console.log(`📡 Carico prezzi (${symbols.join(", ")})`);
-  const prices = await loadPrices(symbols);
+  // 🔑 Usa symbol_api se presente, altrimenti doc.id
+  const symbolMap = snap.docs.map((doc) => ({
+    docId: doc.id,
+    apiSymbol: doc.data().symbol_api || doc.id,
+  }));
 
-  for (const symbol of symbols) {
-    const price = prices[symbol];
+  const apiSymbols = symbolMap.map((s) => s.apiSymbol);
+
+  console.log(`📡 Carico prezzi (${apiSymbols.join(", ")})`);
+  const prices = await loadPrices(apiSymbols);
+
+  for (const { docId, apiSymbol } of symbolMap) {
+    const price = prices[apiSymbol];
     if (!price) continue;
 
     await db
       .collection("azioni")
-      .document(symbol)
+      .doc(docId)
       .set(
         {
-          ticker: symbol,
           prezzo_corrente: price,
           lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
         },
         { merge: true }
       );
 
-    console.log(`💰 ${symbol} → ${price}`);
+    console.log(`💰 ${docId} → ${price}`);
   }
 
   console.log("✅ Aggiornamento completato!");
