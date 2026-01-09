@@ -114,7 +114,7 @@ function renderHeader() {
 }
 
 // -------------------------------------------------------------
-// LOAD DATA
+// LOAD DATA (QUI NASCE TUTTA LA LOGICA)
 // -------------------------------------------------------------
 async function loadData() {
   rowsData = [];
@@ -133,15 +133,18 @@ async function loadData() {
     const d = docSnap.data();
     const az = azioniMap.get((d.nome || "").toUpperCase());
 
+    let quantita = 0;
     let tempoReale = 0;
+
     if (az && az.investito && az.prezzo_medio && az.prezzo_corrente) {
-      const qty = az.investito / az.prezzo_medio;
-      tempoReale = qty * az.prezzo_corrente;
+      quantita = az.investito / az.prezzo_medio;
+      tempoReale = quantita * az.prezzo_corrente;
     }
 
     rowsData.push({
       id: docSnap.id,
       ...d,
+      quantita,
       tempo_reale: tempoReale
     });
   });
@@ -171,43 +174,30 @@ function sortRows() {
 }
 
 // -------------------------------------------------------------
-// COPIA TEMPO REALE → CORRENTE
+// COPIA TEMPO REALE → PREZZO CORRENTE (CORRETTA)
 // -------------------------------------------------------------
 async function copiaTempoRealeInCorrente(riga) {
-  try {
-    const snapAzioni = await getDocs(collection(db, "azioni"));
-    let azione = null;
-
-    snapAzioni.forEach(a => {
-      const d = a.data();
-      if (
-        d.ticker &&
-        d.ticker.toUpperCase() === (riga.nome || "").toUpperCase()
-      ) {
-        azione = d;
-      }
-    });
-
-    if (!azione || !azione.investito || !azione.prezzo_medio) {
-      alert("❌ Dati azione non disponibili");
-      return;
-    }
-
-    const qty = azione.investito / azione.prezzo_medio;
-    if (qty <= 0) return;
-
-    const nuovoPrezzoCorrente = riga.tempo_reale / qty;
-
-    await updateDoc(doc(db, "portafoglio", riga.id), {
-      prezzo_corrente: Number(nuovoPrezzoCorrente.toFixed(4))
-    });
-
-    await loadData();
-    alert("✅ Corrente aggiornato");
-  } catch (e) {
-    console.error(e);
-    alert("❌ Errore durante la copia");
+  if (!riga.quantita || riga.quantita <= 0) {
+    alert("❌ Quantità non disponibile");
+    return;
   }
+
+  const nuovoPrezzoCorrente =
+    riga.tempo_reale / riga.quantita;
+
+  if (!isFinite(nuovoPrezzoCorrente)) {
+    alert("❌ Prezzo non valido");
+    return;
+  }
+
+  await updateDoc(
+    doc(db, "portafoglio", riga.id),
+    {
+      prezzo_corrente: Number(nuovoPrezzoCorrente.toFixed(4))
+    }
+  );
+
+  await loadData();
 }
 
 // -------------------------------------------------------------
