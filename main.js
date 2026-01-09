@@ -256,7 +256,7 @@ async function openEditModal(docId) {
 }
 
 // -------------------------------------------------------------
-// IMPORT / EXPORT EXCEL (unchanged)
+// IMPORT / EXPORT EXCEL
 // -------------------------------------------------------------
 window.importExcel = async function(event) { /*...unchanged...*/ }
 window.exportExcel = async function() { /*...unchanged...*/ }
@@ -284,7 +284,6 @@ async function loadData() {
     const snap = await getDocs(collection(db, "portafoglio"));
     const snapAzioni = await getDocs(collection(db, "azioni"));
 
-    // mappa ticker → prezzo_reale
     const azioniMap = new Map();
     snapAzioni.docs.forEach(a => {
       const data = a.data();
@@ -330,11 +329,11 @@ async function loadData() {
           let valore = 0;
           if (az) {
             const investito = Number(d.prezzo_acquisto||0);
-            const prezzoMedio = Number(d.prezzo_medio||0);
-            const prezzoReale = Number(az.prezzo_reale||0);
-            if (investito>0 && prezzoMedio>0 && prezzoReale>0){
+            const prezzoMedio = Number(az.prezzo_medio||0);
+            const prezzoCorrente = Number(az.prezzo_corrente||0);
+            if (investito>0 && prezzoMedio>0 && prezzoCorrente>0){
               const quantita = investito / prezzoMedio;
-              valore = quantita * prezzoReale;
+              valore = quantita * prezzoCorrente;
             }
           }
           td.textContent = fmtEuro(valore);
