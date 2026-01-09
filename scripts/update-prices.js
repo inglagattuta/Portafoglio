@@ -2,6 +2,7 @@
  * update-prices.js — PRODUZIONE
  * Aggiorna prezzo_corrente su Firestore (collezione: azioni)
  * Fonte ticker: azioni (symbol_api || doc.id)
+ * Provider prezzi: Twelve Data
  */
 
 const axios = require("axios");
@@ -21,6 +22,18 @@ function initFirestore() {
   });
 
   return admin.firestore();
+}
+
+// ================= UTILS =================
+function normalizeSymbol(symbol) {
+  if (!symbol) return null;
+
+  // NASDAQ:AAPL → AAPL
+  if (symbol.includes(":")) {
+    return symbol.split(":")[1];
+  }
+
+  return symbol;
 }
 
 // ================= TWELVE DATA =================
@@ -68,11 +81,24 @@ async function run() {
     return;
   }
 
-  // 🔑 Usa symbol_api se presente, altrimenti doc.id
-  const symbolMap = snap.docs.map((doc) => ({
-    docId: doc.id,
-    apiSymbol: doc.data().symbol_api || doc.id,
-  }));
+  // Mappa: docId ↔ symbol API normalizzato
+  const symbolMap = [];
+
+  for (const doc of snap.docs) {
+    const data = doc.data();
+    const rawSymbol = data.symbol_api || doc.id;
+    const apiSymbol = normalizeSymbol(rawSymbol);
+
+    if (!apiSymbol) {
+      console.log(`⚠️ Symbol non valido per ${doc.id}`);
+      continue;
+    }
+
+    symbolMap.push({
+      docId: doc.id,
+      apiSymbol,
+    });
+  }
 
   const apiSymbols = symbolMap.map((s) => s.apiSymbol);
 
