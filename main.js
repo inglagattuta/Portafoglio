@@ -18,9 +18,9 @@ const headerRow = document.getElementById("headerRow");
 const tableBody = document.getElementById("tableBody");
 
 const bxInvestito = document.getElementById("totInvestito");
-const bxValore    = document.getElementById("valoreAttuale");
+const bxValore = document.getElementById("valoreAttuale");
 const bxDividendi = document.getElementById("totDividendi");
-const bxProfitto  = document.getElementById("totProfitto");
+const bxProfitto = document.getElementById("totProfitto");
 const bxProfittoPerc = document.getElementById("totProfittoPerc");
 
 // -------------------------------------------------------------
@@ -149,6 +149,22 @@ async function loadData() {
         totProfitto += p;
       }
 
+      // -------- SCORE --------
+      else if (col === "score") {
+        const v = Number(d.score || 0);
+        td.textContent = v.toFixed(2);
+
+        td.classList.remove("score-high", "score-medium", "score-low");
+
+        if (v >= 12) {
+          td.classList.add("score-high");
+        } else if (v >= 8) {
+          td.classList.add("score-medium");
+        } else {
+          td.classList.add("score-low");
+        }
+      }
+
       // -------- EURO --------
       else if (euroCols.has(col)) {
         const v = Number(d[col] || 0);
@@ -190,9 +206,9 @@ async function loadData() {
 
   // -------- BOX --------
   bxInvestito.textContent = fmtEuro(totInvestito);
-  bxValore.textContent    = fmtEuro(totValore);
+  bxValore.textContent = fmtEuro(totValore);
   bxDividendi.textContent = fmtEuro(totDividendi);
-  bxProfitto.textContent  = fmtEuro(totProfitto);
+  bxProfitto.textContent = fmtEuro(totProfitto);
   bxProfittoPerc.textContent =
     totInvestito > 0
       ? ((totProfitto / totInvestito) * 100).toFixed(2) + " %"
@@ -200,7 +216,7 @@ async function loadData() {
 }
 
 // -------------------------------------------------------------
-// MODAL (rimane invariato)
+// MODAL
 // -------------------------------------------------------------
 let modalEl = null;
 
@@ -289,26 +305,6 @@ async function openEditModal(id) {
     loadData();
   };
 }
-
-// ---------------- SCORE ----------------
-else if (col === "score") {
-  const v = Number(d[col] || 0);
-
-  td.textContent = v.toFixed(2);
-  td.dataset.raw = v;
-
-  // reset classi
-  td.classList.remove("score-high", "score-medium", "score-low");
-
-  if (v >= 12) {
-    td.classList.add("score-high");      // verde
-  } else if (v >= 8) {
-    td.classList.add("score-medium");    // giallo scuro
-  } else {
-    td.classList.add("score-low");       // rosso scuro
-  }
-}
-
 
 // -------------------------------------------------------------
 loadData();
