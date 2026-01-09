@@ -552,5 +552,20 @@ td.score-low { color: var(--danger-color); font-weight: 700; }
     border: none;
 }
 
+.score-high {
+  color: #2ecc71;        /* verde */
+  font-weight: 600;
+}
+
+.score-medium {
+  color: #f1c40f;        /* giallo scuro */
+  font-weight: 600;
+}
+
+.score-low {
+  color: #e74c3c;        /* rosso scuro */
+  font-weight: 600;
+}
+
 #modalSave.btn-save { background-color: var(--success-color); color: white; }
 #modalClose.btn-cancel { background-color: var(--bg-page); color: var(--text-primary); border: 1px solid var(--border-color); }
