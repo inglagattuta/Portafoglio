@@ -1,0 +1,28 @@
+name: Aggiorna prezzi azioni su Firestore
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'   # ogni ora
+
+jobs:
+  update-portfolio:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install axios firebase-admin
+
+      - name: Run update prices script
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          FIREBASE_KEY_JSON: ${{ secrets.FIREBASE_KEY_JSON }}
+        run: node scripts/update-prices.js
