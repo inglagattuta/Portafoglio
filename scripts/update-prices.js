@@ -1,7 +1,7 @@
 /**
  * update-prices.js — PRODUZIONE
- * Aggiorna prezzo_corrente su Firestore usando Twelve Data
- * Collection: portafoglio
+ * Aggiorna prezzo_corrente su Firestore (collezione: azioni)
+ * Fonte ticker: azioni (doc.id)
  */
 
 const axios = require("axios");
@@ -24,10 +24,6 @@ function initFirestore() {
 }
 
 // ================= TWELVE DATA =================
-function twelveDataUrl(symbols) {
-  return "https://api.twelvedata.com/price";
-}
-
 async function loadPrices(symbols) {
   if (!process.env.TWELVE_DATA_API_KEY) {
     throw new Error("❌ TWELVE_DATA_API_KEY mancante");
@@ -36,7 +32,7 @@ async function loadPrices(symbols) {
   const prices = {};
 
   for (const symbol of symbols) {
-    const resp = await axios.get(twelveDataUrl(), {
+    const resp = await axios.get("https://api.twelvedata.com/price", {
       params: {
         symbol,
         apikey: process.env.TWELVE_DATA_API_KEY,
@@ -44,8 +40,10 @@ async function loadPrices(symbols) {
       timeout: 15000,
     });
 
-    if (resp.data && resp.data.price) {
+    if (resp.data?.price) {
       prices[symbol] = parseFloat(resp.data.price);
+    } else {
+      console.log(`⚠️ Prezzo non disponibile per ${symbol}`);
     }
   }
 
@@ -54,31 +52,17 @@ async function loadPrices(symbols) {
 
 // ================= MAIN =================
 async function run() {
-  console.log("🚀 Avvio aggiornamento prezzi azioni");
+  console.log("🚀 Avvio aggiornamento prezzi (azioni)");
 
   const db = initFirestore();
-  const snap = await db.collection("portafoglio").get();
+  const snap = await db.collection("azioni").get();
 
-  console.log(`📊 ${snap.size} strumenti in portafoglio`);
+  console.log(`📊 ${snap.size} azioni trovate`);
 
-  const symbols = [];
-  const docBySymbol = {};
-
-  for (const doc of snap.docs) {
-    const data = doc.data();
-    const symbol = data.nome; // ⚠️ ticker = nome
-
-    if (!symbol) {
-      console.log(`⚠️ Documento senza nome: ${doc.id}`);
-      continue;
-    }
-
-    symbols.push(symbol);
-    docBySymbol[symbol] = doc;
-  }
+  const symbols = snap.docs.map((doc) => doc.id);
 
   if (!symbols.length) {
-    console.log("⚠️ Nessun ticker valido, uscita");
+    console.log("⚠️ Nessun ticker trovato, uscita");
     return;
   }
 
@@ -87,18 +71,21 @@ async function run() {
 
   for (const symbol of symbols) {
     const price = prices[symbol];
-    if (!price) {
-      console.log(`⚠️ Prezzo non disponibile per ${symbol}`);
-      continue;
-    }
+    if (!price) continue;
 
-    const doc = docBySymbol[symbol];
-    console.log(`💰 ${symbol}: ${price}`);
+    await db
+      .collection("azioni")
+      .document(symbol)
+      .set(
+        {
+          ticker: symbol,
+          prezzo_corrente: price,
+          lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
 
-    await doc.ref.update({
-      prezzo_corrente: price,
-      lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    console.log(`💰 ${symbol} → ${price}`);
   }
 
   console.log("✅ Aggiornamento completato!");
