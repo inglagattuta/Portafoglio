@@ -1,8 +1,7 @@
 /**
- * update-prices.js — PRODUZIONE (FIX DEFINITIVO)
+ * update-prices.js — PRODUZIONE (Twelve Data FIX)
  * Aggiorna prezzo_corrente su Firestore (collezione: azioni)
- * Fonte ticker: symbol_api (PRIORITÀ ASSOLUTA) oppure doc.id
- * Provider prezzi: Twelve Data
+ * Usa symbol_api ma RIMUOVE il prefisso EXCHANGE:
  */
 
 const axios = require("axios");
@@ -24,6 +23,18 @@ function initFirestore() {
   }
 
   return admin.firestore();
+}
+
+// ================= UTILS =================
+function cleanSymbol(symbol) {
+  if (!symbol) return null;
+
+  // NASDAQ:MSFT → MSFT
+  if (symbol.includes(":")) {
+    return symbol.split(":")[1];
+  }
+
+  return symbol.trim();
 }
 
 // ================= TWELVE DATA =================
@@ -68,51 +79,39 @@ async function run() {
   const snap = await db.collection("azioni").get();
 
   console.log(`📊 ${snap.size} azioni trovate`);
+  if (snap.empty) return;
 
-  if (snap.empty) {
-    console.log("⚠️ Nessuna azione trovata, uscita");
-    return;
-  }
-
-  // docId ↔ symbol Twelve Data (SENZA NORMALIZZARE)
   const symbolMap = [];
 
   for (const doc of snap.docs) {
     const data = doc.data();
+    const rawSymbol = data.symbol_api || doc.id;
+    const apiSymbol = cleanSymbol(rawSymbol);
 
-    const apiSymbol = data.symbol_api || doc.id;
-
-    if (!apiSymbol) {
-      console.log(`⚠️ Symbol mancante per ${doc.id}`);
-      continue;
-    }
+    if (!apiSymbol) continue;
 
     symbolMap.push({
       docId: doc.id,
-      apiSymbol: apiSymbol.trim(),
+      apiSymbol,
     });
   }
 
   const apiSymbols = [...new Set(symbolMap.map(s => s.apiSymbol))];
 
   console.log(`📡 Carico prezzi (${apiSymbols.join(", ")})`);
-
   const prices = await loadPrices(apiSymbols);
 
   for (const { docId, apiSymbol } of symbolMap) {
     const price = prices[apiSymbol];
     if (!price) continue;
 
-    await db
-      .collection("azioni")
-      .doc(docId)
-      .set(
-        {
-          prezzo_corrente: price,
-          lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+    await db.collection("azioni").doc(docId).set(
+      {
+        prezzo_corrente: price,
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
 
     console.log(`💰 ${docId} → ${price}`);
   }
@@ -120,7 +119,7 @@ async function run() {
   console.log("✅ Aggiornamento completato!");
 }
 
-run().catch((err) => {
+run().catch(err => {
   console.error("❌ ERRORE FATALE:", err.message);
   process.exit(1);
 });
