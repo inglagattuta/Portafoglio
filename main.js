@@ -286,3 +286,109 @@ function renderTable() {
 
 // -------------------------------------------------------------
 loadData();
+
+// -------------------------------------------------------------
+// MODAL EDIT
+// -------------------------------------------------------------
+function ensureModal() {
+  let modal = document.getElementById("editModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "editModal";
+  modal.style.cssText = `
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,.6);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      background:#fff;
+      padding:20px;
+      border-radius:8px;
+      min-width:300px;
+      max-width:400px;
+    ">
+      <h3>Modifica voce</h3>
+      <div id="modalFields"
+           style="display:grid;grid-template-columns:1fr;gap:6px"></div>
+
+      <div style="margin-top:15px;text-align:right">
+        <button id="modalSave">💾 Salva</button>
+        <button id="modalClose">❌ Chiudi</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelector("#modalClose").onclick = () => {
+    modal.style.display = "none";
+  };
+
+  return modal;
+}
+
+// -------------------------------------------------------------
+// OPEN EDIT MODAL (REAL VERSION)
+// -------------------------------------------------------------
+async function openEditModal(docId) {
+  const ref = doc(db, "portafoglio", docId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    alert("Record non trovato!");
+    return;
+  }
+
+  const data = snap.data();
+  const modal = ensureModal();
+  const fieldsDiv = modal.querySelector("#modalFields");
+  fieldsDiv.innerHTML = "";
+
+  const editable = [
+    "prezzo_acquisto",
+    "prezzo_corrente",
+    "dividendi",
+    "prelevato",
+    "percentuale_12_mesi",
+    "rendimento_percentuale",
+    "payback",
+    "score"
+  ];
+
+  editable.forEach(f => {
+    const lbl = document.createElement("label");
+    lbl.textContent = f.replaceAll("_", " ").toUpperCase();
+
+    const inp = document.createElement("input");
+    inp.type = "number";
+    inp.step = "0.01";
+    inp.id = "fld_" + f;
+    inp.value = data[f] ?? "";
+
+    fieldsDiv.appendChild(lbl);
+    fieldsDiv.appendChild(inp);
+  });
+
+  modal.style.display = "flex";
+
+  modal.querySelector("#modalSave").onclick = async () => {
+    const upd = {};
+
+    editable.forEach(f => {
+      const v = modal.querySelector("#fld_" + f).value;
+      upd[f] = v === "" ? 0 : Number(v);
+    });
+
+    await updateDoc(ref, upd);
+    modal.style.display = "none";
+    await loadData();
+  };
+}
