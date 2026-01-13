@@ -225,7 +225,7 @@ function renderTable() {
 
         if (col === "prezzo_acquisto") totInvestito += v;
         if (col === "dividendi") totDividendi += v;
-        if (col === "tempo_reale") totValore += v;
+        if (col === "prezzo_corrente") totValore += v;
       }
       else if (col === "profitto") {
         const p =
