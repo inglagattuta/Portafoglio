@@ -1039,3 +1039,48 @@ body.dark #selectMese option {
   color: #fff !important;
   background: #222 !important;
 }
+
+/* ===============================
+   COLORAZIONE RIGHE PER BLOCCO
+   =============================== */
+
+/* A1 – azzurro chiaro */
+tr.blocco-A1 {
+  background-color: rgba(52, 152, 219, 0.08);
+}
+
+/* A2 – verde chiaro */
+tr.blocco-A2 {
+  background-color: rgba(46, 204, 113, 0.08);
+}
+
+/* A3 – viola chiaro */
+tr.blocco-A3 {
+  background-color: rgba(155, 89, 182, 0.08);
+}
+
+/* A4 – arancione chiaro */
+tr.blocco-A4 {
+  background-color: rgba(243, 156, 18, 0.10);
+}
+
+/* B1 – rosso chiaro */
+tr.blocco-B1 {
+  background-color: rgba(231, 76, 60, 0.08);
+}
+
+/* B2 – giallo chiaro */
+tr.blocco-B2 {
+  background-color: rgba(241, 196, 15, 0.12);
+}
+
+/* C – grigio chiaro */
+tr.blocco-C {
+  background-color: rgba(189, 195, 199, 0.20);
+}
+
+/* Hover leggermente più scuro */
+tr[class^="blocco-"]:hover {
+  filter: brightness(0.96);
+}
+
