@@ -55,6 +55,12 @@ function colorEuroInline(value) {
   if (!isFinite(num) || num === 0) return text;
   return `<span style="font-weight:600;">${text}</span>`;
 }
+// --- aggiungi sotto gli utils ---
+function normalizePctForDisplay(v) {
+  const n = Number(v);
+  if (!isFinite(n)) return null;
+  return n <= 1 ? n * 100 : n;
+}
 
 // 🎯 COLORE PERSONALIZZATO PER SCORE
 function colorScore(value) {
