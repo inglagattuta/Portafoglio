@@ -126,6 +126,32 @@ function sortData(data, column) {
   return copy;
 }
 
+// ✅ ordinamento default: blocco (A1..C) poi score desc
+function sortByBloccoThenScore(rows) {
+  const bloccoOrder = {
+    "A1": 1,
+    "A2": 2,
+    "A3": 3,
+    "A4": 4,
+    "B1": 5,
+    "B2": 6,
+    "C": 7
+  };
+
+  return [...rows].sort((a, b) => {
+    const ba = bloccoOrder[a.blocco] ?? 99;
+    const bb = bloccoOrder[b.blocco] ?? 99;
+
+    // 1) blocco
+    if (ba !== bb) return ba - bb;
+
+    // 2) score desc
+    const sa = Number(a.score) || 0;
+    const sb = Number(b.score) || 0;
+    return sb - sa;
+  });
+}
+
 // ===============================
 // CARICA DATI (score + portafoglio join) + calcoli
 // ===============================
@@ -191,8 +217,8 @@ async function loadScoreData() {
       r.perc_blocco = totale > 0 ? (bloccoSum / totale) * 100 : 0;
     });
 
-    // ordinamento iniziale
-    rows = sortData(rows, "score");
+    // ✅ ordinamento iniziale: blocco poi score (desc)
+    rows = sortByBloccoThenScore(rows);
 
     renderTable(rows);
     computeSummary(rows);
