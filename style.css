@@ -961,6 +961,79 @@ body.dark .table-container tbody tr:hover {
   background: rgba(255,255,255,0.09);
 }
 
+/* =========================================================
+   OVERRIDE FINALE: CONTROLS TUTTI UGUALI (VINCE SU TUTTO)
+   Incolla in FONDO al file
+========================================================= */
+
+/* stessa estetica per button/label/a dentro .controls */
+.controls button,
+.controls .file-label,
+.controls .export-btn,
+.controls .dashboard-btn,
+.controls .control-btn,
+.controls a {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+
+  /* UNIFORME */
+  color: white !important;
+  background: var(--accent-primary) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.controls button:hover,
+.controls .file-label:hover,
+.controls .export-btn:hover,
+.controls .dashboard-btn:hover,
+.controls .control-btn:hover,
+.controls a:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.controls button:active,
+.controls .file-label:active,
+.controls .export-btn:active,
+.controls .dashboard-btn:active,
+.controls .control-btn:active,
+.controls a:active {
+  transform: translateY(0);
+}
+
+/* input file invisibile ma cliccabile tramite label */
+.controls .file-label {
+  position: relative;
+  overflow: hidden;
+}
+
+.controls .file-label input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* mobile: larghezza piena coerente */
+@media (max-width: 768px) {
+  .controls button,
+  .controls .file-label,
+  .controls .export-btn,
+  .controls .dashboard-btn,
+  .controls .control-btn,
+  .controls a {
+    width: 100%;
+    justify-content: center;
+  }
+}
 
 body.dark #selectMese option {
   color: #fff !important;
