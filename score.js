@@ -89,10 +89,11 @@ const visibleColumns = [
   "perf_12m",
   "rendimento",
   "payback",
-  "perc",            // % (da perc_portafoglio -> %)
+  "perc",               // % (da perc_portafoglio -> %)
   "score",
-  "valore_attuale",  // da portafoglio.prezzo_corrente
-  "perc_blocco"      // calcolata su prezzo_corrente
+  "valore_attuale",     // da portafoglio.prezzo_corrente
+  "perc_blocco",        // calcolata su prezzo_corrente
+  "perc_ticker_blocco"  // ✅ calcolata: % ticker nel blocco
 ];
 
 function sortData(data, column) {
@@ -197,14 +198,16 @@ async function loadScoreData() {
         // join
         valore_attuale: valoreAttuale,
 
-        // calcolata dopo
-        perc_blocco: 0
+        // calcolate dopo
+        perc_blocco: 0,
+        perc_ticker_blocco: 0
       });
     });
 
-    // 3) calcolo %blocco su somma prezzo_corrente
+    // 3) calcoli su prezzo_corrente
     const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
 
+    // somma valore attuale per blocco
     const sumByBlocco = new Map();
     rows.forEach(r => {
       const b = r.blocco || "";
@@ -212,9 +215,16 @@ async function loadScoreData() {
       sumByBlocco.set(b, (sumByBlocco.get(b) || 0) + v);
     });
 
+    // assegna % blocco e % ticker nel blocco
     rows.forEach(r => {
       const bloccoSum = sumByBlocco.get(r.blocco || "") || 0;
+      const v = Number(r.valore_attuale) || 0;
+
+      // % blocco su totale portafoglio
       r.perc_blocco = totale > 0 ? (bloccoSum / totale) * 100 : 0;
+
+      // ✅ % ticker nel blocco (valore ticker / totale blocco)
+      r.perc_ticker_blocco = bloccoSum > 0 ? (v / bloccoSum) * 100 : 0;
     });
 
     // ✅ ordinamento iniziale: blocco poi score (desc)
@@ -252,6 +262,7 @@ function renderTable(rows) {
     const score = colorScore(r.score);
     const valoreAttuale = colorEuroInline(r.valore_attuale);
     const percBlocco = colorPercInline(r.perc_blocco);
+    const percTickerBlocco = colorPercInline(r.perc_ticker_blocco);
 
     tr.innerHTML = `
       <td>${blocco}</td>
@@ -263,6 +274,7 @@ function renderTable(rows) {
       <td>${score}</td>
       <td>${valoreAttuale}</td>
       <td>${percBlocco}</td>
+      <td>${percTickerBlocco}</td>
     `;
 
     tableBody.appendChild(tr);
