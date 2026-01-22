@@ -36,7 +36,7 @@ const controls = document.querySelector(".controls");
 
 const btnRealtime = document.createElement("button");
 btnRealtime.textContent = "🔄 Aggiorna Tempo Reale";
-btnRealtime.className = "dashboard-btn";
+btnRealtime.className = "control-btn";
 btnRealtime.onclick = async () => {
   if (!confirm("Aggiornare i prezzi in tempo reale?")) return;
 
@@ -49,6 +49,7 @@ btnRealtime.onclick = async () => {
 };
 
 controls.appendChild(btnRealtime);
+
 
 // -------------------------------------------------------------
 // COLONNE
