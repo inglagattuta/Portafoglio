@@ -26,40 +26,41 @@ container.insertBefore(summaryBox, container.children[2]);
 // ===============================
 // UTILS: formattazioni & colori
 // ===============================
-function toPerc(value) {
+function fmtPct(value) {
   if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
-  if (isNaN(num)) return "-";
-  return (num * 100).toFixed(2) + "%";
+  if (!isFinite(num)) return "-";
+  return num.toFixed(2) + "%"; // i tuoi valori in Firestore sono già "percentuali" (es. 6.55)
 }
 
-function colorValueInline(value) {
-  if (value === null || value === undefined) return "-";
+function fmtEuro(value) {
   const num = Number(value);
-  if (isNaN(num)) return value;
-
-  if (num > 0) return `<span style="color:#00b894;font-weight:600;">${num}</span>`;
-  if (num < 0) return `<span style="color:#d63031;font-weight:600;">${num}</span>`;
-  return `${num}`;
+  if (!isFinite(num)) return "0.00 €";
+  return num.toFixed(2) + " €";
 }
 
 function colorPercInline(value) {
   if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
-  if (isNaN(num)) return "-";
-  const text = (num * 100).toFixed(2) + "%";
-
+  if (!isFinite(num)) return "-";
+  const text = num.toFixed(2) + "%";
   if (num > 0) return `<span style="color:#00b894;font-weight:600;">${text}</span>`;
   if (num < 0) return `<span style="color:#d63031;font-weight:600;">${text}</span>`;
   return text;
 }
 
+function colorEuroInline(value) {
+  const num = Number(value);
+  const text = fmtEuro(num);
+  if (!isFinite(num) || num === 0) return text;
+  return `<span style="font-weight:600;">${text}</span>`;
+}
+
 // 🎯 COLORE PERSONALIZZATO PER SCORE
 function colorScore(value) {
   if (value === null || value === undefined || value === "-") return "-";
-
   const num = Number(value);
-  if (isNaN(num)) return value;
+  if (!isFinite(num)) return value;
 
   let color = "#d63031"; // rosso < 8
   if (num >= 12) color = "#00b894"; // verde
@@ -73,6 +74,19 @@ function colorScore(value) {
 // ===============================
 let sortDirection = "desc";
 let sortColumn = "score";
+
+// colonne visibili e ordinabili (in ordine tabella)
+const visibleColumns = [
+  "blocco",
+  "ticker",
+  "perf_12m",
+  "rendimento",
+  "payback",
+  "perc",            // %
+  "score",
+  "valore_attuale",  // da portafoglio.prezzo_corrente
+  "perc_blocco"      // calcolata
+];
 
 function sortData(data, column) {
   if (sortColumn === column) {
@@ -91,10 +105,12 @@ function sortData(data, column) {
     const nA = Number(vA);
     const nB = Number(vB);
 
-    if (!isNaN(nA) && !isNaN(nB)) {
+    // numerico
+    if (isFinite(nA) && isFinite(nB)) {
       return sortDirection === "asc" ? nA - nB : nB - nA;
     }
 
+    // stringhe
     const sA = vA == null ? "" : String(vA);
     const sB = vB == null ? "" : String(vB);
     return sortDirection === "asc" ? sA.localeCompare(sB) : sB.localeCompare(sA);
@@ -104,15 +120,71 @@ function sortData(data, column) {
 }
 
 // ===============================
-// CARICA DATI
+// CARICA DATI (score + portafoglio join) + calcoli
 // ===============================
 async function loadScoreData() {
   try {
-    const snap = await getDocs(collection(db, "score"));
-    let rows = [];
-    snap.forEach(doc => rows.push(doc.data()));
+    // 1) PORTAFOGLIO (per prezzo_corrente)
+    const snapPtf = await getDocs(collection(db, "portafoglio"));
+    const ptfMap = new Map();
 
-    rows = sortData(rows, "score"); // ordinamento iniziale
+    snapPtf.forEach(docSnap => {
+      const d = docSnap.data() || {};
+      const key = String(d.nome || docSnap.id || "").trim().toUpperCase();
+      if (!key) return;
+      ptfMap.set(key, d);
+    });
+
+    // 2) SCORE
+    const snapScore = await getDocs(collection(db, "score"));
+    let rows = [];
+    snapScore.forEach(docSnap => {
+      const s = docSnap.data() || {};
+      const ticker = String(s.ticker || docSnap.id || "").trim().toUpperCase();
+      if (!ticker) return;
+
+      const ptf = ptfMap.get(ticker) || {};
+      const valoreAttuale = Number(ptf.prezzo_corrente || 0);
+
+      rows.push({
+        blocco: String(s.blocco || "").trim().toUpperCase(),
+        ticker,
+
+        // valori dal documento score (nel tuo excel sono già “percentuali” tipo 6.55)
+        perf_12m: Number(s.perf_12m ?? 0),
+        rendimento: Number(s.rendimento ?? 0),
+        payback: Number(s.payback ?? 0),
+
+        // nel tuo DB può chiamarsi perc o perc_portafoglio
+        perc: Number((s.perc_portafoglio ?? s.perc) ?? 0),
+
+        score: Number(s.score ?? 0),
+
+        // join
+        valore_attuale: valoreAttuale,
+
+        // calcolata dopo
+        perc_blocco: 0
+      });
+    });
+
+    // 3) calcolo %blocco su somma prezzo_corrente
+    const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
+
+    const sumByBlocco = new Map();
+    rows.forEach(r => {
+      const b = r.blocco || "";
+      const v = Number(r.valore_attuale) || 0;
+      sumByBlocco.set(b, (sumByBlocco.get(b) || 0) + v);
+    });
+
+    rows.forEach(r => {
+      const bloccoSum = sumByBlocco.get(r.blocco || "") || 0;
+      r.perc_blocco = totale > 0 ? (bloccoSum / totale) * 100 : 0;
+    });
+
+    // ordinamento iniziale
+    rows = sortData(rows, "score");
 
     renderTable(rows);
     computeSummary(rows);
@@ -124,7 +196,7 @@ async function loadScoreData() {
 }
 
 // ===============================
-// RENDER TABELLA
+// RENDER TABELLA (SOLO colonne richieste)
 // ===============================
 function renderTable(rows) {
   tableBody.innerHTML = "";
@@ -132,31 +204,26 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
+    const blocco = r.blocco || "-";
+    const ticker = r.ticker || "-";
     const perf12 = colorPercInline(r.perf_12m);
     const rendimento = colorPercInline(r.rendimento);
     const payback = colorPercInline(r.payback);
     const perc = colorPercInline(r.perc);
-
-    const score = (r.score == null)
-      ? "-"
-      : colorScore(Number(r.score));
-
-    const esito = r.esito || "-";
-    const tipologia = r.tipologia || "-";
-    const incremento = r.incremento == null ? "-" : colorValueInline(r.incremento);
-    const valore_euro = r.valore_euro == null ? "-" : colorValueInline(r.valore_euro);
+    const score = colorScore(r.score);
+    const valoreAttuale = colorEuroInline(r.valore_attuale);
+    const percBlocco = colorPercInline(r.perc_blocco);
 
     tr.innerHTML = `
-      <td>${r.ticker || "-"}</td>
+      <td>${blocco}</td>
+      <td>${ticker}</td>
       <td>${perf12}</td>
       <td>${rendimento}</td>
       <td>${payback}</td>
       <td>${perc}</td>
       <td>${score}</td>
-      <td>${esito}</td>
-      <td>${tipologia}</td>
-      <td>${incremento}</td>
-      <td>${valore_euro}</td>
+      <td>${valoreAttuale}</td>
+      <td>${percBlocco}</td>
     `;
 
     tableBody.appendChild(tr);
@@ -199,20 +266,7 @@ function enableSorting(rows) {
     th.style.cursor = "pointer";
 
     th.addEventListener("click", () => {
-      const columns = [
-        "ticker",
-        "perf_12m",
-        "rendimento",
-        "payback",
-        "perc",
-        "score",
-        "esito",
-        "tipologia",
-        "incremento",
-        "valore_euro"
-      ];
-
-      const columnName = columns[index] || "score";
+      const columnName = visibleColumns[index] || "score";
       const sorted = sortData(rows, columnName);
       renderTable(sorted);
     });
