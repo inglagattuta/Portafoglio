@@ -76,6 +76,43 @@ function colorScore(value) {
   return `<span style="color:${color};font-weight:700;">${num.toFixed(2)}</span>`;
 }
 
+// ✅ COLORE % TICKER NEL BLOCCO (soglie diverse per blocchi A e blocchi B)
+function colorPctTickerNelBlocco(value, blocco) {
+  const num = Number(value);
+  if (!isFinite(num)) return "-";
+
+  const b = String(blocco || "").trim().toUpperCase();
+
+  // palette coerente con il resto
+  const GREEN = "#00b894";
+  const YELLOW = "#b59d00";
+  const RED = "#d63031";
+
+  const blocchiA = ["A1", "A2", "A3"];
+  const blocchiB = ["A4", "B1", "B2"];
+
+  let color = GREEN;
+
+  if (blocchiA.includes(b)) {
+    // Verde <7, Giallo 7-10, Rosso >10
+    if (num > 10) color = RED;
+    else if (num >= 7) color = YELLOW;
+    else color = GREEN;
+  } else if (blocchiB.includes(b)) {
+    // Verde <40, Giallo 40-50, Rosso >50
+    if (num > 50) color = RED;
+    else if (num >= 40) color = YELLOW;
+    else color = GREEN;
+  } else {
+    // fallback (es. C): tieni verde se piccolo, giallo medio, rosso grande
+    if (num > 50) color = RED;
+    else if (num >= 40) color = YELLOW;
+    else color = GREEN;
+  }
+
+  return `<span style="color:${color};font-weight:700;">${num.toFixed(2)}%</span>`;
+}
+
 // ===============================
 // ORDINAMENTO
 // ===============================
@@ -223,7 +260,7 @@ async function loadScoreData() {
       // % blocco su totale portafoglio
       r.perc_blocco = totale > 0 ? (bloccoSum / totale) * 100 : 0;
 
-      // ✅ % ticker nel blocco (valore ticker / totale blocco)
+      // % ticker nel blocco (valore ticker / totale blocco)
       r.perc_ticker_blocco = bloccoSum > 0 ? (v / bloccoSum) * 100 : 0;
     });
 
@@ -262,7 +299,9 @@ function renderTable(rows) {
     const score = colorScore(r.score);
     const valoreAttuale = colorEuroInline(r.valore_attuale);
     const percBlocco = colorPercInline(r.perc_blocco);
-    const percTickerBlocco = colorPercInline(r.perc_ticker_blocco);
+
+    // ✅ qui usiamo la logica colori richiesta
+    const percTickerBlocco = colorPctTickerNelBlocco(r.perc_ticker_blocco, r.blocco);
 
     tr.innerHTML = `
       <td>${blocco}</td>
