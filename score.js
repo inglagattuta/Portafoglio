@@ -204,6 +204,9 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
+    if (r.blocco) {
+    tr.classList.add("blocco-" + r.blocco);
+  }
     const blocco = r.blocco || "-";
     const ticker = r.ticker || "-";
     const perf12 = colorPercInline(r.perf_12m);
