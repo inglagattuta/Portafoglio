@@ -1042,45 +1042,45 @@ body.dark #selectMese option {
 
 /* ===============================
    COLORAZIONE RIGHE PER BLOCCO
+   (versione più marcata ma soft)
    =============================== */
 
-/* A1 – azzurro chiaro */
+/* A1 – azzurro */
 tr.blocco-A1 {
-  background-color: rgba(52, 152, 219, 0.08);
+  background-color: rgba(52, 152, 219, 0.15);
 }
 
-/* A2 – verde chiaro */
+/* A2 – verde */
 tr.blocco-A2 {
-  background-color: rgba(46, 204, 113, 0.08);
+  background-color: rgba(46, 204, 113, 0.15);
 }
 
-/* A3 – viola chiaro */
+/* A3 – viola */
 tr.blocco-A3 {
-  background-color: rgba(155, 89, 182, 0.08);
+  background-color: rgba(155, 89, 182, 0.16);
 }
 
-/* A4 – arancione chiaro */
+/* A4 – arancione */
 tr.blocco-A4 {
-  background-color: rgba(243, 156, 18, 0.10);
+  background-color: rgba(243, 156, 18, 0.18);
 }
 
-/* B1 – rosso chiaro */
+/* B1 – rosso */
 tr.blocco-B1 {
-  background-color: rgba(231, 76, 60, 0.08);
+  background-color: rgba(231, 76, 60, 0.14);
 }
 
-/* B2 – giallo chiaro */
+/* B2 – giallo */
 tr.blocco-B2 {
-  background-color: rgba(241, 196, 15, 0.12);
+  background-color: rgba(241, 196, 15, 0.20);
 }
 
-/* C – grigio chiaro */
+/* C – grigio */
 tr.blocco-C {
-  background-color: rgba(189, 195, 199, 0.20);
+  background-color: rgba(189, 195, 199, 0.28);
 }
 
-/* Hover leggermente più scuro */
+/* Hover: un filo più scuro */
 tr[class^="blocco-"]:hover {
-  filter: brightness(0.96);
+  filter: brightness(0.92);
 }
-
