@@ -30,7 +30,7 @@ function fmtPct(value) {
   if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
   if (!isFinite(num)) return "-";
-  return num.toFixed(2) + "%"; // i tuoi valori in Firestore sono già "percentuali" (es. 6.55)
+  return num.toFixed(2) + "%";
 }
 
 function fmtEuro(value) {
@@ -55,10 +55,11 @@ function colorEuroInline(value) {
   if (!isFinite(num) || num === 0) return text;
   return `<span style="font-weight:600;">${text}</span>`;
 }
-// --- aggiungi sotto gli utils ---
+
+// perc_portafoglio su Firestore è frazione (0..1) -> converti in %
 function normalizePctForDisplay(v) {
   const n = Number(v);
-  if (!isFinite(n)) return null;
+  if (!isFinite(n)) return 0;
   return n <= 1 ? n * 100 : n;
 }
 
@@ -88,10 +89,10 @@ const visibleColumns = [
   "perf_12m",
   "rendimento",
   "payback",
-  "perc",            // %
+  "perc",            // % (da perc_portafoglio -> %)
   "score",
   "valore_attuale",  // da portafoglio.prezzo_corrente
-  "perc_blocco"      // calcolata
+  "perc_blocco"      // calcolata su prezzo_corrente
 ];
 
 function sortData(data, column) {
@@ -144,6 +145,7 @@ async function loadScoreData() {
     // 2) SCORE
     const snapScore = await getDocs(collection(db, "score"));
     let rows = [];
+
     snapScore.forEach(docSnap => {
       const s = docSnap.data() || {};
       const ticker = String(s.ticker || docSnap.id || "").trim().toUpperCase();
@@ -156,13 +158,13 @@ async function loadScoreData() {
         blocco: String(s.blocco || "").trim().toUpperCase(),
         ticker,
 
-        // valori dal documento score (nel tuo excel sono già “percentuali” tipo 6.55)
+        // valori già in "punti percentuali" (es. 6.55) dal tuo import Excel
         perf_12m: Number(s.perf_12m ?? 0),
         rendimento: Number(s.rendimento ?? 0),
         payback: Number(s.payback ?? 0),
 
-        // nel tuo DB può chiamarsi perc o perc_portafoglio
-        perc: Number((s.perc_portafoglio ?? s.perc) ?? 0),
+        // ✅ % portafoglio: in Firestore è frazione (0..1), la mostriamo in %
+        perc: normalizePctForDisplay(s.perc_portafoglio ?? 0),
 
         score: Number(s.score ?? 0),
 
@@ -210,9 +212,11 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
+    // colore riga per blocco
     if (r.blocco) {
-    tr.classList.add("blocco-" + r.blocco);
-  }
+      tr.classList.add("blocco-" + r.blocco);
+    }
+
     const blocco = r.blocco || "-";
     const ticker = r.ticker || "-";
     const perf12 = colorPercInline(r.perf_12m);
