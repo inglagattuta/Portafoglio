@@ -1084,3 +1084,33 @@ tr.blocco-C {
 tr[class^="blocco-"]:hover {
   filter: brightness(0.92);
 }
+
+
+/* ===========================
+   RIEPILOGO BLOCCHI - COLORI RIGA
+   =========================== */
+
+/* Applica il colore su TUTTE le celle della riga */
+#blocchiTable tr.blocco-ok > td {
+  background: rgba(0, 184, 148, 0.22) !important;  /* verde */
+}
+
+#blocchiTable tr.blocco-warning > td {
+  background: rgba(241, 196, 15, 0.28) !important; /* giallo */
+}
+
+#blocchiTable tr.blocco-danger > td {
+  background: rgba(214, 48, 49, 0.22) !important;  /* rosso */
+}
+
+/* Mantieni leggibile il testo */
+#blocchiTable tr.blocco-ok > td,
+#blocchiTable tr.blocco-warning > td,
+#blocchiTable tr.blocco-danger > td {
+  color: inherit !important;
+}
+
+/* Se hai hover che copre lo sfondo, lo disinneschiamo per questa tabella */
+#blocchiTable tbody tr:hover td {
+  background: inherit !important;
+}
