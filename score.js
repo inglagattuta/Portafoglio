@@ -179,7 +179,7 @@ const visibleColumns = [
   "valore_attuale",
   "perc_blocco",
   "perc_ticker_blocco",
-  "valutazione" // ultima colonna
+  "valutazione"
 ];
 
 function sortData(data, column) {
@@ -196,7 +196,6 @@ function sortData(data, column) {
     const vA = a[column];
     const vB = b[column];
 
-    // ordinamento blocco: A1..C
     if (column === "blocco") {
       const ba = bloccoOrder[String(vA || "").toUpperCase()] ?? 99;
       const bb = bloccoOrder[String(vB || "").toUpperCase()] ?? 99;
@@ -229,6 +228,109 @@ function sortByBloccoThenScore(rows) {
     const sb = Number(b.score) || 0;
     return sb - sa;
   });
+}
+
+// ===============================
+// FILTRO BLOCCO (UI)
+// ===============================
+let allRows = [];
+let currentRows = [];
+let selectedBlocco = "ALL";
+let filterBar = null;
+let bloccoSelect = null;
+
+function ensureFilterUI() {
+  if (filterBar) return;
+
+  // trova la card della tabella score
+  const scoreCard = container.querySelector(".table-card");
+  if (!scoreCard) return;
+
+  filterBar = document.createElement("div");
+  filterBar.style.display = "flex";
+  filterBar.style.gap = "10px";
+  filterBar.style.alignItems = "center";
+  filterBar.style.margin = "10px 0 14px 0";
+
+  const lbl = document.createElement("label");
+  lbl.textContent = "Filtro Blocco:";
+  lbl.style.fontWeight = "700";
+
+  bloccoSelect = document.createElement("select");
+  bloccoSelect.style.padding = "8px 10px";
+  bloccoSelect.style.borderRadius = "10px";
+  bloccoSelect.style.border = "1px solid rgba(0,0,0,0.15)";
+  bloccoSelect.style.fontWeight = "700";
+  bloccoSelect.innerHTML = `
+    <option value="ALL">Tutti</option>
+    <option value="A1">A1</option>
+    <option value="A2">A2</option>
+    <option value="A3">A3</option>
+    <option value="A4">A4</option>
+    <option value="B1">B1</option>
+    <option value="B2">B2</option>
+    <option value="C">C</option>
+  `;
+
+  bloccoSelect.addEventListener("change", () => {
+    selectedBlocco = bloccoSelect.value;
+    applyFilterAndRender();
+  });
+
+  const btnReset = document.createElement("button");
+  btnReset.textContent = "Reset";
+  btnReset.style.padding = "8px 12px";
+  btnReset.style.borderRadius = "10px";
+  btnReset.style.border = "1px solid rgba(0,0,0,0.15)";
+  btnReset.style.fontWeight = "800";
+  btnReset.style.cursor = "pointer";
+  btnReset.addEventListener("click", () => {
+    selectedBlocco = "ALL";
+    if (bloccoSelect) bloccoSelect.value = "ALL";
+    applyFilterAndRender();
+  });
+
+  filterBar.appendChild(lbl);
+  filterBar.appendChild(bloccoSelect);
+  filterBar.appendChild(btnReset);
+
+  // inserisci la barra filtro sotto il titolo h2 della card
+  const h2 = scoreCard.querySelector("h2");
+  if (h2 && h2.parentNode) h2.parentNode.insertBefore(filterBar, h2.nextSibling);
+  else scoreCard.insertBefore(filterBar, scoreCard.firstChild);
+}
+
+function applyFilterAndRender() {
+  // 1) filtro
+  let filtered = allRows;
+  if (selectedBlocco && selectedBlocco !== "ALL") {
+    filtered = allRows.filter(r => String(r.blocco || "").toUpperCase() === selectedBlocco);
+  }
+
+  // 2) mantieni ordinamento corrente (se l'utente ha cliccato su un header)
+  // se non ha mai cliccato nulla, il sortColumn rimane "score" ma noi vogliamo default blocco+score:
+  if (sortColumn === "score" && sortDirection === "desc") {
+    // ok, ma non vogliamo perdere il default: blocco poi score
+    // se l'utente ha cliccato almeno una volta su un header, può cambiare sortColumn
+    // qui usiamo un trucco: se non è mai stato impostato "hasUserSorted", usiamo default
+  }
+
+  currentRows = [...filtered];
+
+  // se l'utente ha fatto sorting (hasUserSorted true), ordiniamo con sortData
+  if (hasUserSorted) {
+    currentRows = sortData(currentRows, sortColumn);
+  } else {
+    currentRows = sortByBloccoThenScore(currentRows);
+  }
+
+  renderTable(currentRows);
+
+  // Riepilogo blocchi SEMPRE sul totale, non filtrato (così non “mente”)
+  renderBlocchiSummary(allRows);
+
+  // summary: sul filtro (più utile mentre filtri)
+  computeSummary(currentRows);
 }
 
 // ===============================
@@ -278,7 +380,6 @@ function getBloccoRowClass(pct, bandInf, bandSup) {
   return "blocco-ok";                       // verde
 }
 
-// costruisce anche priorityMap (serve per VALUTAZIONE)
 function buildBlocchiStats(rows) {
   const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
 
@@ -333,24 +434,15 @@ function renderBlocchiSummary(rows) {
     const rowClass = getBloccoRowClass(r.pct, r.bandInf, r.bandSup);
     if (rowClass) tr.classList.add(rowClass);
 
-    const euro = fmtEuro0(r.attuali);
-    const pct = fmtPct(r.pct);
-    const target = fmtPct(r.target);
-    const bandInf = fmtPct(r.bandInf);
-    const bandSup = fmtPct(r.bandSup);
-
-    const deltaTxt = fmtItInt.format(r.delta);
-    const prio = priorityMap.get(r.blocco) ?? "-";
-
     tr.innerHTML = `
       <td>${r.blocco}</td>
-      <td>${euro}</td>
-      <td>${pct}</td>
-      <td>${target}</td>
-      <td>${bandInf}</td>
-      <td>${bandSup}</td>
-      <td>${deltaTxt}</td>
-      <td>${prio}</td>
+      <td>${fmtEuro0(r.attuali)}</td>
+      <td>${fmtPct(r.pct)}</td>
+      <td>${fmtPct(r.target)}</td>
+      <td>${fmtPct(r.bandInf)}</td>
+      <td>${fmtPct(r.bandSup)}</td>
+      <td>${fmtItInt.format(r.delta)}</td>
+      <td>${priorityMap.get(r.blocco) ?? "-"}</td>
     `;
 
     blocchiBody.appendChild(tr);
@@ -359,10 +451,6 @@ function renderBlocchiSummary(rows) {
 
 // ===============================
 // VALUTAZIONE: regole colore cella
-// Verde default, Rosso se UNA condizione è vera:
-// 1) blocco NON ha priorità 1 o 2
-// 2) %ticker nel blocco > 10% (A1,A2,A3) oppure >50% (A4,B1,B2)
-// 3) colonna % supera soglie per blocco
 // ===============================
 function shouldValutazioneBeRed(row) {
   const blocco = String(row.blocco || "").trim().toUpperCase();
@@ -379,7 +467,7 @@ function shouldValutazioneBeRed(row) {
   if (isFinite(ptb)) {
     if (blocchiA.includes(blocco)) condTickerNelBlocco = ptb > 10;
     else if (blocchiB.includes(blocco)) condTickerNelBlocco = ptb > 50;
-    else condTickerNelBlocco = ptb > 50; // fallback (es. C)
+    else condTickerNelBlocco = ptb > 50;
   }
 
   // (3) % portafoglio (colonna %)
@@ -391,7 +479,6 @@ function shouldValutazioneBeRed(row) {
 }
 
 function applyValutazioneStyle(inputEl, isRed) {
-  // “verde forte ma non troppo” + rosso ben visibile
   const GREEN_BG = "rgba(46, 204, 113, 0.65)";
   const RED_BG = "rgba(255, 118, 117, 0.75)";
 
@@ -442,30 +529,25 @@ async function loadScoreData() {
         rendimento: Number(s.rendimento ?? 0),
         payback: Number(s.payback ?? 0),
 
-        // ✅ % portafoglio: frazione -> %
+        // % portafoglio (frazione -> %)
         perc: normalizePctForDisplay(s.perc_portafoglio ?? 0),
 
         score: Number(s.score ?? 0),
 
-        // join
         valore_attuale: valoreAttuale,
 
-        // calcolate dopo
         perc_blocco: 0,
         perc_ticker_blocco: 0,
 
-        // valutazione (testo)
         valutazione: String(s.valutazione || "").slice(0, 10),
 
-        // priorità blocco (arriva dopo)
         blocco_priority: null
       });
     });
 
-    // 3) calcoli su prezzo_corrente
+    // 3) calcoli
     const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
 
-    // somma valore attuale per blocco
     const sumByBlocco = new Map();
     rows.forEach(r => {
       const b = r.blocco || "";
@@ -481,19 +563,26 @@ async function loadScoreData() {
       r.perc_ticker_blocco = bloccoSum > 0 ? (v / bloccoSum) * 100 : 0;
     });
 
-    // 4) priorità blocchi (serve per valutazione)
+    // 4) priorità blocchi
     const { priorityMap } = buildBlocchiStats(rows);
     rows.forEach(r => {
       r.blocco_priority = priorityMap.get(r.blocco) ?? null;
     });
 
-    // ✅ ordinamento iniziale: blocco poi score (desc)
-    rows = sortByBloccoThenScore(rows);
+    // salva global e render iniziale
+    allRows = sortByBloccoThenScore(rows);
 
-    renderTable(rows);
-    renderBlocchiSummary(rows);
-    computeSummary(rows);
-    enableSorting(rows);
+    // UI filtro
+    ensureFilterUI();
+
+    // prima render: rispettando filtro corrente (di default ALL)
+    applyFilterAndRender();
+
+    // riepilogo blocchi sul totale
+    renderBlocchiSummary(allRows);
+
+    // sorting click
+    enableSorting();
 
   } catch (err) {
     console.error("Errore caricamento score:", err);
@@ -512,8 +601,6 @@ function renderTable(rows) {
     // colore riga per blocco (se hai le classi CSS)
     if (r.blocco) tr.classList.add("blocco-" + r.blocco);
 
-    const blocco = r.blocco || "-";
-    const ticker = r.ticker || "-";
     const perf12 = colorPercInline(r.perf_12m);
     const rendimento = colorPercInline(r.rendimento);
     const payback = colorPercInline(r.payback);
@@ -521,19 +608,15 @@ function renderTable(rows) {
     const score = colorScore(r.score);
     const valoreAttuale = colorEuroInline0(r.valore_attuale);
 
-    // ✅ % blocco colorata su banda
     const percBlocco = colorPctBlocco(r.perc_blocco, r.blocco);
-
-    // ✅ colori soglia per % ticker nel blocco
     const percTickerBlocco = colorPctTickerNelBlocco(r.perc_ticker_blocco, r.blocco);
 
-    // ✅ VALUTAZIONE (editabile e salvata su Firestore)
     const valutazioneTxt = String(r.valutazione || "").slice(0, 10);
     const valutazioneIsRed = shouldValutazioneBeRed(r);
 
     tr.innerHTML = `
-      <td>${blocco}</td>
-      <td>${ticker}</td>
+      <td>${r.blocco || "-"}</td>
+      <td>${r.ticker || "-"}</td>
       <td>${perf12}</td>
       <td>${rendimento}</td>
       <td>${payback}</td>
@@ -545,6 +628,7 @@ function renderTable(rows) {
       <td></td>
     `;
 
+    // VALUTAZIONE input
     const tdVal = tr.querySelectorAll("td")[10];
     const inp = document.createElement("input");
     inp.type = "text";
@@ -553,7 +637,6 @@ function renderTable(rows) {
     inp.placeholder = "VALUT...";
     applyValutazioneStyle(inp, valutazioneIsRed);
 
-    // salva su blur / invio
     const save = async () => {
       const newVal = String(inp.value || "").trim().slice(0, 10);
       if (newVal === String(r.valutazione || "")) return;
@@ -564,7 +647,6 @@ function renderTable(rows) {
         await updateDoc(doc(db, "score", r.ticker), { valutazione: newVal });
       } catch (e) {
         console.error("Errore salvataggio valutazione:", r.ticker, e);
-        // (volendo: evidenzia errore)
       }
     };
 
@@ -583,7 +665,7 @@ function renderTable(rows) {
 }
 
 // ===============================
-// BOX RIEPILOGATIVI
+// BOX RIEPILOGATIVI (sul set passato)
 // ===============================
 function computeSummary(rows) {
   if (!rows || rows.length === 0) {
@@ -611,19 +693,30 @@ function computeSummary(rows) {
 // ===============================
 // ABILITA ORDINAMENTO CLICK COLONNE
 // ===============================
-function enableSorting(rows) {
+let hasUserSorted = false;
+
+function enableSorting() {
   const headers = document.querySelectorAll("#scoreTable th");
 
   headers.forEach((th, index) => {
     th.style.cursor = "pointer";
 
     th.addEventListener("click", () => {
+      hasUserSorted = true;
       const columnName = visibleColumns[index] || "score";
-      const sorted = sortData(rows, columnName);
+      sortColumn = columnName;
 
-      // re-render
-      renderTable(sorted);
-      renderBlocchiSummary(sorted);
+      // alterna direzione come prima
+      // (manteniamo la stessa logica dentro sortData)
+      currentRows = sortData(currentRows, columnName);
+
+      renderTable(currentRows);
+
+      // riepilogo blocchi sul totale non filtrato
+      renderBlocchiSummary(allRows);
+
+      // summary sul filtrato
+      computeSummary(currentRows);
     });
   });
 }
