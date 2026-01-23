@@ -26,34 +26,36 @@ container.insertBefore(summaryBox, container.children[2]);
 // ===============================
 // UTILS: formattazioni & colori
 // ===============================
+const fmtItPct = new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtItInt = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0 });
+const fmtItEur0 = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
 function fmtPct(value) {
-  if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
   if (!isFinite(num)) return "-";
-  return num.toFixed(2) + "%";
+  return fmtItPct.format(num) + "%";
 }
 
-function fmtEuro(value) {
+function fmtEuro0(value) {
   const num = Number(value);
-  if (!isFinite(num)) return "0.00 €";
-  return num.toFixed(2) + " €";
+  if (!isFinite(num)) return fmtItEur0.format(0);
+  return fmtItEur0.format(num);
 }
 
 function colorPercInline(value) {
-  if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
   if (!isFinite(num)) return "-";
-  const text = num.toFixed(2) + "%";
+  const text = fmtItPct.format(num) + "%";
   if (num > 0) return `<span style="color:#00b894;font-weight:600;">${text}</span>`;
   if (num < 0) return `<span style="color:#d63031;font-weight:600;">${text}</span>`;
   return text;
 }
 
-function colorEuroInline(value) {
+function colorEuroInline0(value) {
   const num = Number(value);
-  const text = fmtEuro(num);
+  const text = fmtEuro0(num);
   if (!isFinite(num) || num === 0) return text;
-  return `<span style="font-weight:600;">${text}</span>`;
+  return `<span style="font-weight:700;">${text}</span>`;
 }
 
 // perc_portafoglio su Firestore è frazione (0..1) -> converti in %
@@ -73,7 +75,7 @@ function colorScore(value) {
   if (num >= 12) color = "#00b894"; // verde
   else if (num >= 8) color = "#b59d00"; // giallo scuro
 
-  return `<span style="color:${color};font-weight:700;">${num.toFixed(2)}</span>`;
+  return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}</span>`;
 }
 
 // ✅ COLORE % TICKER NEL BLOCCO (soglie diverse per blocchi A e blocchi B)
@@ -83,7 +85,7 @@ function colorPctTickerNelBlocco(value, blocco) {
 
   const b = String(blocco || "").trim().toUpperCase();
 
-  // palette coerente con il resto
+  // palette coerente
   const GREEN = "#00b894";
   const YELLOW = "#b59d00";
   const RED = "#d63031";
@@ -104,14 +106,29 @@ function colorPctTickerNelBlocco(value, blocco) {
     else if (num >= 40) color = YELLOW;
     else color = GREEN;
   } else {
-    // fallback (es. C): tieni verde se piccolo, giallo medio, rosso grande
+    // fallback (es. C)
     if (num > 50) color = RED;
     else if (num >= 40) color = YELLOW;
     else color = GREEN;
   }
 
-  return `<span style="color:${color};font-weight:700;">${num.toFixed(2)}%</span>`;
+  return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}%</span>`;
 }
+
+// ===============================
+// CONFIG BLOCCHI (target e bande fisse)
+// ===============================
+const blocchiConfig = {
+  A1: { target: 18, bandInf: 15, bandSup: 22 },
+  A2: { target: 15, bandInf: 12, bandSup: 19 },
+  A3: { target: 25, bandInf: 22, bandSup: 30 },
+  A4: { target: 15, bandInf: 12, bandSup: 20 },
+  B1: { target: 17, bandInf: 14, bandSup: 22 },
+  B2: { target: 7,  bandInf: 4,  bandSup: 10 },
+  C:  { target: 3,  bandInf: 1,  bandSup: 5  }
+};
+
+const bloccoOrder = { A1: 1, A2: 2, A3: 3, A4: 4, B1: 5, B2: 6, C: 7 };
 
 // ===============================
 // ORDINAMENTO
@@ -130,7 +147,7 @@ const visibleColumns = [
   "score",
   "valore_attuale",     // da portafoglio.prezzo_corrente
   "perc_blocco",        // calcolata su prezzo_corrente
-  "perc_ticker_blocco"  // ✅ calcolata: % ticker nel blocco
+  "perc_ticker_blocco"  // % ticker nel blocco
 ];
 
 function sortData(data, column) {
@@ -166,27 +183,126 @@ function sortData(data, column) {
 
 // ✅ ordinamento default: blocco (A1..C) poi score desc
 function sortByBloccoThenScore(rows) {
-  const bloccoOrder = {
-    "A1": 1,
-    "A2": 2,
-    "A3": 3,
-    "A4": 4,
-    "B1": 5,
-    "B2": 6,
-    "C": 7
-  };
-
   return [...rows].sort((a, b) => {
     const ba = bloccoOrder[a.blocco] ?? 99;
     const bb = bloccoOrder[b.blocco] ?? 99;
-
-    // 1) blocco
     if (ba !== bb) return ba - bb;
 
-    // 2) score desc
     const sa = Number(a.score) || 0;
     const sb = Number(b.score) || 0;
     return sb - sa;
+  });
+}
+
+// ===============================
+// RIEPILOGO BLOCCHI (DOM + render)
+// ===============================
+let blocchiCard = null;
+let blocchiBody = null;
+
+function ensureBlocchiTable() {
+  if (blocchiCard && blocchiBody) return;
+
+  blocchiCard = document.createElement("div");
+  blocchiCard.className = "table-card";
+  blocchiCard.innerHTML = `
+    <h2>Riepilogo Blocchi</h2>
+    <table id="blocchiTable">
+      <thead>
+        <tr>
+          <th>Blocco</th>
+          <th>€ attuali</th>
+          <th>%</th>
+          <th>% Target</th>
+          <th>Banda Inferiore</th>
+          <th>Banda Superiore</th>
+          <th>Delta</th>
+          <th>Priorità</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  `;
+
+  // la mettiamo sotto la tabella score (prima table-card presente = quella score)
+  const cards = container.querySelectorAll(".table-card");
+  const lastCard = cards[cards.length - 1] || null;
+  if (lastCard && lastCard.parentNode) lastCard.parentNode.insertBefore(blocchiCard, lastCard.nextSibling);
+  else container.appendChild(blocchiCard);
+
+  blocchiBody = blocchiCard.querySelector("tbody");
+}
+
+function renderBlocchiSummary(rows) {
+  ensureBlocchiTable();
+  blocchiBody.innerHTML = "";
+
+  // totale e somme per blocco
+  const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
+
+  const sumByBlocco = new Map();
+  rows.forEach(r => {
+    const b = String(r.blocco || "").trim().toUpperCase();
+    const v = Number(r.valore_attuale) || 0;
+    sumByBlocco.set(b, (sumByBlocco.get(b) || 0) + v);
+  });
+
+  // costruisco record per tutti i blocchi del config (anche se vuoti)
+  let blocchiRows = Object.keys(blocchiConfig).map(b => {
+    const curr = sumByBlocco.get(b) || 0;
+    const pct = totale > 0 ? (curr / totale) * 100 : 0;
+    const cfg = blocchiConfig[b];
+
+    // ✅ Delta in €: (totale * target%) - valore attuale blocco
+    const targetValue = (totale * (cfg.target / 100));
+    const delta = Math.round(targetValue - curr); // senza decimali
+
+    return {
+      blocco: b,
+      attuali: curr,
+      pct,
+      target: cfg.target,
+      bandInf: cfg.bandInf,
+      bandSup: cfg.bandSup,
+      delta
+    };
+  });
+
+  // priorità: delta più alto = 1, più basso = 7 (stabile per ordine blocchi)
+  const sortedForPriority = [...blocchiRows].sort((a, b) => {
+    if (b.delta !== a.delta) return b.delta - a.delta; // desc
+    return (bloccoOrder[a.blocco] ?? 99) - (bloccoOrder[b.blocco] ?? 99);
+  });
+  const priorityMap = new Map();
+  sortedForPriority.forEach((r, idx) => priorityMap.set(r.blocco, idx + 1));
+
+  // rendering in ordine blocchi A1..C
+  blocchiRows.sort((a, b) => (bloccoOrder[a.blocco] ?? 99) - (bloccoOrder[b.blocco] ?? 99));
+
+  blocchiRows.forEach(r => {
+    const tr = document.createElement("tr");
+
+    const euro = fmtEuro0(r.attuali);
+    const pct = fmtPct(r.pct);
+    const target = fmtPct(r.target);
+    const bandInf = fmtPct(r.bandInf);
+    const bandSup = fmtPct(r.bandSup);
+
+    const deltaTxt = fmtItInt.format(r.delta); // numero senza decimali (anche negativo)
+    const prio = priorityMap.get(r.blocco) ?? "-";
+
+    tr.innerHTML = `
+      <td>${r.blocco}</td>
+      <td>${euro}</td>
+      <td>${pct}</td>
+      <td>${target}</td>
+      <td>${bandInf}</td>
+      <td>${bandSup}</td>
+      <td>${deltaTxt}</td>
+      <td>${prio}</td>
+    `;
+
+    blocchiBody.appendChild(tr);
   });
 }
 
@@ -268,6 +384,7 @@ async function loadScoreData() {
     rows = sortByBloccoThenScore(rows);
 
     renderTable(rows);
+    renderBlocchiSummary(rows); // ✅ nuova tabella sotto
     computeSummary(rows);
     enableSorting(rows);
 
@@ -277,7 +394,7 @@ async function loadScoreData() {
 }
 
 // ===============================
-// RENDER TABELLA (SOLO colonne richieste)
+// RENDER TABELLA SCORE
 // ===============================
 function renderTable(rows) {
   tableBody.innerHTML = "";
@@ -285,10 +402,8 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
-    // colore riga per blocco
-    if (r.blocco) {
-      tr.classList.add("blocco-" + r.blocco);
-    }
+    // colore riga per blocco (se hai le classi CSS)
+    if (r.blocco) tr.classList.add("blocco-" + r.blocco);
 
     const blocco = r.blocco || "-";
     const ticker = r.ticker || "-";
@@ -297,10 +412,10 @@ function renderTable(rows) {
     const payback = colorPercInline(r.payback);
     const perc = colorPercInline(r.perc);
     const score = colorScore(r.score);
-    const valoreAttuale = colorEuroInline(r.valore_attuale);
+    const valoreAttuale = colorEuroInline0(r.valore_attuale);
     const percBlocco = colorPercInline(r.perc_blocco);
 
-    // ✅ qui usiamo la logica colori richiesta
+    // ✅ colori soglia per % ticker nel blocco
     const percTickerBlocco = colorPctTickerNelBlocco(r.perc_ticker_blocco, r.blocco);
 
     tr.innerHTML = `
@@ -340,8 +455,8 @@ function computeSummary(rows) {
 
   const sorted = [...rows].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
 
-  document.querySelector("#mediaScore").innerText = avgScore.toFixed(2);
-  document.querySelector("#mediaRend").innerText = avgRend.toFixed(2) + "%";
+  document.querySelector("#mediaScore").innerText = fmtItPct.format(avgScore);
+  document.querySelector("#mediaRend").innerText = fmtItPct.format(avgRend) + "%";
   document.querySelector("#topTicker").innerText = sorted[0]?.ticker || "-";
   document.querySelector("#worstTicker").innerText = sorted[sorted.length - 1]?.ticker || "-";
 }
@@ -359,6 +474,9 @@ function enableSorting(rows) {
       const columnName = visibleColumns[index] || "score";
       const sorted = sortData(rows, columnName);
       renderTable(sorted);
+
+      // ricalcolo riepilogo blocchi (non cambia, ma rimane consistente)
+      renderBlocchiSummary(sorted);
     });
   });
 }
