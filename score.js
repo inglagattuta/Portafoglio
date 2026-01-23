@@ -233,6 +233,17 @@ function ensureBlocchiTable() {
   blocchiBody = blocchiCard.querySelector("tbody");
 }
 
+function getBloccoRowClass(pct, bandInf, bandSup) {
+  const p = Number(pct);
+  if (!isFinite(p)) return "";
+
+  if (p < bandInf) return "blocco-warning";   // giallo
+  if (p > bandSup) return "blocco-danger";    // rosso
+  return "blocco-ok";                         // verde
+}
+
+
+
 function renderBlocchiSummary(rows) {
   ensureBlocchiTable();
   blocchiBody.innerHTML = "";
@@ -281,6 +292,9 @@ function renderBlocchiSummary(rows) {
 
   blocchiRows.forEach(r => {
     const tr = document.createElement("tr");
+
+    const rowClass = getBloccoRowClass(r.pct, r.bandInf, r.bandSup);
+    if (rowClass) tr.classList.add(rowClass);
 
     const euro = fmtEuro0(r.attuali);
     const pct = fmtPct(r.pct);
