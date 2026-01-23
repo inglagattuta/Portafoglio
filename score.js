@@ -115,6 +115,22 @@ function colorPctTickerNelBlocco(value, blocco) {
   return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}%</span>`;
 }
 
+// ✅ COLORE % BLOCCO NELLA LISTA TITOLI (in base alle bande del blocco)
+function colorPercBlocco(value, blocco) {
+  const num = Number(value);
+  if (!isFinite(num)) return "-";
+
+  const b = String(blocco || "").trim().toUpperCase();
+  const cfg = blocchiConfig[b];
+  if (!cfg) return `<span style="font-weight:800;">${fmtItPct.format(num)}%</span>`;
+
+  let color = "#00b894"; // verde
+  if (num < cfg.bandInf) color = "#b59d00";      // giallo
+  else if (num > cfg.bandSup) color = "#d63031"; // rosso
+
+  return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}%</span>`;
+}
+
 // ===============================
 // CONFIG BLOCCHI (target e bande fisse)
 // ===============================
@@ -241,8 +257,6 @@ function getBloccoRowClass(pct, bandInf, bandSup) {
   if (p > bandSup) return "blocco-danger";    // rosso
   return "blocco-ok";                         // verde
 }
-
-
 
 function renderBlocchiSummary(rows) {
   ensureBlocchiTable();
@@ -427,7 +441,9 @@ function renderTable(rows) {
     const perc = colorPercInline(r.perc);
     const score = colorScore(r.score);
     const valoreAttuale = colorEuroInline0(r.valore_attuale);
-    const percBlocco = colorPercInline(r.perc_blocco);
+
+    // ✅ % Blocco colorata in base alle bande del blocco (bandInf/bandSup)
+    const percBlocco = colorPercBlocco(r.perc_blocco, r.blocco);
 
     // ✅ colori soglia per % ticker nel blocco
     const percTickerBlocco = colorPctTickerNelBlocco(r.perc_ticker_blocco, r.blocco);
