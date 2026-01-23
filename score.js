@@ -33,12 +33,7 @@ container.insertBefore(summaryBox, container.children[2]);
 // ===============================
 const fmtItPct = new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtItInt = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0 });
-const fmtItEur0 = new Intl.NumberFormat("it-IT", {
-  style: "currency",
-  currency: "EUR",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0
-});
+const fmtItEur0 = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 function fmtPct(value) {
   const num = Number(value);
@@ -56,8 +51,8 @@ function colorPercInline(value) {
   const num = Number(value);
   if (!isFinite(num)) return "-";
   const text = fmtItPct.format(num) + "%";
-  if (num > 0) return `<span style="color:#00b894;font-weight:600;">${text}</span>`;
-  if (num < 0) return `<span style="color:#d63031;font-weight:600;">${text}</span>`;
+  if (num > 0) return `<span style="color:#00b894;font-weight:700;">${text}</span>`;
+  if (num < 0) return `<span style="color:#d63031;font-weight:700;">${text}</span>`;
   return text;
 }
 
@@ -65,7 +60,7 @@ function colorEuroInline0(value) {
   const num = Number(value);
   const text = fmtEuro0(num);
   if (!isFinite(num) || num === 0) return text;
-  return `<span style="font-weight:700;">${text}</span>`;
+  return `<span style="font-weight:800;">${text}</span>`;
 }
 
 // perc_portafoglio su Firestore è frazione (0..1) -> converti in %
@@ -85,7 +80,7 @@ function colorScore(value) {
   if (num >= 12) color = "#00b894"; // verde
   else if (num >= 8) color = "#b59d00"; // giallo scuro
 
-  return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}</span>`;
+  return `<span style="color:${color};font-weight:900;">${fmtItPct.format(num)}</span>`;
 }
 
 // ✅ COLORE % TICKER NEL BLOCCO (soglie diverse per blocchi A e blocchi B)
@@ -118,7 +113,26 @@ function colorPctTickerNelBlocco(value, blocco) {
     else color = GREEN;
   }
 
-  return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}%</span>`;
+  return `<span style="color:${color};font-weight:900;">${fmtItPct.format(num)}%</span>`;
+}
+
+// ✅ COLORE TESTO % BLOCCO (in tabella titoli): confronto con bande del blocco
+function colorPctBlocco(value, blocco) {
+  const num = Number(value);
+  if (!isFinite(num)) return "-";
+
+  const cfg = blocchiConfig[String(blocco || "").trim().toUpperCase()];
+  if (!cfg) return `<span style="font-weight:900;">${fmtItPct.format(num)}%</span>`;
+
+  const GREEN = "#00b894";
+  const YELLOW = "#b59d00";
+  const RED = "#d63031";
+
+  let color = GREEN;
+  if (num < cfg.bandInf) color = YELLOW;
+  else if (num > cfg.bandSup) color = RED;
+
+  return `<span style="color:${color};font-weight:900;">${fmtItPct.format(num)}%</span>`;
 }
 
 // ===============================
@@ -130,27 +144,22 @@ const blocchiConfig = {
   A3: { target: 25, bandInf: 22, bandSup: 30 },
   A4: { target: 15, bandInf: 12, bandSup: 20 },
   B1: { target: 17, bandInf: 14, bandSup: 22 },
-  B2: { target: 7, bandInf: 4, bandSup: 10 },
-  C: { target: 3, bandInf: 1, bandSup: 5 }
+  B2: { target: 7,  bandInf: 4,  bandSup: 10 },
+  C:  { target: 3,  bandInf: 1,  bandSup: 5  }
 };
 
 const bloccoOrder = { A1: 1, A2: 2, A3: 3, A4: 4, B1: 5, B2: 6, C: 7 };
 
-// ✅ COLORE % BLOCCO NELLA LISTA TITOLI (in base alle bande del blocco)
-function colorPercBlocco(value, blocco) {
-  const num = Number(value);
-  if (!isFinite(num)) return "-";
-
-  const b = String(blocco || "").trim().toUpperCase();
-  const cfg = blocchiConfig[b];
-  if (!cfg) return `<span style="font-weight:800;">${fmtItPct.format(num)}%</span>`;
-
-  let color = "#00b894"; // verde
-  if (num < cfg.bandInf) color = "#b59d00"; // giallo
-  else if (num > cfg.bandSup) color = "#d63031"; // rosso
-
-  return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}%</span>`;
-}
+// soglie % (colonna "%", cioè perc_portafoglio convertita in %)
+const percMaxByBlocco = {
+  A1: 2.25,
+  A2: 2.25,
+  A3: 3.25,
+  A4: 4.50,
+  B1: 4.25,
+  B2: 1.25,
+  C:  3.00
+};
 
 // ===============================
 // ORDINAMENTO
@@ -170,7 +179,7 @@ const visibleColumns = [
   "valore_attuale",
   "perc_blocco",
   "perc_ticker_blocco",
-  "valutazione" // ✅ nuova colonna
+  "valutazione" // ultima colonna
 ];
 
 function sortData(data, column) {
@@ -186,6 +195,13 @@ function sortData(data, column) {
   copy.sort((a, b) => {
     const vA = a[column];
     const vB = b[column];
+
+    // ordinamento blocco: A1..C
+    if (column === "blocco") {
+      const ba = bloccoOrder[String(vA || "").toUpperCase()] ?? 99;
+      const bb = bloccoOrder[String(vB || "").toUpperCase()] ?? 99;
+      return sortDirection === "asc" ? (ba - bb) : (bb - ba);
+    }
 
     const nA = Number(vA);
     const nB = Number(vB);
@@ -213,27 +229,6 @@ function sortByBloccoThenScore(rows) {
     const sb = Number(b.score) || 0;
     return sb - sa;
   });
-}
-
-// ===============================
-// SALVATAGGIO VALUTAZIONE SU FIREBASE
-// ===============================
-async function saveValutazioneToFirebase(ticker, valutazione) {
-  const t = String(ticker || "").trim().toUpperCase();
-  if (!t) return;
-
-  // max 10 char hard-safe
-  const v = String(valutazione || "").trim().slice(0, 10);
-
-  try {
-    // i tuoi doc score sono già indicizzati per ticker (docId = ticker)
-    await updateDoc(doc(db, "score", t), {
-      valutazione: v,
-      valutazione_updatedAt: new Date()
-    });
-  } catch (err) {
-    console.error("Errore salvataggio valutazione:", t, err);
-  }
 }
 
 // ===============================
@@ -278,15 +273,13 @@ function getBloccoRowClass(pct, bandInf, bandSup) {
   const p = Number(pct);
   if (!isFinite(p)) return "";
 
-  if (p < bandInf) return "blocco-warning";
-  if (p > bandSup) return "blocco-danger";
-  return "blocco-ok";
+  if (p < bandInf) return "blocco-warning"; // giallo
+  if (p > bandSup) return "blocco-danger";  // rosso
+  return "blocco-ok";                       // verde
 }
 
-function renderBlocchiSummary(rows) {
-  ensureBlocchiTable();
-  blocchiBody.innerHTML = "";
-
+// costruisce anche priorityMap (serve per VALUTAZIONE)
+function buildBlocchiStats(rows) {
   const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
 
   const sumByBlocco = new Map();
@@ -296,7 +289,7 @@ function renderBlocchiSummary(rows) {
     sumByBlocco.set(b, (sumByBlocco.get(b) || 0) + v);
   });
 
-  let blocchiRows = Object.keys(blocchiConfig).map(b => {
+  const blocchiRows = Object.keys(blocchiConfig).map(b => {
     const curr = sumByBlocco.get(b) || 0;
     const pct = totale > 0 ? (curr / totale) * 100 : 0;
     const cfg = blocchiConfig[b];
@@ -316,11 +309,21 @@ function renderBlocchiSummary(rows) {
   });
 
   const sortedForPriority = [...blocchiRows].sort((a, b) => {
-    if (b.delta !== a.delta) return b.delta - a.delta;
+    if (b.delta !== a.delta) return b.delta - a.delta; // desc
     return (bloccoOrder[a.blocco] ?? 99) - (bloccoOrder[b.blocco] ?? 99);
   });
+
   const priorityMap = new Map();
   sortedForPriority.forEach((r, idx) => priorityMap.set(r.blocco, idx + 1));
+
+  return { totale, sumByBlocco, blocchiRows, priorityMap };
+}
+
+function renderBlocchiSummary(rows) {
+  ensureBlocchiTable();
+  blocchiBody.innerHTML = "";
+
+  const { blocchiRows, priorityMap } = buildBlocchiStats(rows);
 
   blocchiRows.sort((a, b) => (bloccoOrder[a.blocco] ?? 99) - (bloccoOrder[b.blocco] ?? 99));
 
@@ -352,6 +355,55 @@ function renderBlocchiSummary(rows) {
 
     blocchiBody.appendChild(tr);
   });
+}
+
+// ===============================
+// VALUTAZIONE: regole colore cella
+// Verde default, Rosso se UNA condizione è vera:
+// 1) blocco NON ha priorità 1 o 2
+// 2) %ticker nel blocco > 10% (A1,A2,A3) oppure >50% (A4,B1,B2)
+// 3) colonna % supera soglie per blocco
+// ===============================
+function shouldValutazioneBeRed(row) {
+  const blocco = String(row.blocco || "").trim().toUpperCase();
+
+  // (1) priorità blocco
+  const prio = Number(row.blocco_priority);
+  const condPriority = !(prio === 1 || prio === 2);
+
+  // (2) % ticker nel blocco
+  const ptb = Number(row.perc_ticker_blocco);
+  const blocchiA = ["A1", "A2", "A3"];
+  const blocchiB = ["A4", "B1", "B2"];
+  let condTickerNelBlocco = false;
+  if (isFinite(ptb)) {
+    if (blocchiA.includes(blocco)) condTickerNelBlocco = ptb > 10;
+    else if (blocchiB.includes(blocco)) condTickerNelBlocco = ptb > 50;
+    else condTickerNelBlocco = ptb > 50; // fallback (es. C)
+  }
+
+  // (3) % portafoglio (colonna %)
+  const p = Number(row.perc); // già in %
+  const thr = percMaxByBlocco[blocco];
+  const condPerc = isFinite(p) && isFinite(thr) ? (p > thr) : false;
+
+  return condPriority || condTickerNelBlocco || condPerc;
+}
+
+function applyValutazioneStyle(inputEl, isRed) {
+  // “verde forte ma non troppo” + rosso ben visibile
+  const GREEN_BG = "rgba(46, 204, 113, 0.65)";
+  const RED_BG = "rgba(255, 118, 117, 0.75)";
+
+  inputEl.style.background = isRed ? RED_BG : GREEN_BG;
+  inputEl.style.border = "1px solid rgba(0,0,0,0.15)";
+  inputEl.style.borderRadius = "8px";
+  inputEl.style.padding = "6px 10px";
+  inputEl.style.fontWeight = "800";
+  inputEl.style.textAlign = "center";
+  inputEl.style.width = "100%";
+  inputEl.style.maxWidth = "160px";
+  inputEl.style.outline = "none";
 }
 
 // ===============================
@@ -390,22 +442,30 @@ async function loadScoreData() {
         rendimento: Number(s.rendimento ?? 0),
         payback: Number(s.payback ?? 0),
 
+        // ✅ % portafoglio: frazione -> %
         perc: normalizePctForDisplay(s.perc_portafoglio ?? 0),
+
         score: Number(s.score ?? 0),
 
+        // join
         valore_attuale: valoreAttuale,
 
+        // calcolate dopo
         perc_blocco: 0,
         perc_ticker_blocco: 0,
 
-        // ✅ nuova colonna
-        valutazione: String(s.valutazione || "").trim().slice(0, 10)
+        // valutazione (testo)
+        valutazione: String(s.valutazione || "").slice(0, 10),
+
+        // priorità blocco (arriva dopo)
+        blocco_priority: null
       });
     });
 
     // 3) calcoli su prezzo_corrente
     const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
 
+    // somma valore attuale per blocco
     const sumByBlocco = new Map();
     rows.forEach(r => {
       const b = r.blocco || "";
@@ -421,6 +481,13 @@ async function loadScoreData() {
       r.perc_ticker_blocco = bloccoSum > 0 ? (v / bloccoSum) * 100 : 0;
     });
 
+    // 4) priorità blocchi (serve per valutazione)
+    const { priorityMap } = buildBlocchiStats(rows);
+    rows.forEach(r => {
+      r.blocco_priority = priorityMap.get(r.blocco) ?? null;
+    });
+
+    // ✅ ordinamento iniziale: blocco poi score (desc)
     rows = sortByBloccoThenScore(rows);
 
     renderTable(rows);
@@ -442,6 +509,7 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
+    // colore riga per blocco (se hai le classi CSS)
     if (r.blocco) tr.classList.add("blocco-" + r.blocco);
 
     const blocco = r.blocco || "-";
@@ -453,11 +521,15 @@ function renderTable(rows) {
     const score = colorScore(r.score);
     const valoreAttuale = colorEuroInline0(r.valore_attuale);
 
-    const percBlocco = colorPercBlocco(r.perc_blocco, r.blocco);
+    // ✅ % blocco colorata su banda
+    const percBlocco = colorPctBlocco(r.perc_blocco, r.blocco);
+
+    // ✅ colori soglia per % ticker nel blocco
     const percTickerBlocco = colorPctTickerNelBlocco(r.perc_ticker_blocco, r.blocco);
 
-    // ✅ input valutazione
-    const valutazioneValue = String(r.valutazione || "").slice(0, 10);
+    // ✅ VALUTAZIONE (editabile e salvata su Firestore)
+    const valutazioneTxt = String(r.valutazione || "").slice(0, 10);
+    const valutazioneIsRed = shouldValutazioneBeRed(r);
 
     tr.innerHTML = `
       <td>${blocco}</td>
@@ -473,51 +545,33 @@ function renderTable(rows) {
       <td></td>
     `;
 
-    // crea input e aggancialo nell’ultima cella
-    const tdVal = tr.lastElementChild;
+    const tdVal = tr.querySelectorAll("td")[10];
     const inp = document.createElement("input");
     inp.type = "text";
     inp.maxLength = 10;
-    inp.value = valutazioneValue;
-    inp.placeholder = "";
-    inp.setAttribute("aria-label", `Valutazione ${ticker}`);
+    inp.value = valutazioneTxt;
+    inp.placeholder = "VALUT...";
+    applyValutazioneStyle(inp, valutazioneIsRed);
 
-    // stile: verde forte ma leggibile
-    inp.style.width = "100%";
-    inp.style.boxSizing = "border-box";
-    inp.style.padding = "6px 8px";
-    inp.style.borderRadius = "8px";
-    inp.style.border = "1px solid rgba(0,0,0,0.08)";
-    inp.style.background = "#34c759";  // verde “forte” non aggressivo
-    inp.style.color = "#ffffff";
-    inp.style.fontWeight = "800";
-    inp.style.textTransform = "uppercase";
-    inp.style.outline = "none";
+    // salva su blur / invio
+    const save = async () => {
+      const newVal = String(inp.value || "").trim().slice(0, 10);
+      if (newVal === String(r.valutazione || "")) return;
 
-    // focus più chiaro
-    inp.addEventListener("focus", () => {
-      inp.style.filter = "brightness(1.05)";
-    });
-    inp.addEventListener("blur", async () => {
-      inp.style.filter = "none";
-
-      const newVal = String(inp.value || "").trim().slice(0, 10).toUpperCase();
-      inp.value = newVal;
-
-      // evita scritture inutili
-      if (newVal === (String(r.valutazione || "").trim().slice(0, 10).toUpperCase())) return;
-
-      // aggiorna cache locale
       r.valutazione = newVal;
 
-      // salva su Firestore
-      await saveValutazioneToFirebase(ticker, newVal);
-    });
+      try {
+        await updateDoc(doc(db, "score", r.ticker), { valutazione: newVal });
+      } catch (e) {
+        console.error("Errore salvataggio valutazione:", r.ticker, e);
+        // (volendo: evidenzia errore)
+      }
+    };
 
-    // Invio = salva e toglie focus (tipo Excel)
-    inp.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
+    inp.addEventListener("blur", save);
+    inp.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
         inp.blur();
       }
     });
@@ -566,6 +620,8 @@ function enableSorting(rows) {
     th.addEventListener("click", () => {
       const columnName = visibleColumns[index] || "score";
       const sorted = sortData(rows, columnName);
+
+      // re-render
       renderTable(sorted);
       renderBlocchiSummary(sorted);
     });
