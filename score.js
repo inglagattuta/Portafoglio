@@ -3,7 +3,12 @@
 // IMPORT FIREBASE
 // ===============================
 import { db } from "./firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // ===============================
 // ELEMENTI PAGINA
@@ -28,7 +33,12 @@ container.insertBefore(summaryBox, container.children[2]);
 // ===============================
 const fmtItPct = new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtItInt = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0 });
-const fmtItEur0 = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtItEur0 = new Intl.NumberFormat("it-IT", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+});
 
 function fmtPct(value) {
   const num = Number(value);
@@ -85,7 +95,6 @@ function colorPctTickerNelBlocco(value, blocco) {
 
   const b = String(blocco || "").trim().toUpperCase();
 
-  // palette coerente
   const GREEN = "#00b894";
   const YELLOW = "#b59d00";
   const RED = "#d63031";
@@ -96,37 +105,18 @@ function colorPctTickerNelBlocco(value, blocco) {
   let color = GREEN;
 
   if (blocchiA.includes(b)) {
-    // Verde <7, Giallo 7-10, Rosso >10
     if (num > 10) color = RED;
     else if (num >= 7) color = YELLOW;
     else color = GREEN;
   } else if (blocchiB.includes(b)) {
-    // Verde <40, Giallo 40-50, Rosso >50
     if (num > 50) color = RED;
     else if (num >= 40) color = YELLOW;
     else color = GREEN;
   } else {
-    // fallback (es. C)
     if (num > 50) color = RED;
     else if (num >= 40) color = YELLOW;
     else color = GREEN;
   }
-
-  return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}%</span>`;
-}
-
-// ✅ COLORE % BLOCCO NELLA LISTA TITOLI (in base alle bande del blocco)
-function colorPercBlocco(value, blocco) {
-  const num = Number(value);
-  if (!isFinite(num)) return "-";
-
-  const b = String(blocco || "").trim().toUpperCase();
-  const cfg = blocchiConfig[b];
-  if (!cfg) return `<span style="font-weight:800;">${fmtItPct.format(num)}%</span>`;
-
-  let color = "#00b894"; // verde
-  if (num < cfg.bandInf) color = "#b59d00";      // giallo
-  else if (num > cfg.bandSup) color = "#d63031"; // rosso
 
   return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}%</span>`;
 }
@@ -140,11 +130,27 @@ const blocchiConfig = {
   A3: { target: 25, bandInf: 22, bandSup: 30 },
   A4: { target: 15, bandInf: 12, bandSup: 20 },
   B1: { target: 17, bandInf: 14, bandSup: 22 },
-  B2: { target: 7,  bandInf: 4,  bandSup: 10 },
-  C:  { target: 3,  bandInf: 1,  bandSup: 5  }
+  B2: { target: 7, bandInf: 4, bandSup: 10 },
+  C: { target: 3, bandInf: 1, bandSup: 5 }
 };
 
 const bloccoOrder = { A1: 1, A2: 2, A3: 3, A4: 4, B1: 5, B2: 6, C: 7 };
+
+// ✅ COLORE % BLOCCO NELLA LISTA TITOLI (in base alle bande del blocco)
+function colorPercBlocco(value, blocco) {
+  const num = Number(value);
+  if (!isFinite(num)) return "-";
+
+  const b = String(blocco || "").trim().toUpperCase();
+  const cfg = blocchiConfig[b];
+  if (!cfg) return `<span style="font-weight:800;">${fmtItPct.format(num)}%</span>`;
+
+  let color = "#00b894"; // verde
+  if (num < cfg.bandInf) color = "#b59d00"; // giallo
+  else if (num > cfg.bandSup) color = "#d63031"; // rosso
+
+  return `<span style="color:${color};font-weight:800;">${fmtItPct.format(num)}%</span>`;
+}
 
 // ===============================
 // ORDINAMENTO
@@ -159,11 +165,12 @@ const visibleColumns = [
   "perf_12m",
   "rendimento",
   "payback",
-  "perc",               // % (da perc_portafoglio -> %)
+  "perc",
   "score",
-  "valore_attuale",     // da portafoglio.prezzo_corrente
-  "perc_blocco",        // calcolata su prezzo_corrente
-  "perc_ticker_blocco"  // % ticker nel blocco
+  "valore_attuale",
+  "perc_blocco",
+  "perc_ticker_blocco",
+  "valutazione" // ✅ nuova colonna
 ];
 
 function sortData(data, column) {
@@ -183,12 +190,10 @@ function sortData(data, column) {
     const nA = Number(vA);
     const nB = Number(vB);
 
-    // numerico
     if (isFinite(nA) && isFinite(nB)) {
       return sortDirection === "asc" ? nA - nB : nB - nA;
     }
 
-    // stringhe
     const sA = vA == null ? "" : String(vA);
     const sB = vB == null ? "" : String(vB);
     return sortDirection === "asc" ? sA.localeCompare(sB) : sB.localeCompare(sA);
@@ -208,6 +213,27 @@ function sortByBloccoThenScore(rows) {
     const sb = Number(b.score) || 0;
     return sb - sa;
   });
+}
+
+// ===============================
+// SALVATAGGIO VALUTAZIONE SU FIREBASE
+// ===============================
+async function saveValutazioneToFirebase(ticker, valutazione) {
+  const t = String(ticker || "").trim().toUpperCase();
+  if (!t) return;
+
+  // max 10 char hard-safe
+  const v = String(valutazione || "").trim().slice(0, 10);
+
+  try {
+    // i tuoi doc score sono già indicizzati per ticker (docId = ticker)
+    await updateDoc(doc(db, "score", t), {
+      valutazione: v,
+      valutazione_updatedAt: new Date()
+    });
+  } catch (err) {
+    console.error("Errore salvataggio valutazione:", t, err);
+  }
 }
 
 // ===============================
@@ -240,7 +266,6 @@ function ensureBlocchiTable() {
     </table>
   `;
 
-  // la mettiamo sotto la tabella score (prima table-card presente = quella score)
   const cards = container.querySelectorAll(".table-card");
   const lastCard = cards[cards.length - 1] || null;
   if (lastCard && lastCard.parentNode) lastCard.parentNode.insertBefore(blocchiCard, lastCard.nextSibling);
@@ -253,16 +278,15 @@ function getBloccoRowClass(pct, bandInf, bandSup) {
   const p = Number(pct);
   if (!isFinite(p)) return "";
 
-  if (p < bandInf) return "blocco-warning";   // giallo
-  if (p > bandSup) return "blocco-danger";    // rosso
-  return "blocco-ok";                         // verde
+  if (p < bandInf) return "blocco-warning";
+  if (p > bandSup) return "blocco-danger";
+  return "blocco-ok";
 }
 
 function renderBlocchiSummary(rows) {
   ensureBlocchiTable();
   blocchiBody.innerHTML = "";
 
-  // totale e somme per blocco
   const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
 
   const sumByBlocco = new Map();
@@ -272,15 +296,13 @@ function renderBlocchiSummary(rows) {
     sumByBlocco.set(b, (sumByBlocco.get(b) || 0) + v);
   });
 
-  // costruisco record per tutti i blocchi del config (anche se vuoti)
   let blocchiRows = Object.keys(blocchiConfig).map(b => {
     const curr = sumByBlocco.get(b) || 0;
     const pct = totale > 0 ? (curr / totale) * 100 : 0;
     const cfg = blocchiConfig[b];
 
-    // ✅ Delta in €: (totale * target%) - valore attuale blocco
     const targetValue = (totale * (cfg.target / 100));
-    const delta = Math.round(targetValue - curr); // senza decimali
+    const delta = Math.round(targetValue - curr);
 
     return {
       blocco: b,
@@ -293,15 +315,13 @@ function renderBlocchiSummary(rows) {
     };
   });
 
-  // priorità: delta più alto = 1, più basso = 7 (stabile per ordine blocchi)
   const sortedForPriority = [...blocchiRows].sort((a, b) => {
-    if (b.delta !== a.delta) return b.delta - a.delta; // desc
+    if (b.delta !== a.delta) return b.delta - a.delta;
     return (bloccoOrder[a.blocco] ?? 99) - (bloccoOrder[b.blocco] ?? 99);
   });
   const priorityMap = new Map();
   sortedForPriority.forEach((r, idx) => priorityMap.set(r.blocco, idx + 1));
 
-  // rendering in ordine blocchi A1..C
   blocchiRows.sort((a, b) => (bloccoOrder[a.blocco] ?? 99) - (bloccoOrder[b.blocco] ?? 99));
 
   blocchiRows.forEach(r => {
@@ -316,7 +336,7 @@ function renderBlocchiSummary(rows) {
     const bandInf = fmtPct(r.bandInf);
     const bandSup = fmtPct(r.bandSup);
 
-    const deltaTxt = fmtItInt.format(r.delta); // numero senza decimali (anche negativo)
+    const deltaTxt = fmtItInt.format(r.delta);
     const prio = priorityMap.get(r.blocco) ?? "-";
 
     tr.innerHTML = `
@@ -366,29 +386,26 @@ async function loadScoreData() {
         blocco: String(s.blocco || "").trim().toUpperCase(),
         ticker,
 
-        // valori già in "punti percentuali" (es. 6.55) dal tuo import Excel
         perf_12m: Number(s.perf_12m ?? 0),
         rendimento: Number(s.rendimento ?? 0),
         payback: Number(s.payback ?? 0),
 
-        // ✅ % portafoglio: in Firestore è frazione (0..1), la mostriamo in %
         perc: normalizePctForDisplay(s.perc_portafoglio ?? 0),
-
         score: Number(s.score ?? 0),
 
-        // join
         valore_attuale: valoreAttuale,
 
-        // calcolate dopo
         perc_blocco: 0,
-        perc_ticker_blocco: 0
+        perc_ticker_blocco: 0,
+
+        // ✅ nuova colonna
+        valutazione: String(s.valutazione || "").trim().slice(0, 10)
       });
     });
 
     // 3) calcoli su prezzo_corrente
     const totale = rows.reduce((acc, r) => acc + (Number(r.valore_attuale) || 0), 0);
 
-    // somma valore attuale per blocco
     const sumByBlocco = new Map();
     rows.forEach(r => {
       const b = r.blocco || "";
@@ -396,23 +413,18 @@ async function loadScoreData() {
       sumByBlocco.set(b, (sumByBlocco.get(b) || 0) + v);
     });
 
-    // assegna % blocco e % ticker nel blocco
     rows.forEach(r => {
       const bloccoSum = sumByBlocco.get(r.blocco || "") || 0;
       const v = Number(r.valore_attuale) || 0;
 
-      // % blocco su totale portafoglio
       r.perc_blocco = totale > 0 ? (bloccoSum / totale) * 100 : 0;
-
-      // % ticker nel blocco (valore ticker / totale blocco)
       r.perc_ticker_blocco = bloccoSum > 0 ? (v / bloccoSum) * 100 : 0;
     });
 
-    // ✅ ordinamento iniziale: blocco poi score (desc)
     rows = sortByBloccoThenScore(rows);
 
     renderTable(rows);
-    renderBlocchiSummary(rows); // ✅ nuova tabella sotto
+    renderBlocchiSummary(rows);
     computeSummary(rows);
     enableSorting(rows);
 
@@ -430,7 +442,6 @@ function renderTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
 
-    // colore riga per blocco (se hai le classi CSS)
     if (r.blocco) tr.classList.add("blocco-" + r.blocco);
 
     const blocco = r.blocco || "-";
@@ -442,11 +453,11 @@ function renderTable(rows) {
     const score = colorScore(r.score);
     const valoreAttuale = colorEuroInline0(r.valore_attuale);
 
-    // ✅ % Blocco colorata in base alle bande del blocco (bandInf/bandSup)
     const percBlocco = colorPercBlocco(r.perc_blocco, r.blocco);
-
-    // ✅ colori soglia per % ticker nel blocco
     const percTickerBlocco = colorPctTickerNelBlocco(r.perc_ticker_blocco, r.blocco);
+
+    // ✅ input valutazione
+    const valutazioneValue = String(r.valutazione || "").slice(0, 10);
 
     tr.innerHTML = `
       <td>${blocco}</td>
@@ -459,7 +470,59 @@ function renderTable(rows) {
       <td>${valoreAttuale}</td>
       <td>${percBlocco}</td>
       <td>${percTickerBlocco}</td>
+      <td></td>
     `;
+
+    // crea input e aggancialo nell’ultima cella
+    const tdVal = tr.lastElementChild;
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.maxLength = 10;
+    inp.value = valutazioneValue;
+    inp.placeholder = "";
+    inp.setAttribute("aria-label", `Valutazione ${ticker}`);
+
+    // stile: verde forte ma leggibile
+    inp.style.width = "100%";
+    inp.style.boxSizing = "border-box";
+    inp.style.padding = "6px 8px";
+    inp.style.borderRadius = "8px";
+    inp.style.border = "1px solid rgba(0,0,0,0.08)";
+    inp.style.background = "#34c759";  // verde “forte” non aggressivo
+    inp.style.color = "#ffffff";
+    inp.style.fontWeight = "800";
+    inp.style.textTransform = "uppercase";
+    inp.style.outline = "none";
+
+    // focus più chiaro
+    inp.addEventListener("focus", () => {
+      inp.style.filter = "brightness(1.05)";
+    });
+    inp.addEventListener("blur", async () => {
+      inp.style.filter = "none";
+
+      const newVal = String(inp.value || "").trim().slice(0, 10).toUpperCase();
+      inp.value = newVal;
+
+      // evita scritture inutili
+      if (newVal === (String(r.valutazione || "").trim().slice(0, 10).toUpperCase())) return;
+
+      // aggiorna cache locale
+      r.valutazione = newVal;
+
+      // salva su Firestore
+      await saveValutazioneToFirebase(ticker, newVal);
+    });
+
+    // Invio = salva e toglie focus (tipo Excel)
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        inp.blur();
+      }
+    });
+
+    tdVal.appendChild(inp);
 
     tableBody.appendChild(tr);
   });
@@ -504,8 +567,6 @@ function enableSorting(rows) {
       const columnName = visibleColumns[index] || "score";
       const sorted = sortData(rows, columnName);
       renderTable(sorted);
-
-      // ricalcolo riepilogo blocchi (non cambia, ma rimane consistente)
       renderBlocchiSummary(sorted);
     });
   });
